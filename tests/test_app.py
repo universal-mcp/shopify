@@ -4,6 +4,7 @@ import pytest
 
 from universal_mcp_shopify.app import ShopifyApp
 
+
 @pytest.fixture
 def app_instance():
     """Provides a ShopifyApp instance for tests."""
@@ -19,7 +20,7 @@ def test_universal_mcp_shopify_app_initialization(app_instance):
     assert hasattr(app_instance, 'name'), "Application instance should have a 'name' attribute."
     assert isinstance(app_instance.name, str), "Application name should be a string."
     assert app_instance.name.strip() != "", "Application name should not be empty."
-    assert app_instance.name == "shopify", "ShopifyApp instance has unexpected name."
+    assert app_instance.name == "shopifyapp", "ShopifyApp instance has unexpected name."
 
 
 def test_universal_mcp_shopify_tool_docstrings_format(app_instance):

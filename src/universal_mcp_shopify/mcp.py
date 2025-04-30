@@ -1,6 +1,6 @@
 
-from universal_mcp.servers.server import SingleMCPServer
 from universal_mcp.integrations.integration import ApiKeyIntegration
+from universal_mcp.servers.server import SingleMCPServer
 from universal_mcp.stores.store import EnvironmentStore
 
 from universal_mcp_shopify.app import ShopifyApp
