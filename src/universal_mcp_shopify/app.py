@@ -1,16 +1,14 @@
-from typing import Annotated, Any
-
+import json 
+from typing import Any
 from universal_mcp.applications import APIApplication
 from universal_mcp.integrations import Integration
 
-
 class ShopifyApp(APIApplication):
-    def __init__(self, integration: Integration = None, **kwargs) -> None:
-        super().__init__(name='shopifyapp', integration=integration, **kwargs)
+    def __init__(self, integration: Integration | None = None, **kwargs) -> None:
+        super().__init__(name='shopify', integration=integration, **kwargs)
         self.base_url = "https://{{store_name}}.myshopify.com"
-
-
-    def retrieves_alist_of_access_scopes_associated_to_the_access_token(self, ) -> dict[str, Any]:
+        
+    def retrieves_alist_of_access_scopes_associated_to_the_access_token(self) -> dict[str, Any]:
         """
         Retrieves access scopes associated with the current authentication token.
         
@@ -26,14 +24,18 @@ class ShopifyApp(APIApplication):
         Tags:
             access-scopes, authentication, metadata, api, important
         """
-        path = ""
-        url = f"{self.base_url}{path}"
+        url = "https://{{store_name}}.myshopify.com/admin/oauth/access_scopes.json"
         query_params = {}
         response = self._get(url, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def retrieves_alist_of_storefront_access_tokens_that_have_been_issued(self, ) -> dict[str, Any]:
+    def retrieves_alist_of_storefront_access_tokens_that_have_been_issued(self, api_version) -> dict[str, Any]:
         """
         Retrieves a list of issued storefront access tokens.
         
@@ -49,14 +51,18 @@ class ShopifyApp(APIApplication):
         Tags:
             retrieve, list, access-tokens, storefront, api, important
         """
-        path = ""
-        url = f"{self.base_url}{path}"
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/storefront_access_tokens.json"
         query_params = {}
         response = self._get(url, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def creates_anew_storefrontaccesstoken(self, storefront_access_token: Annotated[dict[str, Any], ''] = None) -> dict[str, Any]:
+    def creates_anew_storefrontaccesstoken(self, api_version, storefront_access_token: dict[str, Any] | None = None) -> dict[str, Any]:
         """
         Creates a new Storefront Access Token.
         
@@ -72,18 +78,23 @@ class ShopifyApp(APIApplication):
         Tags:
             storefront-access-token, create, management, access, important
         """
-        request_body = {
-            "storefront_access_token": storefront_access_token,
+        # Build the request body from parameters
+        request_body_payload = {
+            'storefront_access_token': storefront_access_token,
         }
-        request_body = {k: v for k, v in request_body.items() if v is not None}
-        path = ""
-        url = f"{self.base_url}{path}"
+        request_body_payload = {k: v for k, v in request_body_payload.items() if v is not None}
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/storefront_access_tokens.json"
         query_params = {}
-        response = self._post(url, data=request_body, params=query_params)
+        response = self._post(url, json=request_body_payload, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def deletes_an_existing_storefront_access_token(self, request_body: Annotated[Any, ''] = None) -> Any:
+    def deletes_an_existing_storefront_access_token(self, api_version, storefront_access_token_id, request_body: Any | None = None) -> Any:
         """
         Deletes an existing storefront access token.
         
@@ -99,15 +110,18 @@ class ShopifyApp(APIApplication):
         Tags:
             delete, storefront, important, management
         """
-        request_body = request_body
-        path = ""
-        url = f"{self.base_url}{path}"
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/storefront_access_tokens/{storefront_access_token_id}.json"
         query_params = {}
-        response = self._delete(url, data=request_body, params=query_params)
+        response = self._delete(url, json=request_body, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def retrieves_alist_of_reports(self, fields: Annotated[Any, 'A comma-separated list of fields to include in the response. '] = None, ids: Annotated[Any, 'A comma-separated list of report IDs. '] = None, limit: Annotated[Any, 'The amount of results to return.(default: 50)(maximum: 250) '] = None, since_id: Annotated[Any, 'Restrict results to after the specified ID. '] = None, updated_at_max: Annotated[Any, 'Show reports last updated before date. (format: 2014-04-25T16:15:47-04:00) '] = None, updated_at_min: Annotated[Any, 'Show reports last updated after date. (format: 2014-04-25T16:15:47-04:00) '] = None) -> dict[str, Any]:
+    def retrieves_alist_of_reports(self, api_version, ids: str | None = None, limit: str | None = None, since_id: str | None = None, updated_at_min: str | None = None, updated_at_max: str | None = None, fields: str | None = None) -> dict[str, Any]:
         """
         Retrieves a list of reports based on the specified filters and parameters.
         
@@ -128,22 +142,18 @@ class ShopifyApp(APIApplication):
         Tags:
             list, reports, api-query, important
         """
-        path = ""
-        url = f"{self.base_url}{path}"
-        query_params = {
-                "ids": ids,
-                "limit": limit,
-                "since_id": since_id,
-                "updated_at_min": updated_at_min,
-                "updated_at_max": updated_at_max,
-                "fields": fields,
-            }
-        query_params = {k: v for k, v in query_params.items() if v is not None}
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/reports.json"
+        query_params = {k: v for k, v in [('ids', ids), ('limit', limit), ('since_id', since_id), ('updated_at_min', updated_at_min), ('updated_at_max', updated_at_max), ('fields', fields)] if v is not None}
         response = self._get(url, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def creates_anew_report(self, report: Annotated[dict[str, Any], ''] = None) -> dict[str, Any]:
+    def creates_anew_report(self, api_version, report: dict[str, Any] | None = None) -> dict[str, Any]:
         """
         Creates a new report by sending a POST request with the provided report data to a specific URL.
         
@@ -159,18 +169,23 @@ class ShopifyApp(APIApplication):
         Tags:
             create, report, analytics, http, important
         """
-        request_body = {
-            "report": report,
+        # Build the request body from parameters
+        request_body_payload = {
+            'report': report,
         }
-        request_body = {k: v for k, v in request_body.items() if v is not None}
-        path = ""
-        url = f"{self.base_url}{path}"
+        request_body_payload = {k: v for k, v in request_body_payload.items() if v is not None}
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/reports.json"
         query_params = {}
-        response = self._post(url, data=request_body, params=query_params)
+        response = self._post(url, json=request_body_payload, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def retrieves_asingle_report(self, fields: Annotated[Any, 'A comma-separated list of fields to include in the response. '] = None) -> dict[str, Any]:
+    def retrieves_asingle_report(self, api_version, report_id, fields: str | None = None) -> dict[str, Any]:
         """
         Retrieves a single report from the application.
         
@@ -186,17 +201,18 @@ class ShopifyApp(APIApplication):
         Tags:
             retrieve, report, important, analytics, management
         """
-        path = ""
-        url = f"{self.base_url}{path}"
-        query_params = {
-                "fields": fields,
-            }
-        query_params = {k: v for k, v in query_params.items() if v is not None}
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/reports/{report_id}.json"
+        query_params = {k: v for k, v in [('fields', fields)] if v is not None}
         response = self._get(url, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def updates_areport(self, report: Annotated[dict[str, Any], ''] = None) -> dict[str, Any]:
+    def updates_areport(self, api_version, report_id, report: dict[str, Any] | None = None) -> dict[str, Any]:
         """
         Updates an existing report by sending a PUT request to the API endpoint with the provided report data.
         
@@ -212,18 +228,23 @@ class ShopifyApp(APIApplication):
         Tags:
             update, report, api, async-job, management, important
         """
-        request_body = {
-            "report": report,
+        # Build the request body from parameters
+        request_body_payload = {
+            'report': report,
         }
-        request_body = {k: v for k, v in request_body.items() if v is not None}
-        path = ""
-        url = f"{self.base_url}{path}"
+        request_body_payload = {k: v for k, v in request_body_payload.items() if v is not None}
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/reports/{report_id}.json"
         query_params = {}
-        response = self._put(url, data=request_body, params=query_params)
+        response = self._put(url, json=request_body_payload, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def deletes_areport(self, request_body: Annotated[Any, ''] = None) -> dict[str, Any]:
+    def deletes_areport(self, api_version, report_id, request_body: Any | None = None) -> dict[str, Any]:
         """
         Deletes a report by making a DELETE request to the API endpoint.
         
@@ -239,15 +260,18 @@ class ShopifyApp(APIApplication):
         Tags:
             delete, report, api, important, analytics
         """
-        request_body = request_body
-        path = ""
-        url = f"{self.base_url}{path}"
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/reports/{report_id}.json"
         query_params = {}
-        response = self._delete(url, data=request_body, params=query_params)
+        response = self._delete(url, json=request_body, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def retrieves_alist_of_application_charges(self, fields: Annotated[Any, 'A comma-separated list of fields to include in the response. '] = None, since_id: Annotated[Any, 'Restrict results to after the specified ID. '] = None) -> dict[str, Any]:
+    def retrieves_alist_of_application_charges(self, api_version, since_id: str | None = None, fields: str | None = None) -> dict[str, Any]:
         """
         Retrieves a list of application charges from the API, filtered by specified criteria.
         
@@ -264,18 +288,18 @@ class ShopifyApp(APIApplication):
         Tags:
             retrieve, list, billing, application-charge, api, important
         """
-        path = ""
-        url = f"{self.base_url}{path}"
-        query_params = {
-                "since_id": since_id,
-                "fields": fields,
-            }
-        query_params = {k: v for k, v in query_params.items() if v is not None}
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/application_charges.json"
+        query_params = {k: v for k, v in [('since_id', since_id), ('fields', fields)] if v is not None}
         response = self._get(url, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def creates_an_application_charge(self, application_charge: Annotated[dict[str, Any], ''] = None) -> dict[str, Any]:
+    def creates_an_application_charge(self, api_version, application_charge: dict[str, Any] | None = None) -> dict[str, Any]:
         """
         Creates a new application charge for billing purposes.
         
@@ -291,18 +315,23 @@ class ShopifyApp(APIApplication):
         Tags:
             billing, application-charge, api, create, important
         """
-        request_body = {
-            "application_charge": application_charge,
+        # Build the request body from parameters
+        request_body_payload = {
+            'application_charge': application_charge,
         }
-        request_body = {k: v for k, v in request_body.items() if v is not None}
-        path = ""
-        url = f"{self.base_url}{path}"
+        request_body_payload = {k: v for k, v in request_body_payload.items() if v is not None}
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/application_charges.json"
         query_params = {}
-        response = self._post(url, data=request_body, params=query_params)
+        response = self._post(url, json=request_body_payload, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def retrieves_an_application_charge(self, fields: Annotated[Any, 'A comma-separated list of fields to include in the response. '] = None) -> dict[str, Any]:
+    def retrieves_an_application_charge(self, api_version, application_charge_id, fields: str | None = None) -> dict[str, Any]:
         """
         Retrieves application charge details from the billing system.
         
@@ -318,17 +347,18 @@ class ShopifyApp(APIApplication):
         Tags:
             retrieve, billing, application-charge, important
         """
-        path = ""
-        url = f"{self.base_url}{path}"
-        query_params = {
-                "fields": fields,
-            }
-        query_params = {k: v for k, v in query_params.items() if v is not None}
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/application_charges/{application_charge_id}.json"
+        query_params = {k: v for k, v in [('fields', fields)] if v is not None}
         response = self._get(url, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def activates_an_application_charge(self, application_charge: Annotated[dict[str, Any], ''] = None) -> dict[str, Any]:
+    def activates_an_application_charge(self, api_version, application_charge_id, application_charge: dict[str, Any] | None = None) -> dict[str, Any]:
         """
         Activates an accepted application charge.
         
@@ -344,18 +374,23 @@ class ShopifyApp(APIApplication):
         Tags:
             activate, billing, application-charge, important
         """
-        request_body = {
-            "application_charge": application_charge,
+        # Build the request body from parameters
+        request_body_payload = {
+            'application_charge': application_charge,
         }
-        request_body = {k: v for k, v in request_body.items() if v is not None}
-        path = ""
-        url = f"{self.base_url}{path}"
+        request_body_payload = {k: v for k, v in request_body_payload.items() if v is not None}
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/application_charges/{application_charge_id}/activate.json"
         query_params = {}
-        response = self._post(url, data=request_body, params=query_params)
+        response = self._post(url, json=request_body_payload, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def retrieves_all_application_credits(self, fields: Annotated[Any, 'A comma-separated list of fields to include in the response. '] = None) -> dict[str, Any]:
+    def retrieves_all_application_credits(self, api_version, fields: str | None = None) -> dict[str, Any]:
         """
         Retrieves all application credits from the server.
         
@@ -371,17 +406,18 @@ class ShopifyApp(APIApplication):
         Tags:
             retrieve, application-credits, billing, important
         """
-        path = ""
-        url = f"{self.base_url}{path}"
-        query_params = {
-                "fields": fields,
-            }
-        query_params = {k: v for k, v in query_params.items() if v is not None}
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/application_credits.json"
+        query_params = {k: v for k, v in [('fields', fields)] if v is not None}
         response = self._get(url, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def creates_an_application_credit(self, application_credit: Annotated[dict[str, Any], ''] = None) -> dict[str, Any]:
+    def creates_an_application_credit(self, api_version, application_credit: dict[str, Any] | None = None) -> dict[str, Any]:
         """
         Creates an application credit by sending a POST request to the API endpoint.
         
@@ -397,18 +433,23 @@ class ShopifyApp(APIApplication):
         Tags:
             create, application-credit, billing, api-client, important
         """
-        request_body = {
-            "application_credit": application_credit,
+        # Build the request body from parameters
+        request_body_payload = {
+            'application_credit': application_credit,
         }
-        request_body = {k: v for k, v in request_body.items() if v is not None}
-        path = ""
-        url = f"{self.base_url}{path}"
+        request_body_payload = {k: v for k, v in request_body_payload.items() if v is not None}
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/application_credits.json"
         query_params = {}
-        response = self._post(url, data=request_body, params=query_params)
+        response = self._post(url, json=request_body_payload, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def retrieves_asingle_application_credit(self, fields: Annotated[Any, 'A comma-separated list of fields to include in the response. '] = None) -> dict[str, Any]:
+    def retrieves_asingle_application_credit(self, api_version, application_credit_id, fields: str | None = None) -> dict[str, Any]:
         """
         Retrieves a single application credit from the API, including specified fields.
         
@@ -424,17 +465,18 @@ class ShopifyApp(APIApplication):
         Tags:
             retrieve, application-credit, api, important
         """
-        path = ""
-        url = f"{self.base_url}{path}"
-        query_params = {
-                "fields": fields,
-            }
-        query_params = {k: v for k, v in query_params.items() if v is not None}
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/application_credits/{application_credit_id}.json"
+        query_params = {k: v for k, v in [('fields', fields)] if v is not None}
         response = self._get(url, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def retrieves_alist_of_recurring_application_charges(self, fields: Annotated[Any, 'A comma-separated list of fields to include in the response. '] = None, since_id: Annotated[Any, 'Restrict results to after the specified ID. '] = None) -> dict[str, Any]:
+    def retrieves_alist_of_recurring_application_charges(self, api_version, since_id: str | None = None, fields: str | None = None) -> dict[str, Any]:
         """
         Retrieves a list of recurring application charges with optional filtering parameters.
         
@@ -451,18 +493,18 @@ class ShopifyApp(APIApplication):
         Tags:
             billing, recurring-application-charge, list, management, important
         """
-        path = ""
-        url = f"{self.base_url}{path}"
-        query_params = {
-                "since_id": since_id,
-                "fields": fields,
-            }
-        query_params = {k: v for k, v in query_params.items() if v is not None}
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/recurring_application_charges.json"
+        query_params = {k: v for k, v in [('since_id', since_id), ('fields', fields)] if v is not None}
         response = self._get(url, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def creates_arecurring_application_charge(self, recurring_application_charge: Annotated[dict[str, Any], ''] = None) -> dict[str, Any]:
+    def creates_arecurring_application_charge(self, api_version, recurring_application_charge: dict[str, Any] | None = None) -> dict[str, Any]:
         """
         Creates a recurring application charge.
         
@@ -478,18 +520,23 @@ class ShopifyApp(APIApplication):
         Tags:
             recurring, billing, charge, important
         """
-        request_body = {
-            "recurring_application_charge": recurring_application_charge,
+        # Build the request body from parameters
+        request_body_payload = {
+            'recurring_application_charge': recurring_application_charge,
         }
-        request_body = {k: v for k, v in request_body.items() if v is not None}
-        path = ""
-        url = f"{self.base_url}{path}"
+        request_body_payload = {k: v for k, v in request_body_payload.items() if v is not None}
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/recurring_application_charges.json"
         query_params = {}
-        response = self._post(url, data=request_body, params=query_params)
+        response = self._post(url, json=request_body_payload, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def retrieves_asingle_charge(self, fields: Annotated[Any, 'A comma-separated list of fields to include in the response. '] = None) -> dict[str, Any]:
+    def retrieves_asingle_charge(self, api_version, recurring_application_charge_id, fields: str | None = None) -> dict[str, Any]:
         """
         Retrieves a single charge's data from the API, including specified fields.
         
@@ -505,17 +552,18 @@ class ShopifyApp(APIApplication):
         Tags:
             retrieve, billing, api, recurring-charge, important
         """
-        path = ""
-        url = f"{self.base_url}{path}"
-        query_params = {
-                "fields": fields,
-            }
-        query_params = {k: v for k, v in query_params.items() if v is not None}
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/recurring_application_charges/{recurring_application_charge_id}.json"
+        query_params = {k: v for k, v in [('fields', fields)] if v is not None}
         response = self._get(url, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def cancels_arecurring_application_charge(self, request_body: Annotated[Any, ''] = None) -> Any:
+    def cancels_arecurring_application_charge(self, api_version, recurring_application_charge_id, request_body: Any | None = None) -> Any:
         """
         Cancels a recurring application charge, typically used in billing systems to stop periodic charges.
         
@@ -531,15 +579,18 @@ class ShopifyApp(APIApplication):
         Tags:
             cancel, recurring, billing, async-job, management, important
         """
-        request_body = request_body
-        path = ""
-        url = f"{self.base_url}{path}"
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/recurring_application_charges/{recurring_application_charge_id}.json"
         query_params = {}
-        response = self._delete(url, data=request_body, params=query_params)
+        response = self._delete(url, json=request_body, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def activates_arecurring_application_charge(self, recurring_application_charge: Annotated[dict[str, Any], ''] = None) -> dict[str, Any]:
+    def activates_arecurring_application_charge(self, api_version, recurring_application_charge_id, recurring_application_charge: dict[str, Any] | None = None) -> dict[str, Any]:
         """
         Activates a previously accepted recurring application charge.
         
@@ -555,18 +606,23 @@ class ShopifyApp(APIApplication):
         Tags:
             activate, recurring-charge, billing, important
         """
-        request_body = {
-            "recurring_application_charge": recurring_application_charge,
+        # Build the request body from parameters
+        request_body_payload = {
+            'recurring_application_charge': recurring_application_charge,
         }
-        request_body = {k: v for k, v in request_body.items() if v is not None}
-        path = ""
-        url = f"{self.base_url}{path}"
+        request_body_payload = {k: v for k, v in request_body_payload.items() if v is not None}
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/recurring_application_charges/{recurring_application_charge_id}/activate.json"
         query_params = {}
-        response = self._post(url, data=request_body, params=query_params)
+        response = self._post(url, json=request_body_payload, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def updates_the_capped_amount_of_arecurring_application_charge(self, request_body: Annotated[Any, ''] = None) -> dict[str, Any]:
+    def updates_the_capped_amount_of_arecurring_application_charge(self, api_version, recurring_application_charge_id, request_body: Any | None = None) -> dict[str, Any]:
         """
         Updates the capped amount of an active recurring application charge.
         
@@ -582,15 +638,18 @@ class ShopifyApp(APIApplication):
         Tags:
             update, billing, recurring-application-charge, important
         """
-        request_body = request_body
-        path = ""
-        url = f"{self.base_url}{path}"
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/recurring_application_charges/{recurring_application_charge_id}/customize.json"
         query_params = {}
-        response = self._put(url, data=request_body, params=query_params)
+        response = self._put(url, json=request_body, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def retrieves_alist_of_usage_charges(self, fields: Annotated[Any, 'A comma-separated list of fields to include in the response. '] = None) -> dict[str, Any]:
+    def retrieves_alist_of_usage_charges(self, api_version, recurring_application_charge_id, fields: str | None = None) -> dict[str, Any]:
         """
         Retrieves a list of usage charges from a specified endpoint.
         
@@ -606,17 +665,18 @@ class ShopifyApp(APIApplication):
         Tags:
             billing, usage-charge, api-call, important, async_job
         """
-        path = ""
-        url = f"{self.base_url}{path}"
-        query_params = {
-                "fields": fields,
-            }
-        query_params = {k: v for k, v in query_params.items() if v is not None}
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/recurring_application_charges/{recurring_application_charge_id}/usage_charges.json"
+        query_params = {k: v for k, v in [('fields', fields)] if v is not None}
         response = self._get(url, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def creates_ausage_charge(self, usage_charge: Annotated[dict[str, Any], ''] = None) -> dict[str, Any]:
+    def creates_ausage_charge(self, api_version, recurring_application_charge_id, usage_charge: dict[str, Any] | None = None) -> dict[str, Any]:
         """
         Creates a usage charge for a billing resource, typically in a SaaS or subscription-based system.
         
@@ -632,18 +692,23 @@ class ShopifyApp(APIApplication):
         Tags:
             billing, usage-charge, create, important
         """
-        request_body = {
-            "usage_charge": usage_charge,
+        # Build the request body from parameters
+        request_body_payload = {
+            'usage_charge': usage_charge,
         }
-        request_body = {k: v for k, v in request_body.items() if v is not None}
-        path = ""
-        url = f"{self.base_url}{path}"
+        request_body_payload = {k: v for k, v in request_body_payload.items() if v is not None}
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/recurring_application_charges/{recurring_application_charge_id}/usage_charges.json"
         query_params = {}
-        response = self._post(url, data=request_body, params=query_params)
+        response = self._post(url, json=request_body_payload, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def retrieves_asingle_charge1(self, fields: Annotated[Any, 'A comma-separated list of fields to include in the response. '] = None) -> dict[str, Any]:
+    def retrieves_asingle_charge1(self, api_version, recurring_application_charge_id, usage_charge_id, fields: str | None = None) -> dict[str, Any]:
         """
         Retrieves a single charge including specified fields from the API.
         
@@ -659,17 +724,18 @@ class ShopifyApp(APIApplication):
         Tags:
             retrieve, charge, billing, usage-charge, api, important
         """
-        path = ""
-        url = f"{self.base_url}{path}"
-        query_params = {
-                "fields": fields,
-            }
-        query_params = {k: v for k, v in query_params.items() if v is not None}
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/recurring_application_charges/{recurring_application_charge_id}/usage_charges/{usage_charge_id}.json"
+        query_params = {k: v for k, v in [('fields', fields)] if v is not None}
         response = self._get(url, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def retrieves_alist_of_addresses_for_acustomer(self, ) -> dict[str, Any]:
+    def retrieves_alist_of_addresses_for_acustomer(self, api_version, customer_id) -> dict[str, Any]:
         """
         Retrieves a list of addresses for a customer.
         
@@ -686,14 +752,18 @@ class ShopifyApp(APIApplication):
         Tags:
             list, customer, address, api, important
         """
-        path = ""
-        url = f"{self.base_url}{path}"
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/customers/{customer_id}/addresses.json"
         query_params = {}
         response = self._get(url, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def creates_anew_address_for_acustomer(self, address: Annotated[dict[str, Any], ''] = None) -> dict[str, Any]:
+    def creates_anew_address_for_acustomer(self, api_version, customer_id, address: dict[str, Any] | None = None) -> dict[str, Any]:
         """
         Creates a new address for a customer by sending a POST request with the provided address details.
         
@@ -709,18 +779,23 @@ class ShopifyApp(APIApplication):
         Tags:
             create, customer_address, important
         """
-        request_body = {
-            "address": address,
+        # Build the request body from parameters
+        request_body_payload = {
+            'address': address,
         }
-        request_body = {k: v for k, v in request_body.items() if v is not None}
-        path = ""
-        url = f"{self.base_url}{path}"
+        request_body_payload = {k: v for k, v in request_body_payload.items() if v is not None}
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/customers/{customer_id}/addresses.json"
         query_params = {}
-        response = self._post(url, data=request_body, params=query_params)
+        response = self._post(url, json=request_body_payload, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def retrieves_details_for_asingle_customer_address(self, ) -> dict[str, Any]:
+    def retrieves_details_for_asingle_customer_address(self, api_version, customer_id, address_id) -> dict[str, Any]:
         """
         Retrieves details for a customer's address by making a GET request to the specified API endpoint.
         
@@ -736,14 +811,18 @@ class ShopifyApp(APIApplication):
         Tags:
             retrieve, customer, address, important
         """
-        path = ""
-        url = f"{self.base_url}{path}"
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/customers/{customer_id}/addresses/{address_id}.json"
         query_params = {}
         response = self._get(url, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def updates_an_existing_customer_address(self, address: Annotated[dict[str, Any], ''] = None) -> dict[str, Any]:
+    def updates_an_existing_customer_address(self, api_version, customer_id, address_id, address: dict[str, Any] | None = None) -> dict[str, Any]:
         """
         Updates an existing customer address by sending a PUT request with the new address details.
         
@@ -759,18 +838,23 @@ class ShopifyApp(APIApplication):
         Tags:
             update, customer, address, api-call, important
         """
-        request_body = {
-            "address": address,
+        # Build the request body from parameters
+        request_body_payload = {
+            'address': address,
         }
-        request_body = {k: v for k, v in request_body.items() if v is not None}
-        path = ""
-        url = f"{self.base_url}{path}"
+        request_body_payload = {k: v for k, v in request_body_payload.items() if v is not None}
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/customers/{customer_id}/addresses/{address_id}.json"
         query_params = {}
-        response = self._put(url, data=request_body, params=query_params)
+        response = self._put(url, json=request_body_payload, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def removes_an_address_from_acustomer_saddress_list(self, request_body: Annotated[Any, ''] = None) -> dict[str, Any]:
+    def removes_an_address_from_acustomer_saddress_list(self, api_version, customer_id, address_id, request_body: Any | None = None) -> dict[str, Any]:
         """
         Removes a specified address from a customer's address list by sending a DELETE request.
         
@@ -786,15 +870,18 @@ class ShopifyApp(APIApplication):
         Tags:
             customers, customer-address, delete, management, core-operation, important
         """
-        request_body = request_body
-        path = ""
-        url = f"{self.base_url}{path}"
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/customers/{customer_id}/addresses/{address_id}.json"
         query_params = {}
-        response = self._delete(url, data=request_body, params=query_params)
+        response = self._delete(url, json=request_body, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def performs_bulk_operations_for_multiple_customer_addresses(self, request_body: Annotated[Any, ''] = None) -> dict[str, Any]:
+    def performs_bulk_operations_for_multiple_customer_addresses(self, api_version, customer_id, request_body: Any | None = None) -> dict[str, Any]:
         """
         Performs bulk operations on multiple customer addresses using a provided request body.
         
@@ -810,15 +897,18 @@ class ShopifyApp(APIApplication):
         Tags:
             bulk-operations, customer-addresses, important, management
         """
-        request_body = request_body
-        path = ""
-        url = f"{self.base_url}{path}"
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/customers/{customer_id}/addresses/set.json"
         query_params = {}
-        response = self._put(url, data=request_body, params=query_params)
+        response = self._put(url, json=request_body, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def sets_the_default_address_for_acustomer(self, request_body: Annotated[Any, ''] = None) -> dict[str, Any]:
+    def sets_the_default_address_for_acustomer(self, api_version, customer_id, address_id, request_body: Any | None = None) -> dict[str, Any]:
         """
         Sets the default address for a customer.
         
@@ -834,15 +924,18 @@ class ShopifyApp(APIApplication):
         Tags:
             set, address, customers, management, important
         """
-        request_body = request_body
-        path = ""
-        url = f"{self.base_url}{path}"
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/customers/{customer_id}/addresses/{address_id}/default.json"
         query_params = {}
-        response = self._put(url, data=request_body, params=query_params)
+        response = self._put(url, json=request_body, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def retrieves_alist_of_customers(self, created_at_max: Annotated[Any, 'Show customers created before a specified date.  \n(format: 2014-04-25T16:15:47-04:00) '] = None, created_at_min: Annotated[Any, 'Show customers created after a specified date.  \n(format: 2014-04-25T16:15:47-04:00) '] = None, fields: Annotated[Any, 'Show only certain fields, specified by a comma-separated list of field names. '] = None, ids: Annotated[Any, 'Restrict results to customers specified by a comma-separated list of IDs. '] = None, limit: Annotated[Any, 'The maximum number of results to show.(default: 50)(maximum: 250) '] = None, since_id: Annotated[Any, 'Restrict results to those after the specified ID. '] = None, updated_at_max: Annotated[Any, 'Show customers last updated before a specified date.  \n(format: 2014-04-25T16:15:47-04:00) '] = None, updated_at_min: Annotated[Any, 'Show customers last updated after a specified date.  \n(format: 2014-04-25T16:15:47-04:00) '] = None) -> dict[str, Any]:
+    def retrieves_alist_of_customers(self, api_version, ids: str | None = None, since_id: str | None = None, created_at_min: str | None = None, created_at_max: str | None = None, updated_at_min: str | None = None, updated_at_max: str | None = None, limit: str | None = None, fields: str | None = None) -> dict[str, Any]:
         """
         Retrieves a list of customers based on specified criteria, including creation and update dates, customer IDs, and select fields.
         
@@ -865,24 +958,18 @@ class ShopifyApp(APIApplication):
         Tags:
             customer, list, paginate, important
         """
-        path = ""
-        url = f"{self.base_url}{path}"
-        query_params = {
-                "ids": ids,
-                "since_id": since_id,
-                "created_at_min": created_at_min,
-                "created_at_max": created_at_max,
-                "updated_at_min": updated_at_min,
-                "updated_at_max": updated_at_max,
-                "limit": limit,
-                "fields": fields,
-            }
-        query_params = {k: v for k, v in query_params.items() if v is not None}
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/customers.json"
+        query_params = {k: v for k, v in [('ids', ids), ('since_id', since_id), ('created_at_min', created_at_min), ('created_at_max', created_at_max), ('updated_at_min', updated_at_min), ('updated_at_max', updated_at_max), ('limit', limit), ('fields', fields)] if v is not None}
         response = self._get(url, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def creates_acustomer(self, customer: Annotated[dict[str, Any], ''] = None) -> dict[str, Any]:
+    def creates_acustomer(self, api_version, customer: dict[str, Any] | None = None) -> dict[str, Any]:
         """
         Creates a new customer record by sending customer data to the API endpoint.
         
@@ -898,18 +985,23 @@ class ShopifyApp(APIApplication):
         Tags:
             create, customer, management, api-client, important
         """
-        request_body = {
-            "customer": customer,
+        # Build the request body from parameters
+        request_body_payload = {
+            'customer': customer,
         }
-        request_body = {k: v for k, v in request_body.items() if v is not None}
-        path = ""
-        url = f"{self.base_url}{path}"
+        request_body_payload = {k: v for k, v in request_body_payload.items() if v is not None}
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/customers.json"
         query_params = {}
-        response = self._post(url, data=request_body, params=query_params)
+        response = self._post(url, json=request_body_payload, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def searches_for_customers_that_match_asupplied_query(self, fields: Annotated[Any, 'Show only certain fields, specified by a comma-separated list of field names. '] = None, limit: Annotated[Any, 'The maximum number of results to show.(default: 50)(maximum: 250) '] = None, order: Annotated[Any, 'Set the field and direction by which to order results.(default: last\\_order\\_date DESC) '] = None, query: Annotated[Any, "Text to search for in the shop\\'s customer data. "] = None) -> dict[str, Any]:
+    def searches_for_customers_that_match_asupplied_query(self, api_version, order: str | None = None, query: str | None = None, limit: str | None = None, fields: str | None = None) -> dict[str, Any]:
         """
         Searches for customers that match a supplied query, allowing filtering by fields, limit, ordering, and query text.
         
@@ -928,20 +1020,18 @@ class ShopifyApp(APIApplication):
         Tags:
             search, customer, important, shopify-api
         """
-        path = ""
-        url = f"{self.base_url}{path}"
-        query_params = {
-                "order": order,
-                "query": query,
-                "limit": limit,
-                "fields": fields,
-            }
-        query_params = {k: v for k, v in query_params.items() if v is not None}
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/customers/search.json"
+        query_params = {k: v for k, v in [('order', order), ('query', query), ('limit', limit), ('fields', fields)] if v is not None}
         response = self._get(url, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def retrieves_asingle_customer(self, fields: Annotated[Any, 'Show only certain fields, specified by a comma-separated list of field names. '] = None) -> dict[str, Any]:
+    def retrieves_asingle_customer(self, api_version, customer_id, fields: str | None = None) -> dict[str, Any]:
         """
         Retrieves information about a single customer, allowing specification of which fields to include.
         
@@ -957,17 +1047,18 @@ class ShopifyApp(APIApplication):
         Tags:
             customer, retrieve, important
         """
-        path = ""
-        url = f"{self.base_url}{path}"
-        query_params = {
-                "fields": fields,
-            }
-        query_params = {k: v for k, v in query_params.items() if v is not None}
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/customers/{customer_id}.json"
+        query_params = {k: v for k, v in [('fields', fields)] if v is not None}
         response = self._get(url, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def updates_acustomer(self, customer: Annotated[dict[str, Any], ''] = None) -> dict[str, Any]:
+    def updates_acustomer(self, api_version, customer_id, customer: dict[str, Any] | None = None) -> dict[str, Any]:
         """
         Updates a customer by sending a PUT request with the provided customer data.
         
@@ -983,18 +1074,23 @@ class ShopifyApp(APIApplication):
         Tags:
             update, customer-management, important
         """
-        request_body = {
-            "customer": customer,
+        # Build the request body from parameters
+        request_body_payload = {
+            'customer': customer,
         }
-        request_body = {k: v for k, v in request_body.items() if v is not None}
-        path = ""
-        url = f"{self.base_url}{path}"
+        request_body_payload = {k: v for k, v in request_body_payload.items() if v is not None}
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/customers/{customer_id}.json"
         query_params = {}
-        response = self._put(url, data=request_body, params=query_params)
+        response = self._put(url, json=request_body_payload, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def deletes_acustomer(self, request_body: Annotated[Any, ''] = None) -> Any:
+    def deletes_acustomer(self, api_version, customer_id, request_body: Any | None = None) -> Any:
         """
         Deletes a customer from the system if they have no existing orders.
         
@@ -1010,15 +1106,18 @@ class ShopifyApp(APIApplication):
         Tags:
             delete, customer, management, important
         """
-        request_body = request_body
-        path = ""
-        url = f"{self.base_url}{path}"
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/customers/{customer_id}.json"
         query_params = {}
-        response = self._delete(url, data=request_body, params=query_params)
+        response = self._delete(url, json=request_body, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def creates_an_account_activation_url_for_acustomer(self, request_body: Annotated[Any, ''] = None) -> dict[str, Any]:
+    def creates_an_account_activation_url_for_acustomer(self, api_version, customer_id, request_body: Any | None = None) -> dict[str, Any]:
         """
         Generates a one-time-use account activation URL for a customer with an inactive account.
         
@@ -1034,15 +1133,18 @@ class ShopifyApp(APIApplication):
         Tags:
             activation-url-generation, customer-management, account-enablement, async-batch, important
         """
-        request_body = request_body
-        path = ""
-        url = f"{self.base_url}{path}"
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/customers/{customer_id}/account_activation_url.json"
         query_params = {}
-        response = self._post(url, data=request_body, params=query_params)
+        response = self._post(url, json=request_body, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def sends_an_account_invite_to_acustomer(self, customer_invite: Annotated[dict[str, Any], ''] = None) -> dict[str, Any]:
+    def sends_an_account_invite_to_acustomer(self, api_version, customer_id, customer_invite: dict[str, Any] | None = None) -> dict[str, Any]:
         """
         Sends an account invitation to a customer via API request.
         
@@ -1058,18 +1160,23 @@ class ShopifyApp(APIApplication):
         Tags:
             send, account-invite, customers, api, post, important
         """
-        request_body = {
-            "customer_invite": customer_invite,
+        # Build the request body from parameters
+        request_body_payload = {
+            'customer_invite': customer_invite,
         }
-        request_body = {k: v for k, v in request_body.items() if v is not None}
-        path = ""
-        url = f"{self.base_url}{path}"
+        request_body_payload = {k: v for k, v in request_body_payload.items() if v is not None}
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/customers/{customer_id}/send_invite.json"
         query_params = {}
-        response = self._post(url, data=request_body, params=query_params)
+        response = self._post(url, json=request_body_payload, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def retrieves_acount_of_customers(self, ) -> dict[str, Any]:
+    def retrieves_acount_of_customers(self, api_version) -> dict[str, Any]:
         """
         Retrieves a count of all customers from the API endpoint.
         
@@ -1082,14 +1189,18 @@ class ShopifyApp(APIApplication):
         Tags:
             retrieve, count, customers, api, important
         """
-        path = ""
-        url = f"{self.base_url}{path}"
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/customers/count.json"
         query_params = {}
         response = self._get(url, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def retrieves_all_orders_belonging_to_acustomer(self, ) -> dict[str, Any]:
+    def retrieves_all_orders_belonging_to_acustomer(self, api_version, customer_id) -> dict[str, Any]:
         """
         Retrieves all orders belonging to a customer.
         
@@ -1105,14 +1216,18 @@ class ShopifyApp(APIApplication):
         Tags:
             retrieve, orders, customer, important
         """
-        path = ""
-        url = f"{self.base_url}{path}"
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/customers/{customer_id}/orders.json"
         query_params = {}
         response = self._get(url, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def retrieves_alist_of_customer_saved_searches(self, fields: Annotated[Any, 'Show only certain fields, specified by a comma-separated list of field names. '] = None, limit: Annotated[Any, 'The maximum number of results to show.(default: 50)(maximum: 250) '] = None, since_id: Annotated[Any, 'Restrict results to after the specified ID. '] = None) -> dict[str, Any]:
+    def retrieves_alist_of_customer_saved_searches(self, api_version, limit: str | None = None, since_id: str | None = None, fields: str | None = None) -> dict[str, Any]:
         """
         Retrieves a list of customer saved searches with pagination support via response headers.
         
@@ -1130,19 +1245,18 @@ class ShopifyApp(APIApplication):
         Tags:
             customer-saved-searches, retrieve, list, pagination, customers, management, important
         """
-        path = ""
-        url = f"{self.base_url}{path}"
-        query_params = {
-                "limit": limit,
-                "since_id": since_id,
-                "fields": fields,
-            }
-        query_params = {k: v for k, v in query_params.items() if v is not None}
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/customer_saved_searches.json"
+        query_params = {k: v for k, v in [('limit', limit), ('since_id', since_id), ('fields', fields)] if v is not None}
         response = self._get(url, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def creates_acustomer_saved_search(self, customer_saved_search: Annotated[dict[str, Any], ''] = None) -> dict[str, Any]:
+    def creates_acustomer_saved_search(self, api_version, customer_saved_search: dict[str, Any] | None = None) -> dict[str, Any]:
         """
         Creates a customer saved search using the provided data.
         
@@ -1158,18 +1272,23 @@ class ShopifyApp(APIApplication):
         Tags:
             create, customer-saved-search, management, important
         """
-        request_body = {
-            "customer_saved_search": customer_saved_search,
+        # Build the request body from parameters
+        request_body_payload = {
+            'customer_saved_search': customer_saved_search,
         }
-        request_body = {k: v for k, v in request_body.items() if v is not None}
-        path = ""
-        url = f"{self.base_url}{path}"
+        request_body_payload = {k: v for k, v in request_body_payload.items() if v is not None}
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/customer_saved_searches.json"
         query_params = {}
-        response = self._post(url, data=request_body, params=query_params)
+        response = self._post(url, json=request_body_payload, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def retrieves_acount_of_all_customer_saved_searches(self, since_id: Annotated[Any, 'Restrict results to after the specified ID '] = None) -> dict[str, Any]:
+    def retrieves_acount_of_all_customer_saved_searches(self, api_version, since_id: str | None = None) -> dict[str, Any]:
         """
         Retrieves a count of all customer saved searches, optionally filtering results to after a specified ID.
         
@@ -1185,17 +1304,18 @@ class ShopifyApp(APIApplication):
         Tags:
             search, management, customers, important
         """
-        path = ""
-        url = f"{self.base_url}{path}"
-        query_params = {
-                "since_id": since_id,
-            }
-        query_params = {k: v for k, v in query_params.items() if v is not None}
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/customer_saved_searches/count.json"
+        query_params = {k: v for k, v in [('since_id', since_id)] if v is not None}
         response = self._get(url, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def retrieves_asingle_customer_saved_search(self, fields: Annotated[Any, 'Show only certain fields, specified by a comma-separated list of field names. '] = None) -> dict[str, Any]:
+    def retrieves_asingle_customer_saved_search(self, api_version, customer_saved_search_id, fields: str | None = None) -> dict[str, Any]:
         """
         Retrieves a single customer saved search.
         
@@ -1211,17 +1331,18 @@ class ShopifyApp(APIApplication):
         Tags:
             search, customer-management, important
         """
-        path = ""
-        url = f"{self.base_url}{path}"
-        query_params = {
-                "fields": fields,
-            }
-        query_params = {k: v for k, v in query_params.items() if v is not None}
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/customer_saved_searches/{customer_saved_search_id}.json"
+        query_params = {k: v for k, v in [('fields', fields)] if v is not None}
         response = self._get(url, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def updates_acustomer_saved_search(self, customer_saved_search: Annotated[dict[str, Any], ''] = None) -> dict[str, Any]:
+    def updates_acustomer_saved_search(self, api_version, customer_saved_search_id, customer_saved_search: dict[str, Any] | None = None) -> dict[str, Any]:
         """
         Updates a customer saved search by sending a PUT request to the specified URL.
         
@@ -1237,18 +1358,23 @@ class ShopifyApp(APIApplication):
         Tags:
             update, customer-saved-search, management, important
         """
-        request_body = {
-            "customer_saved_search": customer_saved_search,
+        # Build the request body from parameters
+        request_body_payload = {
+            'customer_saved_search': customer_saved_search,
         }
-        request_body = {k: v for k, v in request_body.items() if v is not None}
-        path = ""
-        url = f"{self.base_url}{path}"
+        request_body_payload = {k: v for k, v in request_body_payload.items() if v is not None}
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/customer_saved_searches/{customer_saved_search_id}.json"
         query_params = {}
-        response = self._put(url, data=request_body, params=query_params)
+        response = self._put(url, json=request_body_payload, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def deletes_acustomer_saved_search(self, request_body: Annotated[Any, ''] = None) -> dict[str, Any]:
+    def deletes_acustomer_saved_search(self, api_version, customer_saved_search_id, request_body: Any | None = None) -> dict[str, Any]:
         """
         Deletes a customer saved search from the system.
         
@@ -1264,15 +1390,18 @@ class ShopifyApp(APIApplication):
         Tags:
             delete, customer, saved-search, api, management, important
         """
-        request_body = request_body
-        path = ""
-        url = f"{self.base_url}{path}"
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/customer_saved_searches/{customer_saved_search_id}.json"
         query_params = {}
-        response = self._delete(url, data=request_body, params=query_params)
+        response = self._delete(url, json=request_body, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def retrieves_all_customers_returned_by_acustomer_saved_search(self, fields: Annotated[Any, 'Show only certain fields, specified by a comma-separated list of field names. '] = None, limit: Annotated[Any, 'The maximum number of results to show.(default: 50)(maximum: 250) '] = None, order: Annotated[Any, 'Set the field and direction by which to order results.(default: last\\_order\\_date DESC) '] = None) -> dict[str, Any]:
+    def retrieves_all_customers_returned_by_acustomer_saved_search(self, api_version, customer_saved_search_id, order: str | None = None, limit: str | None = None, fields: str | None = None) -> dict[str, Any]:
         """
         Retrieves all customers associated with a customer saved search using specified filters and ordering.
         
@@ -1290,19 +1419,18 @@ class ShopifyApp(APIApplication):
         Tags:
             retrieve, customers, saved-search, async-job, ai-management, important
         """
-        path = ""
-        url = f"{self.base_url}{path}"
-        query_params = {
-                "order": order,
-                "limit": limit,
-                "fields": fields,
-            }
-        query_params = {k: v for k, v in query_params.items() if v is not None}
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/customer_saved_searches/{customer_saved_search_id}/customers.json"
+        query_params = {k: v for k, v in [('order', order), ('limit', limit), ('fields', fields)] if v is not None}
         response = self._get(url, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def retrieves_alist_of_discount_codes(self, ) -> dict[str, Any]:
+    def retrieves_alist_of_discount_codes(self, api_version, price_rule_id) -> dict[str, Any]:
         """
         Retrieves a paginated list of discount codes from the Shopify REST Admin API, adhering to API version 2019-10 pagination rules.
         
@@ -1318,14 +1446,18 @@ class ShopifyApp(APIApplication):
         Tags:
             discounts, discount-code, pagination, rest-api, shopify, list, management, important
         """
-        path = ""
-        url = f"{self.base_url}{path}"
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/price_rules/{price_rule_id}/discount_codes.json"
         query_params = {}
         response = self._get(url, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def creates_adiscount_code(self, discount_code: Annotated[dict[str, Any], ''] = None) -> dict[str, Any]:
+    def creates_adiscount_code(self, api_version, price_rule_id, discount_code: dict[str, Any] | None = None) -> dict[str, Any]:
         """
         Creates a discount code by sending a POST request with the specified parameters.
         
@@ -1342,18 +1474,23 @@ class ShopifyApp(APIApplication):
         Tags:
             create, discount-code, post-request, important
         """
-        request_body = {
-            "discount_code": discount_code,
+        # Build the request body from parameters
+        request_body_payload = {
+            'discount_code': discount_code,
         }
-        request_body = {k: v for k, v in request_body.items() if v is not None}
-        path = ""
-        url = f"{self.base_url}{path}"
+        request_body_payload = {k: v for k, v in request_body_payload.items() if v is not None}
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/price_rules/{price_rule_id}/discount_codes.json"
         query_params = {}
-        response = self._post(url, data=request_body, params=query_params)
+        response = self._post(url, json=request_body_payload, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def retrieves_asingle_discount_code(self, ) -> dict[str, Any]:
+    def retrieves_asingle_discount_code(self, api_version, price_rule_id, discount_code_id) -> dict[str, Any]:
         """
         Retrieves a single discount code.
         
@@ -1369,14 +1506,18 @@ class ShopifyApp(APIApplication):
         Tags:
             discount, discount-code, important
         """
-        path = ""
-        url = f"{self.base_url}{path}"
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/price_rules/{price_rule_id}/discount_codes/{discount_code_id}.json"
         query_params = {}
         response = self._get(url, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def updates_an_existing_discount_code(self, discount_code: Annotated[dict[str, Any], ''] = None) -> dict[str, Any]:
+    def updates_an_existing_discount_code(self, api_version, price_rule_id, discount_code_id, discount_code: dict[str, Any] | None = None) -> dict[str, Any]:
         """
         Updates an existing discount code with new data via a PUT request.
         
@@ -1392,18 +1533,23 @@ class ShopifyApp(APIApplication):
         Tags:
             update, discount, async-job, management, important
         """
-        request_body = {
-            "discount_code": discount_code,
+        # Build the request body from parameters
+        request_body_payload = {
+            'discount_code': discount_code,
         }
-        request_body = {k: v for k, v in request_body.items() if v is not None}
-        path = ""
-        url = f"{self.base_url}{path}"
+        request_body_payload = {k: v for k, v in request_body_payload.items() if v is not None}
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/price_rules/{price_rule_id}/discount_codes/{discount_code_id}.json"
         query_params = {}
-        response = self._put(url, data=request_body, params=query_params)
+        response = self._put(url, json=request_body_payload, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def deletes_adiscount_code(self, request_body: Annotated[Any, ''] = None) -> Any:
+    def deletes_adiscount_code(self, api_version, price_rule_id, discount_code_id, request_body: Any | None = None) -> Any:
         """
         Deletes a discount code by sending a DELETE request to the API endpoint.
         
@@ -1419,15 +1565,18 @@ class ShopifyApp(APIApplication):
         Tags:
             discounts, delete, management, api, important
         """
-        request_body = request_body
-        path = ""
-        url = f"{self.base_url}{path}"
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/price_rules/{price_rule_id}/discount_codes/{discount_code_id}.json"
         query_params = {}
-        response = self._delete(url, data=request_body, params=query_params)
+        response = self._delete(url, json=request_body, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def retrieves_the_location_of_adiscount_code(self, ) -> Any:
+    def retrieves_the_location_of_adiscount_code(self, api_version) -> Any:
         """
         Retrieves the location of a discount code via HTTP response headers.
         
@@ -1443,14 +1592,18 @@ class ShopifyApp(APIApplication):
         Tags:
             retrieve, discount-code, location-header, http-client, api, important
         """
-        path = ""
-        url = f"{self.base_url}{path}"
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/discount_codes/lookup.json"
         query_params = {}
         response = self._get(url, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def creates_adiscount_code_creation_job(self, discount_codes: Annotated[list[Any], ''] = None) -> dict[str, Any]:
+    def creates_adiscount_code_creation_job(self, api_version, price_rule_id, discount_codes: list[Any] | None = None) -> dict[str, Any]:
         """
         Creates an asynchronous batch job to generate discount codes, enqueuing the request for background processing.
         
@@ -1466,18 +1619,20 @@ class ShopifyApp(APIApplication):
         Tags:
             discounts, batch-job, async-job, discount-code-creation, important
         """
-        request_body = {
-            "discount_codes": discount_codes,
-        }
-        request_body = {k: v for k, v in request_body.items() if v is not None}
-        path = ""
-        url = f"{self.base_url}{path}"
+        # Use discount_codes as the request body (assuming it's a list)
+        request_body_payload = discount_codes
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/price_rules/{price_rule_id}/batch.json"
         query_params = {}
-        response = self._post(url, data=request_body, params=query_params)
+        response = self._post(url, json=request_body_payload, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def retrieves_adiscount_code_creation_job(self, ) -> dict[str, Any]:
+    def retrieves_adiscount_code_creation_job(self, api_version, price_rule_id, batch_id) -> dict[str, Any]:
         """
         Retrieves details of a discount code creation job from the API.
         
@@ -1493,14 +1648,18 @@ class ShopifyApp(APIApplication):
         Tags:
             retrieve, discount-code, management, job-status, important
         """
-        path = ""
-        url = f"{self.base_url}{path}"
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/price_rules/{price_rule_id}/batch/{batch_id}.json"
         query_params = {}
         response = self._get(url, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def retrieves_alist_of_discount_codes_for_adiscount_code_creation_job(self, ) -> dict[str, Any]:
+    def retrieves_alist_of_discount_codes_for_adiscount_code_creation_job(self, api_version, price_rule_id, batch_id) -> dict[str, Any]:
         """
         Retrieves a list of discount codes for a discount code creation job.
         
@@ -1516,14 +1675,18 @@ class ShopifyApp(APIApplication):
         Tags:
             retrieves, discounts, discount-codes, important
         """
-        path = ""
-        url = f"{self.base_url}{path}"
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/price_rules/{price_rule_id}/batch/{batch_id}/discount_codes.json"
         query_params = {}
         response = self._get(url, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def retrieves_alist_of_price_rules(self, created_at_max: Annotated[Any, 'Show price rules created before date (format 2017-03-25T16:15:47-04:00). '] = None, created_at_min: Annotated[Any, 'Show price rules created after date (format 2017-03-25T16:15:47-04:00). '] = None, ends_at_max: Annotated[Any, 'Show price rules ending before date (format 2017-03-25T16:15:47-04:00). '] = None, ends_at_min: Annotated[Any, 'Show price rules ending after date (format 2017-03-25T16:15:47-04:00). '] = None, limit: Annotated[Any, 'The maximum number of results to retrieve.(default: 50)(maximum: 250) '] = None, since_id: Annotated[Any, 'Restrict results to after the specified ID. '] = None, starts_at_max: Annotated[Any, 'Show price rules starting before date (format 2017-03-25T16:15:47-04:00). '] = None, starts_at_min: Annotated[Any, 'Show price rules starting after date (format 2017-03-25T16:15:47-04:00). '] = None, times_used: Annotated[Any, 'Show price rules with times used. '] = None, updated_at_max: Annotated[Any, 'Show price rules last updated before date (format 2017-03-25T16:15:47-04:00). '] = None, updated_at_min: Annotated[Any, 'Show price rules last updated after date (format 2017-03-25T16:15:47-04:00). '] = None) -> dict[str, Any]:
+    def retrieves_alist_of_price_rules(self, api_version, limit: str | None = None, since_id: str | None = None, created_at_min: str | None = None, created_at_max: str | None = None, updated_at_min: str | None = None, updated_at_max: str | None = None, starts_at_min: str | None = None, starts_at_max: str | None = None, ends_at_min: str | None = None, ends_at_max: str | None = None, times_used: str | None = None) -> dict[str, Any]:
         """
         Retrieves a list of price rules with optional filters for creation, update, start/end dates, and usage history, following Shopify's pagination guidelines.
         
@@ -1549,27 +1712,18 @@ class ShopifyApp(APIApplication):
         Tags:
             retrieve, list, price-rules, discounts, pagination, shopify-api, management, important
         """
-        path = ""
-        url = f"{self.base_url}{path}"
-        query_params = {
-                "limit": limit,
-                "since_id": since_id,
-                "created_at_min": created_at_min,
-                "created_at_max": created_at_max,
-                "updated_at_min": updated_at_min,
-                "updated_at_max": updated_at_max,
-                "starts_at_min": starts_at_min,
-                "starts_at_max": starts_at_max,
-                "ends_at_min": ends_at_min,
-                "ends_at_max": ends_at_max,
-                "times_used": times_used,
-            }
-        query_params = {k: v for k, v in query_params.items() if v is not None}
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/price_rules.json"
+        query_params = {k: v for k, v in [('limit', limit), ('since_id', since_id), ('created_at_min', created_at_min), ('created_at_max', created_at_max), ('updated_at_min', updated_at_min), ('updated_at_max', updated_at_max), ('starts_at_min', starts_at_min), ('starts_at_max', starts_at_max), ('ends_at_min', ends_at_min), ('ends_at_max', ends_at_max), ('times_used', times_used)] if v is not None}
         response = self._get(url, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def creates_aprice_rule(self, price_rule: Annotated[dict[str, Any], ''] = None) -> dict[str, Any]:
+    def creates_aprice_rule(self, api_version, price_rule: dict[str, Any] | None = None) -> dict[str, Any]:
         """
         Creates a new price rule based on the provided parameters.
         
@@ -1585,18 +1739,23 @@ class ShopifyApp(APIApplication):
         Tags:
             create, price-rule, management, ecommerce, important
         """
-        request_body = {
-            "price_rule": price_rule,
+        # Build the request body from parameters
+        request_body_payload = {
+            'price_rule': price_rule,
         }
-        request_body = {k: v for k, v in request_body.items() if v is not None}
-        path = ""
-        url = f"{self.base_url}{path}"
+        request_body_payload = {k: v for k, v in request_body_payload.items() if v is not None}
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/price_rules.json"
         query_params = {}
-        response = self._post(url, data=request_body, params=query_params)
+        response = self._post(url, json=request_body_payload, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def retrieves_asingle_price_rule(self, ) -> dict[str, Any]:
+    def retrieves_asingle_price_rule(self, api_version, price_rule_id) -> dict[str, Any]:
         """
         Retrieves a single price rule from the server.
         
@@ -1612,14 +1771,18 @@ class ShopifyApp(APIApplication):
         Tags:
             price_rule, management, important
         """
-        path = ""
-        url = f"{self.base_url}{path}"
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/price_rules/{price_rule_id}.json"
         query_params = {}
         response = self._get(url, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def updates_an_existing_aprice_rule(self, price_rule: Annotated[dict[str, Any], ''] = None) -> dict[str, Any]:
+    def updates_an_existing_aprice_rule(self, api_version, price_rule_id, price_rule: dict[str, Any] | None = None) -> dict[str, Any]:
         """
         Updates an existing price rule with new parameters.
         
@@ -1635,18 +1798,23 @@ class ShopifyApp(APIApplication):
         Tags:
             update, pricerule, important, management
         """
-        request_body = {
-            "price_rule": price_rule,
+        # Build the request body from parameters
+        request_body_payload = {
+            'price_rule': price_rule,
         }
-        request_body = {k: v for k, v in request_body.items() if v is not None}
-        path = ""
-        url = f"{self.base_url}{path}"
+        request_body_payload = {k: v for k, v in request_body_payload.items() if v is not None}
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/price_rules/{price_rule_id}.json"
         query_params = {}
-        response = self._put(url, data=request_body, params=query_params)
+        response = self._put(url, json=request_body_payload, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def remove_an_existing_pricerule(self, request_body: Annotated[Any, ''] = None) -> Any:
+    def remove_an_existing_pricerule(self, api_version, price_rule_id, request_body: Any | None = None) -> Any:
         """
         Delete an existing PriceRule using the provided request body to specify which rule to remove.
         
@@ -1662,15 +1830,18 @@ class ShopifyApp(APIApplication):
         Tags:
             discounts, price-rule, delete, management, important
         """
-        request_body = request_body
-        path = ""
-        url = f"{self.base_url}{path}"
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/price_rules/{price_rule_id}.json"
         query_params = {}
-        response = self._delete(url, data=request_body, params=query_params)
+        response = self._delete(url, json=request_body, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def retrieves_acount_of_all_price_rules(self, ) -> dict[str, Any]:
+    def retrieves_acount_of_all_price_rules(self, api_version) -> dict[str, Any]:
         """
         Retrieves a count of all price rules from the API endpoint.
         
@@ -1686,14 +1857,18 @@ class ShopifyApp(APIApplication):
         Tags:
             retrieve, count, discounts, price-rule, important
         """
-        path = ""
-        url = f"{self.base_url}{path}"
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/price_rules/count.json"
         query_params = {}
         response = self._get(url, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def retrieves_alist_of_events(self, created_at_max: Annotated[Any, 'Show events created at or before this date and time. (format: 2014-04-25T16:15:47-04:00) '] = None, created_at_min: Annotated[Any, 'Show events created at or after this date and time. (format: 2014-04-25T16:15:47-04:00) '] = None, fields: Annotated[Any, 'Show only certain fields, specified by a comma-separated list of field names. '] = None, filter: Annotated[Any, 'Show events specified in this filter. '] = None, limit: Annotated[Any, 'The number of results to show.(default: 50)(maximum: 250) '] = None, since_id: Annotated[Any, 'Show only results after the specified ID. '] = None, verb: Annotated[Any, 'Show events of a certain type. '] = None) -> dict[str, Any]:
+    def retrieves_alist_of_events(self, api_version, limit: str | None = None, since_id: str | None = None, created_at_min: str | None = None, created_at_max: str | None = None, filter: str | None = None, verb: str | None = None, fields: str | None = None) -> dict[str, Any]:
         """
         Retrieves a list of events with optional pagination and filtering capabilities.
         
@@ -1715,23 +1890,18 @@ class ShopifyApp(APIApplication):
         Tags:
             events, retrieve, pagination, filtering, management, important
         """
-        path = ""
-        url = f"{self.base_url}{path}"
-        query_params = {
-                "limit": limit,
-                "since_id": since_id,
-                "created_at_min": created_at_min,
-                "created_at_max": created_at_max,
-                "filter": filter,
-                "verb": verb,
-                "fields": fields,
-            }
-        query_params = {k: v for k, v in query_params.items() if v is not None}
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/events.json"
+        query_params = {k: v for k, v in [('limit', limit), ('since_id', since_id), ('created_at_min', created_at_min), ('created_at_max', created_at_max), ('filter', filter), ('verb', verb), ('fields', fields)] if v is not None}
         response = self._get(url, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def retrieves_asingle_event(self, fields: Annotated[Any, 'Show only certain fields, specified by a comma-separated list of field names. '] = None) -> dict[str, Any]:
+    def retrieves_asingle_event(self, api_version, event_id, fields: str | None = None) -> dict[str, Any]:
         """
         Retrieves a single event by its ID, optionally specifying which fields to include.
         
@@ -1747,17 +1917,18 @@ class ShopifyApp(APIApplication):
         Tags:
             event, retrieve, management, important
         """
-        path = ""
-        url = f"{self.base_url}{path}"
-        query_params = {
-                "fields": fields,
-            }
-        query_params = {k: v for k, v in query_params.items() if v is not None}
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/events/{event_id}.json"
+        query_params = {k: v for k, v in [('fields', fields)] if v is not None}
         response = self._get(url, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def retrieves_acount_of_events(self, created_at_max: Annotated[Any, 'Count only events created at or before this date and time. (format: 2014-04-25T16:15:47-04:00) '] = None, created_at_min: Annotated[Any, 'Count only events created at or after this date and time. (format: 2014-04-25T16:15:47-04:00) '] = None) -> dict[str, Any]:
+    def retrieves_acount_of_events(self, api_version, created_at_min: str | None = None, created_at_max: str | None = None) -> dict[str, Any]:
         """
         Retrieves a count of events based on the specified creation time range.
         
@@ -1774,18 +1945,18 @@ class ShopifyApp(APIApplication):
         Tags:
             events, event-counting, important
         """
-        path = ""
-        url = f"{self.base_url}{path}"
-        query_params = {
-                "created_at_min": created_at_min,
-                "created_at_max": created_at_max,
-            }
-        query_params = {k: v for k, v in query_params.items() if v is not None}
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/events/count.json"
+        query_params = {k: v for k, v in [('created_at_min', created_at_min), ('created_at_max', created_at_max)] if v is not None}
         response = self._get(url, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def retrieves_alist_of_webhooks(self, address: Annotated[Any, 'Retrieve webhook subscriptions that send the POST request to this URI. '] = None, created_at_max: Annotated[Any, 'Retrieve webhook subscriptions that were created before a given date and time (format: 2014-04-25T16:15:47-04:00). '] = None, created_at_min: Annotated[Any, 'Retrieve webhook subscriptions that were created after a given date and time (format: 2014-04-25T16:15:47-04:00). '] = None, fields: Annotated[Any, 'Comma-separated list of the properties you want returned for each item in the result list. Use this parameter to restrict the returned list of items to only those properties you specify. '] = None, limit: Annotated[Any, 'Maximum number of webhook subscriptions that should be returned. Setting this parameter outside the maximum range will return an error.(default: 50)(maximum: 250) '] = None, since_id: Annotated[Any, 'Restrict the returned list to webhook subscriptions whose id is greater than the specified since\\_id. '] = None, topic: Annotated[Any, 'Show webhook subscriptions with a given topic. For a list of valid values, refer to the [`topic` property](#topic-property-).> '] = None, updated_at_max: Annotated[Any, 'Retrieve webhooks that were updated after a given date and time (format: 2014-04-25T16:15:47-04:00). '] = None, updated_at_min: Annotated[Any, 'Retrieve webhooks that were updated before a given date and time (format: 2014-04-25T16:15:47-04:00). '] = None) -> dict[str, Any]:
+    def retrieves_alist_of_webhooks(self, api_version, address: str | None = None, created_at_max: str | None = None, created_at_min: str | None = None, fields: str | None = None, limit: str | None = None, since_id: str | None = None, topic: str | None = None, updated_at_min: str | None = None, updated_at_max: str | None = None) -> dict[str, Any]:
         """
         Retrieves a paginated list of webhook subscriptions filtered by specified criteria such as date ranges, address, topic, and ID.
         
@@ -1809,25 +1980,18 @@ class ShopifyApp(APIApplication):
         Tags:
             webhook, retrieve, list, pagination, subscription, management, important
         """
-        path = ""
-        url = f"{self.base_url}{path}"
-        query_params = {
-                "address": address,
-                "created_at_max": created_at_max,
-                "created_at_min": created_at_min,
-                "fields": fields,
-                "limit": limit,
-                "since_id": since_id,
-                "topic": topic,
-                "updated_at_min": updated_at_min,
-                "updated_at_max": updated_at_max,
-            }
-        query_params = {k: v for k, v in query_params.items() if v is not None}
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/webhooks.json"
+        query_params = {k: v for k, v in [('address', address), ('created_at_max', created_at_max), ('created_at_min', created_at_min), ('fields', fields), ('limit', limit), ('since_id', since_id), ('topic', topic), ('updated_at_min', updated_at_min), ('updated_at_max', updated_at_max)] if v is not None}
         response = self._get(url, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def create_anew_webhook(self, webhook: Annotated[dict[str, Any], ''] = None) -> dict[str, Any]:
+    def create_anew_webhook(self, api_version, webhook: dict[str, Any] | None = None) -> dict[str, Any]:
         """
         Creates a new webhook subscription by sending a POST request with a webhook configuration.
         
@@ -1843,18 +2007,23 @@ class ShopifyApp(APIApplication):
         Tags:
             webhook, create, important, management
         """
-        request_body = {
-            "webhook": webhook,
+        # Build the request body from parameters
+        request_body_payload = {
+            'webhook': webhook,
         }
-        request_body = {k: v for k, v in request_body.items() if v is not None}
-        path = ""
-        url = f"{self.base_url}{path}"
+        request_body_payload = {k: v for k, v in request_body_payload.items() if v is not None}
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/webhooks.json"
         query_params = {}
-        response = self._post(url, data=request_body, params=query_params)
+        response = self._post(url, json=request_body_payload, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def receive_acount_of_all_webhooks(self, address: Annotated[Any, 'Retrieve webhook subscriptions that send the POST request to this URI. '] = None, topic: Annotated[Any, 'Show webhook subscriptions with a given topic. For a list of valid values, refer to the [`topic` property](#topic-property-).> '] = None) -> dict[str, Any]:
+    def receive_acount_of_all_webhooks(self, api_version, address: str | None = None, topic: str | None = None) -> dict[str, Any]:
         """
         Retrieves a count of existing webhook subscriptions based on specified filters.
         
@@ -1871,18 +2040,18 @@ class ShopifyApp(APIApplication):
         Tags:
             webhook, count, retrieve, subscriptions, events, management, important
         """
-        path = ""
-        url = f"{self.base_url}{path}"
-        query_params = {
-                "address": address,
-                "topic": topic,
-            }
-        query_params = {k: v for k, v in query_params.items() if v is not None}
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/webhooks/count.json"
+        query_params = {k: v for k, v in [('address', address), ('topic', topic)] if v is not None}
         response = self._get(url, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def receive_asingle_webhook(self, fields: Annotated[Any, 'Comma-separated list of the properties you want returned for each item in the result list. Use this parameter to restrict the returned list of items to only those properties you specify. '] = None) -> dict[str, Any]:
+    def receive_asingle_webhook(self, api_version, webhook_id, fields: str | None = None) -> dict[str, Any]:
         """
         Retrieves a single webhook subscription from the API endpoint.
         
@@ -1898,17 +2067,18 @@ class ShopifyApp(APIApplication):
         Tags:
             webhook, retrieve, api-call, important
         """
-        path = ""
-        url = f"{self.base_url}{path}"
-        query_params = {
-                "fields": fields,
-            }
-        query_params = {k: v for k, v in query_params.items() if v is not None}
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/webhooks/{webhook_id}.json"
+        query_params = {k: v for k, v in [('fields', fields)] if v is not None}
         response = self._get(url, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def modify_an_existing_webhook(self, webhook: Annotated[dict[str, Any], ''] = None) -> dict[str, Any]:
+    def modify_an_existing_webhook(self, api_version, webhook_id, webhook: dict[str, Any] | None = None) -> dict[str, Any]:
         """
         Modify an existing webhook by updating its subscription's topic or address URIs.
         
@@ -1924,18 +2094,23 @@ class ShopifyApp(APIApplication):
         Tags:
             modify, webhook, events, important
         """
-        request_body = {
-            "webhook": webhook,
+        # Build the request body from parameters
+        request_body_payload = {
+            'webhook': webhook,
         }
-        request_body = {k: v for k, v in request_body.items() if v is not None}
-        path = ""
-        url = f"{self.base_url}{path}"
+        request_body_payload = {k: v for k, v in request_body_payload.items() if v is not None}
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/webhooks/{webhook_id}.json"
         query_params = {}
-        response = self._put(url, data=request_body, params=query_params)
+        response = self._put(url, json=request_body_payload, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def remove_an_existing_webhook(self, request_body: Annotated[Any, ''] = None) -> dict[str, Any]:
+    def remove_an_existing_webhook(self, api_version, webhook_id, request_body: Any | None = None) -> dict[str, Any]:
         """
         Deletes an existing webhook subscription by sending a delete request to the API endpoint.
         
@@ -1951,15 +2126,18 @@ class ShopifyApp(APIApplication):
         Tags:
             webhook, events, delete, api, management, important
         """
-        request_body = request_body
-        path = ""
-        url = f"{self.base_url}{path}"
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/webhooks/{webhook_id}.json"
         query_params = {}
-        response = self._delete(url, data=request_body, params=query_params)
+        response = self._delete(url, json=request_body, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def retrieves_alist_of_inventory_items(self, ids: Annotated[Any, 'Show only inventory items specified by a comma-separated list of IDs.(maximum: 100) '] = None, limit: Annotated[Any, 'The maximum number of results to show.(default: 50)(maximum: 250) '] = None) -> dict[str, Any]:
+    def retrieves_alist_of_inventory_items(self, api_version, ids: str | None = None, limit: str | None = None) -> dict[str, Any]:
         """
         Retrieves a list of inventory items based on provided IDs and a specified limit.
         
@@ -1976,18 +2154,18 @@ class ShopifyApp(APIApplication):
         Tags:
             inventory, paginated, important
         """
-        path = ""
-        url = f"{self.base_url}{path}"
-        query_params = {
-                "ids": ids,
-                "limit": limit,
-            }
-        query_params = {k: v for k, v in query_params.items() if v is not None}
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/inventory_items.json"
+        query_params = {k: v for k, v in [('ids', ids), ('limit', limit)] if v is not None}
         response = self._get(url, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def retrieves_asingle_inventory_item_by_id(self, ) -> dict[str, Any]:
+    def retrieves_asingle_inventory_item_by_id(self, api_version, inventory_item_id) -> dict[str, Any]:
         """
         Retrieves a single inventory item by ID from a specified inventory source.
         
@@ -2003,14 +2181,18 @@ class ShopifyApp(APIApplication):
         Tags:
             retrieve, inventory, management, important
         """
-        path = ""
-        url = f"{self.base_url}{path}"
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/inventory_items/{inventory_item_id}.json"
         query_params = {}
         response = self._get(url, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def updates_an_existing_inventory_item(self, inventory_item: Annotated[dict[str, Any], ''] = None) -> dict[str, Any]:
+    def updates_an_existing_inventory_item(self, api_version, inventory_item_id, inventory_item: dict[str, Any] | None = None) -> dict[str, Any]:
         """
         Updates an existing inventory item by sending a PUT request with the provided item details.
         
@@ -2026,18 +2208,23 @@ class ShopifyApp(APIApplication):
         Tags:
             update, inventory, item, http-put, important
         """
-        request_body = {
-            "inventory_item": inventory_item,
+        # Build the request body from parameters
+        request_body_payload = {
+            'inventory_item': inventory_item,
         }
-        request_body = {k: v for k, v in request_body.items() if v is not None}
-        path = ""
-        url = f"{self.base_url}{path}"
+        request_body_payload = {k: v for k, v in request_body_payload.items() if v is not None}
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/inventory_items/{inventory_item_id}.json"
         query_params = {}
-        response = self._put(url, data=request_body, params=query_params)
+        response = self._put(url, json=request_body_payload, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def retrieves_alist_of_inventory_levels(self, inventory_item_ids: Annotated[Any, 'A comma-separated list of inventory item IDs.(maximum: 50) '] = None, limit: Annotated[Any, 'The maximum number of results to show.(default: 50)(maximum: 250) '] = None, location_ids: Annotated[Any, 'A comma-separated list of location IDs. To find the ID of a location, use the [Location resource](/api/reference/location).(maximum: 50) '] = None, updated_at_min: Annotated[Any, 'Show inventory levels updated at or after date (format: 2019-03-19T01:21:44-04:00). '] = None) -> dict[str, Any]:
+    def retrieves_alist_of_inventory_levels(self, api_version, inventory_item_ids: str | None = None, location_ids: str | None = None, limit: str | None = None, updated_at_min: str | None = None) -> dict[str, Any]:
         """
         Retrieves a list of inventory levels based on specified parameters
         
@@ -2056,20 +2243,18 @@ class ShopifyApp(APIApplication):
         Tags:
             inventory, inventory-levels, retrieve, management, important
         """
-        path = ""
-        url = f"{self.base_url}{path}"
-        query_params = {
-                "inventory_item_ids": inventory_item_ids,
-                "location_ids": location_ids,
-                "limit": limit,
-                "updated_at_min": updated_at_min,
-            }
-        query_params = {k: v for k, v in query_params.items() if v is not None}
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/inventory_levels.json"
+        query_params = {k: v for k, v in [('inventory_item_ids', inventory_item_ids), ('location_ids', location_ids), ('limit', limit), ('updated_at_min', updated_at_min)] if v is not None}
         response = self._get(url, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def deletes_an_inventory_level_from_alocation(self, request_body: Annotated[Any, ''] = None) -> Any:
+    def deletes_an_inventory_level_from_alocation(self, api_version, request_body: Any | None = None) -> Any:
         """
         Deletes an inventory level of an inventory item at a specified location.
         
@@ -2085,15 +2270,18 @@ class ShopifyApp(APIApplication):
         Tags:
             delete, inventory, important, location-management
         """
-        request_body = request_body
-        path = ""
-        url = f"{self.base_url}{path}"
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/inventory_levels.json"
         query_params = {}
-        response = self._delete(url, data=request_body, params=query_params)
+        response = self._delete(url, json=request_body, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def adjusts_the_inventory_level_of_an_inventory_item_at_alocation(self, available_adjustment: Annotated[float, ''] = None, inventory_item_id: Annotated[float, ''] = None, location_id: Annotated[float, ''] = None) -> dict[str, Any]:
+    def adjusts_the_inventory_level_of_an_inventory_item_at_alocation(self, api_version, available_adjustment: float | None = None, inventory_item_id: float | None = None, location_id: float | None = None) -> dict[str, Any]:
         """
         Adjusts inventory levels for a specific item at a given location.
         
@@ -2111,20 +2299,25 @@ class ShopifyApp(APIApplication):
         Tags:
             inventory, inventory-level, adjustment, management, important
         """
-        request_body = {
-            "available_adjustment": available_adjustment,
-            "inventory_item_id": inventory_item_id,
-            "location_id": location_id,
+        # Build the request body from parameters
+        request_body_payload = {
+            'available_adjustment': available_adjustment,
+            'inventory_item_id': inventory_item_id,
+            'location_id': location_id,
         }
-        request_body = {k: v for k, v in request_body.items() if v is not None}
-        path = ""
-        url = f"{self.base_url}{path}"
+        request_body_payload = {k: v for k, v in request_body_payload.items() if v is not None}
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/inventory_levels/adjust.json"
         query_params = {}
-        response = self._post(url, data=request_body, params=query_params)
+        response = self._post(url, json=request_body_payload, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def connects_an_inventory_item_to_alocation(self, inventory_item_id: Annotated[float, ''] = None, location_id: Annotated[float, ''] = None) -> dict[str, Any]:
+    def connects_an_inventory_item_to_alocation(self, api_version, inventory_item_id: float | None = None, location_id: float | None = None) -> dict[str, Any]:
         """
         Connects an inventory item to a specific location by creating an inventory level at that location.
         
@@ -2141,19 +2334,24 @@ class ShopifyApp(APIApplication):
         Tags:
             inventory, inventory-level, connect, location, management, important
         """
-        request_body = {
-            "inventory_item_id": inventory_item_id,
-            "location_id": location_id,
+        # Build the request body from parameters
+        request_body_payload = {
+            'inventory_item_id': inventory_item_id,
+            'location_id': location_id,
         }
-        request_body = {k: v for k, v in request_body.items() if v is not None}
-        path = ""
-        url = f"{self.base_url}{path}"
+        request_body_payload = {k: v for k, v in request_body_payload.items() if v is not None}
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/inventory_levels/connect.json"
         query_params = {}
-        response = self._post(url, data=request_body, params=query_params)
+        response = self._post(url, json=request_body_payload, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def sets_the_inventory_level_for_an_inventory_item_at_alocation(self, available: Annotated[float, ''] = None, inventory_item_id: Annotated[float, ''] = None, location_id: Annotated[float, ''] = None) -> dict[str, Any]:
+    def sets_the_inventory_level_for_an_inventory_item_at_alocation(self, api_version, available: float | None = None, inventory_item_id: float | None = None, location_id: float | None = None) -> dict[str, Any]:
         """
         Updates the available inventory quantity for a specific item at a designated location, automatically connecting the location if not already linked.
         
@@ -2171,20 +2369,25 @@ class ShopifyApp(APIApplication):
         Tags:
             inventory, inventory-level, update, management, async_job, important
         """
-        request_body = {
-            "available": available,
-            "inventory_item_id": inventory_item_id,
-            "location_id": location_id,
+        # Build the request body from parameters
+        request_body_payload = {
+            'available': available,
+            'inventory_item_id': inventory_item_id,
+            'location_id': location_id,
         }
-        request_body = {k: v for k, v in request_body.items() if v is not None}
-        path = ""
-        url = f"{self.base_url}{path}"
+        request_body_payload = {k: v for k, v in request_body_payload.items() if v is not None}
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/inventory_levels/set.json"
         query_params = {}
-        response = self._post(url, data=request_body, params=query_params)
+        response = self._post(url, json=request_body_payload, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def retrieves_alist_of_locations(self, ) -> dict[str, Any]:
+    def retrieves_alist_of_locations(self, api_version) -> dict[str, Any]:
         """
         Retrieves a list of locations from the API endpoint.
         
@@ -2200,14 +2403,18 @@ class ShopifyApp(APIApplication):
         Tags:
             retrieve, list, inventory, location-management, api-interaction, important
         """
-        path = ""
-        url = f"{self.base_url}{path}"
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/locations.json"
         query_params = {}
         response = self._get(url, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def retrieves_asingle_location_by_its_id(self, ) -> dict[str, Any]:
+    def retrieves_asingle_location_by_its_id(self, api_version, location_id) -> dict[str, Any]:
         """
         Retrieves a single location by its unique identifier from the inventory system.
         
@@ -2223,14 +2430,18 @@ class ShopifyApp(APIApplication):
         Tags:
             retrieve, location, inventory, important, management
         """
-        path = ""
-        url = f"{self.base_url}{path}"
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/locations/{location_id}.json"
         query_params = {}
         response = self._get(url, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def retrieves_acount_of_locations(self, ) -> dict[str, Any]:
+    def retrieves_acount_of_locations(self, api_version) -> dict[str, Any]:
         """
         Retrieves the count of locations from the API.
         
@@ -2246,14 +2457,18 @@ class ShopifyApp(APIApplication):
         Tags:
             retrieve, inventory, location, count, api, important
         """
-        path = ""
-        url = f"{self.base_url}{path}"
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/locations/count.json"
         query_params = {}
         response = self._get(url, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def retrieves_alist_of_inventory_levels_for_alocation(self, ) -> dict[str, Any]:
+    def retrieves_alist_of_inventory_levels_for_alocation(self, api_version, location_id) -> dict[str, Any]:
         """
         Retrieves a dictionary of inventory levels for a location.
         
@@ -2269,14 +2484,18 @@ class ShopifyApp(APIApplication):
         Tags:
             inventory, location, important
         """
-        path = ""
-        url = f"{self.base_url}{path}"
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/locations/{location_id}/inventory_levels.json"
         query_params = {}
         response = self._get(url, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def retrieves_alist_of_all_marketing_events(self, limit: Annotated[Any, 'The amount of results to return.(default: 50)(maximum: 250) '] = None, offset: Annotated[Any, 'The number of marketing events to skip. '] = None) -> dict[str, Any]:
+    def retrieves_alist_of_all_marketing_events(self, api_version, limit: str | None = None, offset: str | None = None) -> dict[str, Any]:
         """
         Retrieves a list of all marketing events with pagination based on provided limit and offset.
         
@@ -2293,18 +2512,18 @@ class ShopifyApp(APIApplication):
         Tags:
             list, marketing, event, important, api-call, pagination
         """
-        path = ""
-        url = f"{self.base_url}{path}"
-        query_params = {
-                "limit": limit,
-                "offset": offset,
-            }
-        query_params = {k: v for k, v in query_params.items() if v is not None}
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/marketing_events.json"
+        query_params = {k: v for k, v in [('limit', limit), ('offset', offset)] if v is not None}
         response = self._get(url, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def creates_amarketing_event(self, marketing_event: Annotated[dict[str, Any], ''] = None) -> dict[str, Any]:
+    def creates_amarketing_event(self, api_version, marketing_event: dict[str, Any] | None = None) -> dict[str, Any]:
         """
         Creates a marketing event by sending a POST request with the provided marketing event data.
         
@@ -2320,18 +2539,23 @@ class ShopifyApp(APIApplication):
         Tags:
             create, marketing-event, management, important
         """
-        request_body = {
-            "marketing_event": marketing_event,
+        # Build the request body from parameters
+        request_body_payload = {
+            'marketing_event': marketing_event,
         }
-        request_body = {k: v for k, v in request_body.items() if v is not None}
-        path = ""
-        url = f"{self.base_url}{path}"
+        request_body_payload = {k: v for k, v in request_body_payload.items() if v is not None}
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/marketing_events.json"
         query_params = {}
-        response = self._post(url, data=request_body, params=query_params)
+        response = self._post(url, json=request_body_payload, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def retrieves_acount_of_all_marketing_events(self, ) -> dict[str, Any]:
+    def retrieves_acount_of_all_marketing_events(self, api_version) -> dict[str, Any]:
         """
         Retrieves a count of all marketing events.
         
@@ -2347,14 +2571,18 @@ class ShopifyApp(APIApplication):
         Tags:
             retrieve, marketing, event, important
         """
-        path = ""
-        url = f"{self.base_url}{path}"
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/marketing_events/count.json"
         query_params = {}
         response = self._get(url, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def retrieves_asingle_marketing_event(self, ) -> dict[str, Any]:
+    def retrieves_asingle_marketing_event(self, api_version, marketing_event_id) -> dict[str, Any]:
         """
         Retrieves a single marketing event's details from the API endpoint.
         
@@ -2367,14 +2595,18 @@ class ShopifyApp(APIApplication):
         Tags:
             retrieve, marketing-event, api, get, important
         """
-        path = ""
-        url = f"{self.base_url}{path}"
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/marketing_events/{marketing_event_id}.json"
         query_params = {}
         response = self._get(url, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def updates_amarketing_event(self, marketing_event: Annotated[dict[str, Any], ''] = None) -> dict[str, Any]:
+    def updates_amarketing_event(self, api_version, marketing_event_id, marketing_event: dict[str, Any] | None = None) -> dict[str, Any]:
         """
         Updates an existing marketing event by sending the provided data to the API endpoint.
         
@@ -2390,18 +2622,23 @@ class ShopifyApp(APIApplication):
         Tags:
             update, marketing, management, api, important
         """
-        request_body = {
-            "marketing_event": marketing_event,
+        # Build the request body from parameters
+        request_body_payload = {
+            'marketing_event': marketing_event,
         }
-        request_body = {k: v for k, v in request_body.items() if v is not None}
-        path = ""
-        url = f"{self.base_url}{path}"
+        request_body_payload = {k: v for k, v in request_body_payload.items() if v is not None}
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/marketing_events/{marketing_event_id}.json"
         query_params = {}
-        response = self._put(url, data=request_body, params=query_params)
+        response = self._put(url, json=request_body_payload, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def deletes_amarketing_event(self, request_body: Annotated[Any, ''] = None) -> dict[str, Any]:
+    def deletes_amarketing_event(self, api_version, marketing_event_id, request_body: Any | None = None) -> dict[str, Any]:
         """
         Deletes a marketing event by sending a DELETE request to the specified base URL.
         
@@ -2417,15 +2654,18 @@ class ShopifyApp(APIApplication):
         Tags:
             delete, marketing-event, important, management
         """
-        request_body = request_body
-        path = ""
-        url = f"{self.base_url}{path}"
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/marketing_events/{marketing_event_id}.json"
         query_params = {}
-        response = self._delete(url, data=request_body, params=query_params)
+        response = self._delete(url, json=request_body, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def creates_marketing_engagements_on_amarketing_event(self, engagements: Annotated[list[Any], ''] = None) -> dict[str, Any]:
+    def creates_marketing_engagements_on_amarketing_event(self, api_version, marketing_event_id, engagements: list[Any] | None = None) -> dict[str, Any]:
         """
         Creates or updates marketing engagements for a marketing event, with daily aggregation and overwrites for existing entries on the same date.
         
@@ -2441,18 +2681,20 @@ class ShopifyApp(APIApplication):
         Tags:
             create, marketing-engagements, marketing-event, async-job, api, overwrite, important
         """
-        request_body = {
-            "engagements": engagements,
-        }
-        request_body = {k: v for k, v in request_body.items() if v is not None}
-        path = ""
-        url = f"{self.base_url}{path}"
+        # Use engagements as the request body (assuming it's a list)
+        request_body_payload = engagements
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/marketing_events/{marketing_event_id}/engagements.json"
         query_params = {}
-        response = self._post(url, data=request_body, params=query_params)
+        response = self._post(url, json=request_body_payload, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def retrieves_alist_of_metafields_that_belong_to_aresource(self, created_at_max: Annotated[Any, 'Show metafields created before date (format: 2014-04-25T16:15:47-04:00) '] = None, created_at_min: Annotated[Any, 'Show metafields created after date (format: 2014-04-25T16:15:47-04:00) '] = None, fields: Annotated[Any, 'comma-separated list of fields to include in the response '] = None, key: Annotated[Any, 'Show metafields with given key '] = None, limit: Annotated[Any, 'Amount of results(default: 50)(maximum: 250) '] = None, namespace: Annotated[Any, 'Show metafields with given namespace '] = None, since_id: Annotated[Any, 'Restrict results to after the specified ID '] = None, updated_at_max: Annotated[Any, 'Show metafields last updated before date (format: 2014-04-25T16:15:47-04:00) '] = None, updated_at_min: Annotated[Any, 'Show metafields last updated after date (format: 2014-04-25T16:15:47-04:00) '] = None, value_type: Annotated[Any, ''] = None) -> dict[str, Any]:
+    def retrieves_alist_of_metafields_that_belong_to_aresource(self, api_version, limit: str | None = None, since_id: str | None = None, created_at_min: str | None = None, created_at_max: str | None = None, updated_at_min: str | None = None, updated_at_max: str | None = None, namespace: str | None = None, key: str | None = None, value_type: str | None = None, fields: str | None = None) -> dict[str, Any]:
         """
         Retrieves a list of metafields belonging to a resource using pagination via response headers (note: explicit pagination parameters are not supported).
         
@@ -2477,26 +2719,18 @@ class ShopifyApp(APIApplication):
         Tags:
             metafield, list, pagination, api, resource, retrieve, important
         """
-        path = ""
-        url = f"{self.base_url}{path}"
-        query_params = {
-                "limit": limit,
-                "since_id": since_id,
-                "created_at_min": created_at_min,
-                "created_at_max": created_at_max,
-                "updated_at_min": updated_at_min,
-                "updated_at_max": updated_at_max,
-                "namespace": namespace,
-                "key": key,
-                "value_type": value_type,
-                "fields": fields,
-            }
-        query_params = {k: v for k, v in query_params.items() if v is not None}
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/metafields.json"
+        query_params = {k: v for k, v in [('limit', limit), ('since_id', since_id), ('created_at_min', created_at_min), ('created_at_max', created_at_max), ('updated_at_min', updated_at_min), ('updated_at_max', updated_at_max), ('namespace', namespace), ('key', key), ('value_type', value_type), ('fields', fields)] if v is not None}
         response = self._get(url, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def creates_anew_metafield_for_aresource(self, metafield: Annotated[dict[str, Any], ''] = None) -> dict[str, Any]:
+    def creates_anew_metafield_for_aresource(self, api_version, metafield: dict[str, Any] | None = None) -> dict[str, Any]:
         """
         Creates a new metafield for a resource by sending a POST request with the provided metafield details.
         
@@ -2512,18 +2746,23 @@ class ShopifyApp(APIApplication):
         Tags:
             metafield, resource, creates, api, important
         """
-        request_body = {
-            "metafield": metafield,
+        # Build the request body from parameters
+        request_body_payload = {
+            'metafield': metafield,
         }
-        request_body = {k: v for k, v in request_body.items() if v is not None}
-        path = ""
-        url = f"{self.base_url}{path}"
+        request_body_payload = {k: v for k, v in request_body_payload.items() if v is not None}
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/metafields.json"
         query_params = {}
-        response = self._post(url, data=request_body, params=query_params)
+        response = self._post(url, json=request_body_payload, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def retrieves_acount_of_aresource_smetafields(self, ) -> dict[str, Any]:
+    def retrieves_acount_of_aresource_smetafields(self, api_version) -> dict[str, Any]:
         """
         Retrieves the count of a resource's metafields.
         
@@ -2539,14 +2778,18 @@ class ShopifyApp(APIApplication):
         Tags:
             metafield, retrieve, count, api, important
         """
-        path = ""
-        url = f"{self.base_url}{path}"
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/metafields/count.json"
         query_params = {}
         response = self._get(url, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def retrieves_asingle_metafield_from_aresource_by_its_id(self, fields: Annotated[Any, 'Show only certain fields, specified by a comma-separated list of field names. '] = None) -> dict[str, Any]:
+    def retrieves_asingle_metafield_from_aresource_by_its_id(self, api_version, metafield_id, fields: str | None = None) -> dict[str, Any]:
         """
         Retrieves a single metafield from a specified resource by its ID.
         
@@ -2563,17 +2806,18 @@ class ShopifyApp(APIApplication):
         Tags:
             metafield, retrieve, resource, fields-filter, api, important
         """
-        path = ""
-        url = f"{self.base_url}{path}"
-        query_params = {
-                "fields": fields,
-            }
-        query_params = {k: v for k, v in query_params.items() if v is not None}
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/metafields/{metafield_id}.json"
+        query_params = {k: v for k, v in [('fields', fields)] if v is not None}
         response = self._get(url, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def updates_ametafield(self, metafield: Annotated[dict[str, Any], ''] = None) -> dict[str, Any]:
+    def updates_ametafield(self, api_version, metafield_id, metafield: dict[str, Any] | None = None) -> dict[str, Any]:
         """
         Updates a metafield by sending a PUT request with the provided metafield data.
         
@@ -2589,18 +2833,23 @@ class ShopifyApp(APIApplication):
         Tags:
             update, metafield, important, management
         """
-        request_body = {
-            "metafield": metafield,
+        # Build the request body from parameters
+        request_body_payload = {
+            'metafield': metafield,
         }
-        request_body = {k: v for k, v in request_body.items() if v is not None}
-        path = ""
-        url = f"{self.base_url}{path}"
+        request_body_payload = {k: v for k, v in request_body_payload.items() if v is not None}
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/metafields/{metafield_id}.json"
         query_params = {}
-        response = self._put(url, data=request_body, params=query_params)
+        response = self._put(url, json=request_body_payload, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def deletes_ametafield_by_its_id(self, request_body: Annotated[Any, ''] = None) -> dict[str, Any]:
+    def deletes_ametafield_by_its_id(self, api_version, metafield_id, request_body: Any | None = None) -> dict[str, Any]:
         """
         Deletes a metafield by its ID.
         
@@ -2616,15 +2865,18 @@ class ShopifyApp(APIApplication):
         Tags:
             metafield, delete, important
         """
-        request_body = request_body
-        path = ""
-        url = f"{self.base_url}{path}"
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/metafields/{metafield_id}.json"
         query_params = {}
-        response = self._delete(url, data=request_body, params=query_params)
+        response = self._delete(url, json=request_body, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def retrieves_alist_of_all_articles_from_ablog(self, author: Annotated[Any, 'Filter articles by article author. '] = None, created_at_max: Annotated[Any, 'Show articles created before date (format: 2014-04-25T16:15:47-04:00). '] = None, created_at_min: Annotated[Any, 'Show articles created after date (format: 2014-04-25T16:15:47-04:00). '] = None, fields: Annotated[Any, 'Show only certain fields, specified by a comma-separated list of field names. '] = None, handle: Annotated[Any, 'Retrieve an article with a specific handle. '] = None, limit: Annotated[Any, 'The maximum number of results to retrieve.(default: 50)(maximum: 250) '] = None, published_at_max: Annotated[Any, 'Show articles published before date (format: 2014-04-25T16:15:47-04:00). '] = None, published_at_min: Annotated[Any, 'Show articles published after date (format: 2014-04-25T16:15:47-04:00). '] = None, published_status: Annotated[Any, 'Retrieve results based on their published status.(default: any) '] = None, since_id: Annotated[Any, 'Restrict results to after the specified ID. '] = None, tag: Annotated[Any, 'Filter articles with a specific tag. '] = None, updated_at_max: Annotated[Any, 'Show articles last updated before date (format: 2014-04-25T16:15:47-04:00). '] = None, updated_at_min: Annotated[Any, 'Show articles last updated after date (format: 2014-04-25T16:15:47-04:00). '] = None) -> dict[str, Any]:
+    def retrieves_alist_of_all_articles_from_ablog(self, api_version, blog_id, limit: str | None = None, since_id: str | None = None, created_at_min: str | None = None, created_at_max: str | None = None, updated_at_min: str | None = None, updated_at_max: str | None = None, published_at_min: str | None = None, published_at_max: str | None = None, published_status: str | None = None, handle: str | None = None, tag: str | None = None, author: str | None = None, fields: str | None = None) -> dict[str, Any]:
         """
         Retrieve a paginated list of blog articles with filtering options via Shopify's REST Admin API.
         
@@ -2652,29 +2904,18 @@ class ShopifyApp(APIApplication):
         Tags:
             retrieve, list, articles, blog, paginated, rest-api, important
         """
-        path = ""
-        url = f"{self.base_url}{path}"
-        query_params = {
-                "limit": limit,
-                "since_id": since_id,
-                "created_at_min": created_at_min,
-                "created_at_max": created_at_max,
-                "updated_at_min": updated_at_min,
-                "updated_at_max": updated_at_max,
-                "published_at_min": published_at_min,
-                "published_at_max": published_at_max,
-                "published_status": published_status,
-                "handle": handle,
-                "tag": tag,
-                "author": author,
-                "fields": fields,
-            }
-        query_params = {k: v for k, v in query_params.items() if v is not None}
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/blogs/{blog_id}/articles.json"
+        query_params = {k: v for k, v in [('limit', limit), ('since_id', since_id), ('created_at_min', created_at_min), ('created_at_max', created_at_max), ('updated_at_min', updated_at_min), ('updated_at_max', updated_at_max), ('published_at_min', published_at_min), ('published_at_max', published_at_max), ('published_status', published_status), ('handle', handle), ('tag', tag), ('author', author), ('fields', fields)] if v is not None}
         response = self._get(url, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def creates_an_article_for_ablog(self, article: Annotated[dict[str, Any], ''] = None) -> dict[str, Any]:
+    def creates_an_article_for_ablog(self, api_version, blog_id, article: dict[str, Any] | None = None) -> dict[str, Any]:
         """
         Creates an article entry for a blog by sending a POST request to the API endpoint.
         
@@ -2690,18 +2931,23 @@ class ShopifyApp(APIApplication):
         Tags:
             create, article, blog, api, post-request, important
         """
-        request_body = {
-            "article": article,
+        # Build the request body from parameters
+        request_body_payload = {
+            'article': article,
         }
-        request_body = {k: v for k, v in request_body.items() if v is not None}
-        path = ""
-        url = f"{self.base_url}{path}"
+        request_body_payload = {k: v for k, v in request_body_payload.items() if v is not None}
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/blogs/{blog_id}/articles.json"
         query_params = {}
-        response = self._post(url, data=request_body, params=query_params)
+        response = self._post(url, json=request_body_payload, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def retrieves_acount_of_all_articles_from_ablog(self, created_at_max: Annotated[Any, 'Count articles created before date (format: 2014-04-25T16:15:47-04:00). '] = None, created_at_min: Annotated[Any, 'Count articles created after date (format: 2014-04-25T16:15:47-04:00). '] = None, published_at_max: Annotated[Any, 'Count articles published before date (format: 2014-04-25T16:15:47-04:00). '] = None, published_at_min: Annotated[Any, 'Count articles published after date (format: 2014-04-25T16:15:47-04:00). '] = None, published_status: Annotated[Any, 'Count articles with a given published status.(default: any) '] = None, updated_at_max: Annotated[Any, 'Count articles last updated before date (format: 2014-04-25T16:15:47-04:00). '] = None, updated_at_min: Annotated[Any, 'Count articles last updated after date (format: 2014-04-25T16:15:47-04:00). '] = None) -> dict[str, Any]:
+    def retrieves_acount_of_all_articles_from_ablog(self, api_version, blog_id, created_at_min: str | None = None, created_at_max: str | None = None, updated_at_min: str | None = None, updated_at_max: str | None = None, published_at_min: str | None = None, published_at_max: str | None = None, published_status: str | None = None) -> dict[str, Any]:
         """
         Retrieves a count of articles from a blog based on specified creation, publication, and update dates, as well as publication status.
         
@@ -2723,23 +2969,18 @@ class ShopifyApp(APIApplication):
         Tags:
             search, blog, management, article, important
         """
-        path = ""
-        url = f"{self.base_url}{path}"
-        query_params = {
-                "created_at_min": created_at_min,
-                "created_at_max": created_at_max,
-                "updated_at_min": updated_at_min,
-                "updated_at_max": updated_at_max,
-                "published_at_min": published_at_min,
-                "published_at_max": published_at_max,
-                "published_status": published_status,
-            }
-        query_params = {k: v for k, v in query_params.items() if v is not None}
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/blogs/{blog_id}/articles/count.json"
+        query_params = {k: v for k, v in [('created_at_min', created_at_min), ('created_at_max', created_at_max), ('updated_at_min', updated_at_min), ('updated_at_max', updated_at_max), ('published_at_min', published_at_min), ('published_at_max', published_at_max), ('published_status', published_status)] if v is not None}
         response = self._get(url, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def receive_asingle_article(self, fields: Annotated[Any, 'Show only certain fields, specifed by a comma-separated list of field names. '] = None) -> dict[str, Any]:
+    def receive_asingle_article(self, api_version, blog_id, article_id, fields: str | None = None) -> dict[str, Any]:
         """
         Retrieve a single article from an online source.
         
@@ -2755,17 +2996,18 @@ class ShopifyApp(APIApplication):
         Tags:
             receive, article, online-store, important
         """
-        path = ""
-        url = f"{self.base_url}{path}"
-        query_params = {
-                "fields": fields,
-            }
-        query_params = {k: v for k, v in query_params.items() if v is not None}
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/blogs/{blog_id}/articles/{article_id}.json"
+        query_params = {k: v for k, v in [('fields', fields)] if v is not None}
         response = self._get(url, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def updates_an_article(self, article: Annotated[dict[str, Any], ''] = None) -> dict[str, Any]:
+    def updates_an_article(self, api_version, blog_id, article_id, article: dict[str, Any] | None = None) -> dict[str, Any]:
         """
         Updates an article by sending a PUT request with the provided article data.
         
@@ -2781,18 +3023,23 @@ class ShopifyApp(APIApplication):
         Tags:
             update, article, management, important
         """
-        request_body = {
-            "article": article,
+        # Build the request body from parameters
+        request_body_payload = {
+            'article': article,
         }
-        request_body = {k: v for k, v in request_body.items() if v is not None}
-        path = ""
-        url = f"{self.base_url}{path}"
+        request_body_payload = {k: v for k, v in request_body_payload.items() if v is not None}
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/blogs/{blog_id}/articles/{article_id}.json"
         query_params = {}
-        response = self._put(url, data=request_body, params=query_params)
+        response = self._put(url, json=request_body_payload, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def deletes_an_article(self, request_body: Annotated[Any, ''] = None) -> dict[str, Any]:
+    def deletes_an_article(self, api_version, blog_id, article_id, request_body: Any | None = None) -> dict[str, Any]:
         """
         Deletes an article by sending a DELETE request to the specified URL.
         
@@ -2808,15 +3055,18 @@ class ShopifyApp(APIApplication):
         Tags:
             delete, article, important, online-store, management
         """
-        request_body = request_body
-        path = ""
-        url = f"{self.base_url}{path}"
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/blogs/{blog_id}/articles/{article_id}.json"
         query_params = {}
-        response = self._delete(url, data=request_body, params=query_params)
+        response = self._delete(url, json=request_body, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def retrieves_alist_of_all_article_authors(self, ) -> dict[str, Any]:
+    def retrieves_alist_of_all_article_authors(self, api_version) -> dict[str, Any]:
         """
         Retrieves a list of all article authors.
         
@@ -2832,14 +3082,18 @@ class ShopifyApp(APIApplication):
         Tags:
             list, article, important, management
         """
-        path = ""
-        url = f"{self.base_url}{path}"
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/articles/authors.json"
         query_params = {}
         response = self._get(url, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def retrieves_alist_of_all_article_tags(self, limit: Annotated[Any, 'The maximum number of tags to retrieve. '] = None, popular: Annotated[Any, 'A flag for ordering retrieved tags. If present in the request, then the results will be ordered by popularity, starting with the most popular tag. '] = None) -> dict[str, Any]:
+    def retrieves_alist_of_all_article_tags(self, api_version, limit: str | None = None, popular: str | None = None) -> dict[str, Any]:
         """
         Retrieves a list of all article tags with optional filtering by popularity and limit.
         
@@ -2856,18 +3110,18 @@ class ShopifyApp(APIApplication):
         Tags:
             scrape, list, article, important
         """
-        path = ""
-        url = f"{self.base_url}{path}"
-        query_params = {
-                "limit": limit,
-                "popular": popular,
-            }
-        query_params = {k: v for k, v in query_params.items() if v is not None}
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/articles/tags.json"
+        query_params = {k: v for k, v in [('limit', limit), ('popular', popular)] if v is not None}
         response = self._get(url, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def retrieves_alist_of_assets_for_atheme(self, fields: Annotated[Any, 'Show only certain fields, specified by a comma-separated list of field names '] = None) -> dict[str, Any]:
+    def retrieves_alist_of_assets_for_atheme(self, api_version, theme_id, fields: str | None = None) -> dict[str, Any]:
         """
         Retrieves a list of assets for a theme, returning metadata about each asset.
         
@@ -2883,17 +3137,18 @@ class ShopifyApp(APIApplication):
         Tags:
             list, asset, metadata, theme, important
         """
-        path = ""
-        url = f"{self.base_url}{path}"
-        query_params = {
-                "fields": fields,
-            }
-        query_params = {k: v for k, v in query_params.items() if v is not None}
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/themes/{theme_id}/assets.json"
+        query_params = {k: v for k, v in [('fields', fields)] if v is not None}
         response = self._get(url, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def creates_or_updates_an_asset_for_atheme(self, asset: Annotated[dict[str, Any], ''] = None) -> dict[str, Any]:
+    def creates_or_updates_an_asset_for_atheme(self, api_version, theme_id, asset: dict[str, Any] | None = None) -> dict[str, Any]:
         """
         Creates or updates an asset for a theme by sending a PUT request.
         
@@ -2909,18 +3164,23 @@ class ShopifyApp(APIApplication):
         Tags:
             asset, management, update, create, api-call, important
         """
-        request_body = {
-            "asset": asset,
+        # Build the request body from parameters
+        request_body_payload = {
+            'asset': asset,
         }
-        request_body = {k: v for k, v in request_body.items() if v is not None}
-        path = ""
-        url = f"{self.base_url}{path}"
+        request_body_payload = {k: v for k, v in request_body_payload.items() if v is not None}
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/themes/{theme_id}/assets.json"
         query_params = {}
-        response = self._put(url, data=request_body, params=query_params)
+        response = self._put(url, json=request_body_payload, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def deletes_an_asset_from_atheme(self, request_body: Annotated[Any, ''] = None) -> dict[str, Any]:
+    def deletes_an_asset_from_atheme(self, api_version, theme_id, request_body: Any | None = None) -> dict[str, Any]:
         """
         Deletes an asset from a theme by sending a DELETE request to a specified URL.
         
@@ -2936,15 +3196,18 @@ class ShopifyApp(APIApplication):
         Tags:
             delete, asset, theme, important
         """
-        request_body = request_body
-        path = ""
-        url = f"{self.base_url}{path}"
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/themes/{theme_id}/assets.json"
         query_params = {}
-        response = self._delete(url, data=request_body, params=query_params)
+        response = self._delete(url, json=request_body, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def retrieve_alist_of_all_blogs(self, fields: Annotated[Any, 'comma-separated list of fields to include in the response '] = None, handle: Annotated[Any, 'Filter by blog handle '] = None, limit: Annotated[Any, 'The maximum number of results to retrieve.(default: 50)(maximum: 250) '] = None, since_id: Annotated[Any, 'Restrict results to after the specified ID '] = None) -> dict[str, Any]:
+    def retrieve_alist_of_all_blogs(self, api_version, limit: str | None = None, since_id: str | None = None, handle: str | None = None, fields: str | None = None) -> dict[str, Any]:
         """
         Retrieve a paginated list of blogs from the Shopify REST Admin API, supporting field selection, filtering, and result limiting.
         
@@ -2963,20 +3226,18 @@ class ShopifyApp(APIApplication):
         Tags:
             retrieve, list, blogs, shopify, rest-api, pagination, important
         """
-        path = ""
-        url = f"{self.base_url}{path}"
-        query_params = {
-                "limit": limit,
-                "since_id": since_id,
-                "handle": handle,
-                "fields": fields,
-            }
-        query_params = {k: v for k, v in query_params.items() if v is not None}
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/blogs.json"
+        query_params = {k: v for k, v in [('limit', limit), ('since_id', since_id), ('handle', handle), ('fields', fields)] if v is not None}
         response = self._get(url, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def create_anew_blog(self, blog: Annotated[dict[str, Any], ''] = None) -> dict[str, Any]:
+    def create_anew_blog(self, api_version, blog: dict[str, Any] | None = None) -> dict[str, Any]:
         """
         Create a new blog with the provided blog details.
         
@@ -2992,18 +3253,23 @@ class ShopifyApp(APIApplication):
         Tags:
             create, blog, management, api, important, async_job
         """
-        request_body = {
-            "blog": blog,
+        # Build the request body from parameters
+        request_body_payload = {
+            'blog': blog,
         }
-        request_body = {k: v for k, v in request_body.items() if v is not None}
-        path = ""
-        url = f"{self.base_url}{path}"
+        request_body_payload = {k: v for k, v in request_body_payload.items() if v is not None}
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/blogs.json"
         query_params = {}
-        response = self._post(url, data=request_body, params=query_params)
+        response = self._post(url, json=request_body_payload, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def receive_acount_of_all_blogs(self, ) -> dict[str, Any]:
+    def receive_acount_of_all_blogs(self, api_version) -> dict[str, Any]:
         """
         Retrieve a count of all blogs from a remote endpoint.
         
@@ -3019,14 +3285,18 @@ class ShopifyApp(APIApplication):
         Tags:
             get, blog, data, management, important
         """
-        path = ""
-        url = f"{self.base_url}{path}"
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/blogs/count.json"
         query_params = {}
         response = self._get(url, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def receive_asingle_blog(self, fields: Annotated[Any, 'comma-separated list of fields to include in the response '] = None) -> dict[str, Any]:
+    def receive_asingle_blog(self, api_version, blog_id, fields: str | None = None) -> dict[str, Any]:
         """
         Retrieves a single Blog by its ID, optionally specifying fields to include in the response.
         
@@ -3042,17 +3312,18 @@ class ShopifyApp(APIApplication):
         Tags:
             fetch, blog, online-store, important
         """
-        path = ""
-        url = f"{self.base_url}{path}"
-        query_params = {
-                "fields": fields,
-            }
-        query_params = {k: v for k, v in query_params.items() if v is not None}
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/blogs/{blog_id}.json"
+        query_params = {k: v for k, v in [('fields', fields)] if v is not None}
         response = self._get(url, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def modify_an_existing_blog(self, blog: Annotated[dict[str, Any], ''] = None) -> dict[str, Any]:
+    def modify_an_existing_blog(self, api_version, blog_id, blog: dict[str, Any] | None = None) -> dict[str, Any]:
         """
         Modifies an existing blog by sending a PUT request with the provided blog data.
         
@@ -3068,18 +3339,23 @@ class ShopifyApp(APIApplication):
         Tags:
             modify, update, blog, management, important
         """
-        request_body = {
-            "blog": blog,
+        # Build the request body from parameters
+        request_body_payload = {
+            'blog': blog,
         }
-        request_body = {k: v for k, v in request_body.items() if v is not None}
-        path = ""
-        url = f"{self.base_url}{path}"
+        request_body_payload = {k: v for k, v in request_body_payload.items() if v is not None}
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/blogs/{blog_id}.json"
         query_params = {}
-        response = self._put(url, data=request_body, params=query_params)
+        response = self._put(url, json=request_body_payload, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def remove_an_existing_blog(self, request_body: Annotated[Any, ''] = None) -> dict[str, Any]:
+    def remove_an_existing_blog(self, api_version, blog_id, request_body: Any | None = None) -> dict[str, Any]:
         """
         Removes an existing blog by sending a delete request to the specified endpoint.
         
@@ -3095,15 +3371,18 @@ class ShopifyApp(APIApplication):
         Tags:
             remove, delete, blog, online-store, important
         """
-        request_body = request_body
-        path = ""
-        url = f"{self.base_url}{path}"
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/blogs/{blog_id}.json"
         query_params = {}
-        response = self._delete(url, data=request_body, params=query_params)
+        response = self._delete(url, json=request_body, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def retrieves_alist_of_comments(self, created_at_max: Annotated[Any, 'Show comments created before date (format: 2014-04-25T16:15:47-04:00). '] = None, created_at_min: Annotated[Any, 'Show comments created after date (format: 2014-04-25T16:15:47-04:00). '] = None, fields: Annotated[Any, 'Show only certain fields, specified by a comma-separated list of field names. '] = None, limit: Annotated[Any, 'The maximum number of results to retrieve.(default: 50)(maximum: 250) '] = None, published_at_max: Annotated[Any, 'Show comments published before date (format: 2014-04-25T16:15:47-04:00). '] = None, published_at_min: Annotated[Any, 'Show comments published after date (format: 2014-04-25T16:15:47-04:00). '] = None, published_status: Annotated[Any, 'Filter results by their published status.(default: any) '] = None, since_id: Annotated[Any, 'Restrict results to after the specified ID. '] = None, status: Annotated[Any, 'Filter results by their status. '] = None, updated_at_max: Annotated[Any, 'Show comments last updated before date (format: 2014-04-25T16:15:47-04:00). '] = None, updated_at_min: Annotated[Any, 'Show comments last updated after date (format: 2014-04-25T16:15:47-04:00). '] = None) -> dict[str, Any]:
+    def retrieves_alist_of_comments(self, api_version, limit: str | None = None, since_id: str | None = None, created_at_min: str | None = None, created_at_max: str | None = None, updated_at_min: str | None = None, updated_at_max: str | None = None, published_at_min: str | None = None, published_at_max: str | None = None, fields: str | None = None, published_status: str | None = None, status: str | None = None) -> dict[str, Any]:
         """
         Retrieves a list of comments based on various filter criteria, including creation and publication dates, fields, limit, and status.
         
@@ -3129,27 +3408,18 @@ class ShopifyApp(APIApplication):
         Tags:
             retrieve, comments, filter, pagination, api, important
         """
-        path = ""
-        url = f"{self.base_url}{path}"
-        query_params = {
-                "limit": limit,
-                "since_id": since_id,
-                "created_at_min": created_at_min,
-                "created_at_max": created_at_max,
-                "updated_at_min": updated_at_min,
-                "updated_at_max": updated_at_max,
-                "published_at_min": published_at_min,
-                "published_at_max": published_at_max,
-                "fields": fields,
-                "published_status": published_status,
-                "status": status,
-            }
-        query_params = {k: v for k, v in query_params.items() if v is not None}
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/comments.json"
+        query_params = {k: v for k, v in [('limit', limit), ('since_id', since_id), ('created_at_min', created_at_min), ('created_at_max', created_at_max), ('updated_at_min', updated_at_min), ('updated_at_max', updated_at_max), ('published_at_min', published_at_min), ('published_at_max', published_at_max), ('fields', fields), ('published_status', published_status), ('status', status)] if v is not None}
         response = self._get(url, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def creates_acomment_for_an_article(self, comment: Annotated[dict[str, Any], ''] = None) -> dict[str, Any]:
+    def creates_acomment_for_an_article(self, api_version, comment: dict[str, Any] | None = None) -> dict[str, Any]:
         """
         Creates a new comment for an article by sending a POST request to the API endpoint.
         
@@ -3165,18 +3435,23 @@ class ShopifyApp(APIApplication):
         Tags:
             comment, create, api-integration, important
         """
-        request_body = {
-            "comment": comment,
+        # Build the request body from parameters
+        request_body_payload = {
+            'comment': comment,
         }
-        request_body = {k: v for k, v in request_body.items() if v is not None}
-        path = ""
-        url = f"{self.base_url}{path}"
+        request_body_payload = {k: v for k, v in request_body_payload.items() if v is not None}
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/comments.json"
         query_params = {}
-        response = self._post(url, data=request_body, params=query_params)
+        response = self._post(url, json=request_body_payload, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def retrieves_acount_of_comments(self, created_at_max: Annotated[Any, 'Count comments created before date (format: 2014-04-25T16:15:47-04:00). '] = None, created_at_min: Annotated[Any, 'Count comments created after date (format: 2014-04-25T16:15:47-04:00). '] = None, published_at_max: Annotated[Any, 'Count comments published before date (format: 2014-04-25T16:15:47-04:00). '] = None, published_at_min: Annotated[Any, 'Count comments published after date (format: 2014-04-25T16:15:47-04:00). '] = None, published_status: Annotated[Any, 'Retrieve a count of comments with a given published status.(default: any) '] = None, status: Annotated[Any, 'Retrieve a count of comments with a given status. '] = None, updated_at_max: Annotated[Any, 'Count comments last updated before date (format: 2014-04-25T16:15:47-04:00). '] = None, updated_at_min: Annotated[Any, 'Count comments last updated after date (format: 2014-04-25T16:15:47-04:00). '] = None) -> dict[str, Any]:
+    def retrieves_acount_of_comments(self, api_version, created_at_min: str | None = None, created_at_max: str | None = None, updated_at_min: str | None = None, updated_at_max: str | None = None, published_at_min: str | None = None, published_at_max: str | None = None, published_status: str | None = None, status: str | None = None) -> dict[str, Any]:
         """
         Retrieves the count of comments filtered by creation, update, publication dates, and statuses.
         
@@ -3199,24 +3474,18 @@ class ShopifyApp(APIApplication):
         Tags:
             comment, count, retrieve, filter, api, important
         """
-        path = ""
-        url = f"{self.base_url}{path}"
-        query_params = {
-                "created_at_min": created_at_min,
-                "created_at_max": created_at_max,
-                "updated_at_min": updated_at_min,
-                "updated_at_max": updated_at_max,
-                "published_at_min": published_at_min,
-                "published_at_max": published_at_max,
-                "published_status": published_status,
-                "status": status,
-            }
-        query_params = {k: v for k, v in query_params.items() if v is not None}
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/comments/count.json"
+        query_params = {k: v for k, v in [('created_at_min', created_at_min), ('created_at_max', created_at_max), ('updated_at_min', updated_at_min), ('updated_at_max', updated_at_max), ('published_at_min', published_at_min), ('published_at_max', published_at_max), ('published_status', published_status), ('status', status)] if v is not None}
         response = self._get(url, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def retrieves_asingle_comment_by_its_id(self, fields: Annotated[Any, 'Show only certain fields, specified by a comma-separated list of field names. '] = None) -> dict[str, Any]:
+    def retrieves_asingle_comment_by_its_id(self, api_version, comment_id, fields: str | None = None) -> dict[str, Any]:
         """
         Retrieves a single comment by its unique identifier from the API.
         
@@ -3232,17 +3501,18 @@ class ShopifyApp(APIApplication):
         Tags:
             retrieve, comment, fetch, api, management, important
         """
-        path = ""
-        url = f"{self.base_url}{path}"
-        query_params = {
-                "fields": fields,
-            }
-        query_params = {k: v for k, v in query_params.items() if v is not None}
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/comments/{comment_id}.json"
+        query_params = {k: v for k, v in [('fields', fields)] if v is not None}
         response = self._get(url, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def updates_acomment_of_an_article(self, comment: Annotated[dict[str, Any], ''] = None) -> dict[str, Any]:
+    def updates_acomment_of_an_article(self, api_version, comment_id, comment: dict[str, Any] | None = None) -> dict[str, Any]:
         """
         Updates a specific comment on an article by sending a PUT request with the updated comment details.
         
@@ -3258,18 +3528,23 @@ class ShopifyApp(APIApplication):
         Tags:
             update, comment, article, online-store, important
         """
-        request_body = {
-            "comment": comment,
+        # Build the request body from parameters
+        request_body_payload = {
+            'comment': comment,
         }
-        request_body = {k: v for k, v in request_body.items() if v is not None}
-        path = ""
-        url = f"{self.base_url}{path}"
+        request_body_payload = {k: v for k, v in request_body_payload.items() if v is not None}
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/comments/{comment_id}.json"
         query_params = {}
-        response = self._put(url, data=request_body, params=query_params)
+        response = self._put(url, json=request_body_payload, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def marks_acomment_as_spam(self, request_body: Annotated[Any, ''] = None) -> dict[str, Any]:
+    def marks_acomment_as_spam(self, api_version, comment_id, request_body: Any | None = None) -> dict[str, Any]:
         """
         Marks a comment as spam by sending a POST request to the target URL with provided request body
         
@@ -3285,15 +3560,18 @@ class ShopifyApp(APIApplication):
         Tags:
             comment, spam, moderation, post, api, online-store, important
         """
-        request_body = request_body
-        path = ""
-        url = f"{self.base_url}{path}"
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/comments/{comment_id}/spam.json"
         query_params = {}
-        response = self._post(url, data=request_body, params=query_params)
+        response = self._post(url, json=request_body, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def marks_acomment_as_not_spam(self, request_body: Annotated[Any, ''] = None) -> dict[str, Any]:
+    def marks_acomment_as_not_spam(self, api_version, comment_id, request_body: Any | None = None) -> dict[str, Any]:
         """
         Marks a comment as not spam by sending a POST request to the server.
         
@@ -3309,15 +3587,18 @@ class ShopifyApp(APIApplication):
         Tags:
             mark, comment, spam, important, management
         """
-        request_body = request_body
-        path = ""
-        url = f"{self.base_url}{path}"
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/comments/{comment_id}/not_spam.json"
         query_params = {}
-        response = self._post(url, data=request_body, params=query_params)
+        response = self._post(url, json=request_body, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def approves_acomment(self, request_body: Annotated[Any, ''] = None) -> dict[str, Any]:
+    def approves_acomment(self, api_version, comment_id, request_body: Any | None = None) -> dict[str, Any]:
         """
         Approves a comment in an online store system.
         
@@ -3333,15 +3614,18 @@ class ShopifyApp(APIApplication):
         Tags:
             approve, async_job, ai, management, important, comments
         """
-        request_body = request_body
-        path = ""
-        url = f"{self.base_url}{path}"
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/comments/{comment_id}/approve.json"
         query_params = {}
-        response = self._post(url, data=request_body, params=query_params)
+        response = self._post(url, json=request_body, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def removes_acomment(self, request_body: Annotated[Any, ''] = None) -> dict[str, Any]:
+    def removes_acomment(self, api_version, comment_id, request_body: Any | None = None) -> dict[str, Any]:
         """
         Removes a comment by sending a POST request to the specified URL endpoint.
         
@@ -3357,15 +3641,18 @@ class ShopifyApp(APIApplication):
         Tags:
             remove, comment, post, api-call, management, important
         """
-        request_body = request_body
-        path = ""
-        url = f"{self.base_url}{path}"
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/comments/{comment_id}/remove.json"
         query_params = {}
-        response = self._post(url, data=request_body, params=query_params)
+        response = self._post(url, json=request_body, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def restores_apreviously_removed_comment(self, request_body: Annotated[Any, ''] = None) -> dict[str, Any]:
+    def restores_apreviously_removed_comment(self, api_version, comment_id, request_body: Any | None = None) -> dict[str, Any]:
         """
         Restores a previously removed comment.
         
@@ -3381,15 +3668,18 @@ class ShopifyApp(APIApplication):
         Tags:
             restore, comment, management, online-store, important
         """
-        request_body = request_body
-        path = ""
-        url = f"{self.base_url}{path}"
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/comments/{comment_id}/restore.json"
         query_params = {}
-        response = self._post(url, data=request_body, params=query_params)
+        response = self._post(url, json=request_body, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def retrieves_alist_of_pages(self, created_at_max: Annotated[Any, 'Show pages created before date (format: 2008-12-31). '] = None, created_at_min: Annotated[Any, 'Show pages created after date (format: 2008-12-31). '] = None, fields: Annotated[Any, 'Show only certain fields, specified by a comma-separated list of field names. '] = None, handle: Annotated[Any, 'Retrieve a page with a given handle. '] = None, limit: Annotated[Any, 'The maximum number of results to show.(default: 50)(maximum: 250) '] = None, published_at_max: Annotated[Any, 'Show pages published before date (format: 2014-04-25T16:15:47-04:00). '] = None, published_at_min: Annotated[Any, 'Show pages published after date (format: 2014-04-25T16:15:47-04:00). '] = None, published_status: Annotated[Any, 'Restrict results to pages with a given published status:(default: any) '] = None, since_id: Annotated[Any, 'Restrict results to after the specified ID. '] = None, title: Annotated[Any, 'Retrieve pages with a given title. '] = None, updated_at_max: Annotated[Any, 'Show pages last updated before date (format: 2008-12-31). '] = None, updated_at_min: Annotated[Any, 'Show pages last updated after date (format: 2008-12-31). '] = None) -> dict[str, Any]:
+    def retrieves_alist_of_pages(self, api_version, limit: str | None = None, since_id: str | None = None, title: str | None = None, handle: str | None = None, created_at_min: str | None = None, created_at_max: str | None = None, updated_at_min: str | None = None, updated_at_max: str | None = None, published_at_min: str | None = None, published_at_max: str | None = None, fields: str | None = None, published_status: str | None = None) -> dict[str, Any]:
         """
         Retrieves a list of pages from the Shopify REST Admin API with pagination support via response header links.
         
@@ -3416,28 +3706,18 @@ class ShopifyApp(APIApplication):
         Tags:
             retrieve, list, pages, shopify, rest-api, pagination, important, online-store
         """
-        path = ""
-        url = f"{self.base_url}{path}"
-        query_params = {
-                "limit": limit,
-                "since_id": since_id,
-                "title": title,
-                "handle": handle,
-                "created_at_min": created_at_min,
-                "created_at_max": created_at_max,
-                "updated_at_min": updated_at_min,
-                "updated_at_max": updated_at_max,
-                "published_at_min": published_at_min,
-                "published_at_max": published_at_max,
-                "fields": fields,
-                "published_status": published_status,
-            }
-        query_params = {k: v for k, v in query_params.items() if v is not None}
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/pages.json"
+        query_params = {k: v for k, v in [('limit', limit), ('since_id', since_id), ('title', title), ('handle', handle), ('created_at_min', created_at_min), ('created_at_max', created_at_max), ('updated_at_min', updated_at_min), ('updated_at_max', updated_at_max), ('published_at_min', published_at_min), ('published_at_max', published_at_max), ('fields', fields), ('published_status', published_status)] if v is not None}
         response = self._get(url, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def create_anew_page(self, page: Annotated[dict[str, Any], ''] = None) -> dict[str, Any]:
+    def create_anew_page(self, api_version, page: dict[str, Any] | None = None) -> dict[str, Any]:
         """
         Creates a new page with the provided data.
         
@@ -3453,18 +3733,23 @@ class ShopifyApp(APIApplication):
         Tags:
             create, page, important, management
         """
-        request_body = {
-            "page": page,
+        # Build the request body from parameters
+        request_body_payload = {
+            'page': page,
         }
-        request_body = {k: v for k, v in request_body.items() if v is not None}
-        path = ""
-        url = f"{self.base_url}{path}"
+        request_body_payload = {k: v for k, v in request_body_payload.items() if v is not None}
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/pages.json"
         query_params = {}
-        response = self._post(url, data=request_body, params=query_params)
+        response = self._post(url, json=request_body_payload, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def retrieves_apage_count(self, created_at_max: Annotated[Any, 'Count pages created before date (format: 2008-12-31). '] = None, created_at_min: Annotated[Any, 'Count pages created after date (format: 2008-12-31). '] = None, published_at_max: Annotated[Any, 'Show pages published before date (format: 2014-04-25T16:15:47-04:00). '] = None, published_at_min: Annotated[Any, 'Show pages published after date (format: 2014-04-25T16:15:47-04:00). '] = None, published_status: Annotated[Any, 'Count pages with a given published status:(default: any) '] = None, title: Annotated[Any, 'Count pages with a given title. '] = None, updated_at_max: Annotated[Any, 'Count pages last updated before date (format: 2008-12-31). '] = None, updated_at_min: Annotated[Any, 'Count pages last updated after date (format: 2008-12-31). '] = None) -> dict[str, Any]:
+    def retrieves_apage_count(self, api_version, title: str | None = None, created_at_min: str | None = None, created_at_max: str | None = None, updated_at_min: str | None = None, updated_at_max: str | None = None, published_at_min: str | None = None, published_at_max: str | None = None, published_status: str | None = None) -> dict[str, Any]:
         """
         Retrieves a page count based on specified filters like creation, publication, and update dates, page title, and publication status.
         
@@ -3487,24 +3772,18 @@ class ShopifyApp(APIApplication):
         Tags:
             search, list, important, page-management
         """
-        path = ""
-        url = f"{self.base_url}{path}"
-        query_params = {
-                "title": title,
-                "created_at_min": created_at_min,
-                "created_at_max": created_at_max,
-                "updated_at_min": updated_at_min,
-                "updated_at_max": updated_at_max,
-                "published_at_min": published_at_min,
-                "published_at_max": published_at_max,
-                "published_status": published_status,
-            }
-        query_params = {k: v for k, v in query_params.items() if v is not None}
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/pages/count.json"
+        query_params = {k: v for k, v in [('title', title), ('created_at_min', created_at_min), ('created_at_max', created_at_max), ('updated_at_min', updated_at_min), ('updated_at_max', updated_at_max), ('published_at_min', published_at_min), ('published_at_max', published_at_max), ('published_status', published_status)] if v is not None}
         response = self._get(url, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def retrieves_asingle_page_by_its_id(self, fields: Annotated[Any, 'Show only certain fields, specified by a comma-separated list of field names. '] = None) -> dict[str, Any]:
+    def retrieves_asingle_page_by_its_id(self, api_version, page_id, fields: str | None = None) -> dict[str, Any]:
         """
         Retrieves a single page by its ID, optionally selecting specific fields.
         
@@ -3520,17 +3799,18 @@ class ShopifyApp(APIApplication):
         Tags:
             page, retrieve, important, online-store
         """
-        path = ""
-        url = f"{self.base_url}{path}"
-        query_params = {
-                "fields": fields,
-            }
-        query_params = {k: v for k, v in query_params.items() if v is not None}
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/pages/{page_id}.json"
+        query_params = {k: v for k, v in [('fields', fields)] if v is not None}
         response = self._get(url, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def updates_apage(self, page: Annotated[dict[str, Any], ''] = None) -> dict[str, Any]:
+    def updates_apage(self, api_version, page_id, page: dict[str, Any] | None = None) -> dict[str, Any]:
         """
         Updates a specific page with the provided data.
         
@@ -3546,18 +3826,23 @@ class ShopifyApp(APIApplication):
         Tags:
             update, page-management, important
         """
-        request_body = {
-            "page": page,
+        # Build the request body from parameters
+        request_body_payload = {
+            'page': page,
         }
-        request_body = {k: v for k, v in request_body.items() if v is not None}
-        path = ""
-        url = f"{self.base_url}{path}"
+        request_body_payload = {k: v for k, v in request_body_payload.items() if v is not None}
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/pages/{page_id}.json"
         query_params = {}
-        response = self._put(url, data=request_body, params=query_params)
+        response = self._put(url, json=request_body_payload, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def deletes_apage(self, request_body: Annotated[Any, ''] = None) -> dict[str, Any]:
+    def deletes_apage(self, api_version, page_id, request_body: Any | None = None) -> dict[str, Any]:
         """
         Deletes a page based on the provided request body.
         
@@ -3573,15 +3858,18 @@ class ShopifyApp(APIApplication):
         Tags:
             delete, page, management, online-store, important
         """
-        request_body = request_body
-        path = ""
-        url = f"{self.base_url}{path}"
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/pages/{page_id}.json"
         query_params = {}
-        response = self._delete(url, data=request_body, params=query_params)
+        response = self._delete(url, json=request_body, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def retrieves_alist_of_url_redirects(self, fields: Annotated[Any, 'Show only certain fields, specified by a comma-separated list of field names. '] = None, limit: Annotated[Any, 'The maximum number of results to show.(default: 50)(maximum: 250) '] = None, path: Annotated[Any, 'Show redirects with a given path. '] = None, since_id: Annotated[Any, 'Restrict results to after the specified ID. '] = None, target: Annotated[Any, 'Show redirects with a given target. '] = None) -> dict[str, Any]:
+    def retrieves_alist_of_url_redirects(self, api_version, limit: str | None = None, since_id: str | None = None, path: str | None = None, target: str | None = None, fields: str | None = None) -> dict[str, Any]:
         """
         Retrieves a list of URL redirects with optional filtering parameters. Results are paginated through response headers (page parameters are not supported).
         
@@ -3601,21 +3889,18 @@ class ShopifyApp(APIApplication):
         Tags:
             retrieve, list, redirects, pagination, api, store-management, important
         """
-        path = ""
-        url = f"{self.base_url}{path}"
-        query_params = {
-                "limit": limit,
-                "since_id": since_id,
-                "path": path,
-                "target": target,
-                "fields": fields,
-            }
-        query_params = {k: v for k, v in query_params.items() if v is not None}
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/redirects.json"
+        query_params = {k: v for k, v in [('limit', limit), ('since_id', since_id), ('path', path), ('target', target), ('fields', fields)] if v is not None}
         response = self._get(url, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def creates_aredirect(self, redirect: Annotated[dict[str, Any], ''] = None) -> dict[str, Any]:
+    def creates_aredirect(self, api_version, redirect: dict[str, Any] | None = None) -> dict[str, Any]:
         """
         Creates a redirect by sending a POST request to the server with the redirect details.
         
@@ -3631,18 +3916,23 @@ class ShopifyApp(APIApplication):
         Tags:
             create, redirect, post, important, management, storage
         """
-        request_body = {
-            "redirect": redirect,
+        # Build the request body from parameters
+        request_body_payload = {
+            'redirect': redirect,
         }
-        request_body = {k: v for k, v in request_body.items() if v is not None}
-        path = ""
-        url = f"{self.base_url}{path}"
+        request_body_payload = {k: v for k, v in request_body_payload.items() if v is not None}
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/redirects.json"
         query_params = {}
-        response = self._post(url, data=request_body, params=query_params)
+        response = self._post(url, json=request_body_payload, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def retrieves_acount_of_url_redirects(self, path: Annotated[Any, 'Count redirects with given path. '] = None, target: Annotated[Any, 'Count redirects with given target. '] = None) -> dict[str, Any]:
+    def retrieves_acount_of_url_redirects(self, api_version, path: str | None = None, target: str | None = None) -> dict[str, Any]:
         """
         Retrieves a count of URL redirects matching specified path and/or target parameters.
         
@@ -3659,18 +3949,18 @@ class ShopifyApp(APIApplication):
         Tags:
             redirect, count, api, management, important
         """
-        path = ""
-        url = f"{self.base_url}{path}"
-        query_params = {
-                "path": path,
-                "target": target,
-            }
-        query_params = {k: v for k, v in query_params.items() if v is not None}
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/redirects/count.json"
+        query_params = {k: v for k, v in [('path', path), ('target', target)] if v is not None}
         response = self._get(url, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def retrieves_asingle_redirect(self, fields: Annotated[Any, 'Show only certain fields, specified by a comma-separated list of field names. '] = None) -> dict[str, Any]:
+    def retrieves_asingle_redirect(self, api_version, redirect_id, fields: str | None = None) -> dict[str, Any]:
         """
         Retrieves details of a single redirect entry from the API.
         
@@ -3686,17 +3976,18 @@ class ShopifyApp(APIApplication):
         Tags:
             retrieve, redirect, api, online-store, important
         """
-        path = ""
-        url = f"{self.base_url}{path}"
-        query_params = {
-                "fields": fields,
-            }
-        query_params = {k: v for k, v in query_params.items() if v is not None}
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/redirects/{redirect_id}.json"
+        query_params = {k: v for k, v in [('fields', fields)] if v is not None}
         response = self._get(url, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def updates_an_existing_redirect(self, redirect: Annotated[dict[str, Any], ''] = None) -> dict[str, Any]:
+    def updates_an_existing_redirect(self, api_version, redirect_id, redirect: dict[str, Any] | None = None) -> dict[str, Any]:
         """
         Updates an existing redirect by sending a PUT request with the specified redirect details.
         
@@ -3712,18 +4003,23 @@ class ShopifyApp(APIApplication):
         Tags:
             update, redirect, http-put, important
         """
-        request_body = {
-            "redirect": redirect,
+        # Build the request body from parameters
+        request_body_payload = {
+            'redirect': redirect,
         }
-        request_body = {k: v for k, v in request_body.items() if v is not None}
-        path = ""
-        url = f"{self.base_url}{path}"
+        request_body_payload = {k: v for k, v in request_body_payload.items() if v is not None}
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/redirects/{redirect_id}.json"
         query_params = {}
-        response = self._put(url, data=request_body, params=query_params)
+        response = self._put(url, json=request_body_payload, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def deletes_aredirect(self, request_body: Annotated[Any, ''] = None) -> dict[str, Any]:
+    def deletes_aredirect(self, api_version, redirect_id, request_body: Any | None = None) -> dict[str, Any]:
         """
         Deletes a redirect from the system using provided request data.
         
@@ -3739,15 +4035,18 @@ class ShopifyApp(APIApplication):
         Tags:
             delete, redirect, management, important
         """
-        request_body = request_body
-        path = ""
-        url = f"{self.base_url}{path}"
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/redirects/{redirect_id}.json"
         query_params = {}
-        response = self._delete(url, data=request_body, params=query_params)
+        response = self._delete(url, json=request_body, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def retrieves_alist_of_all_script_tags(self, created_at_max: Annotated[Any, 'Show script tags created before this date. (format: 2014-04-25T16:15:47-04:00) '] = None, created_at_min: Annotated[Any, 'Show script tags created after this date. (format: 2014-04-25T16:15:47-04:00) '] = None, fields: Annotated[Any, 'A comma-separated list of fields to include in the response. '] = None, limit: Annotated[Any, 'The number of results to return.(default: 50)(maximum: 250) '] = None, since_id: Annotated[Any, 'Restrict results to after the specified ID. '] = None, src: Annotated[Any, 'Show script tags with this URL. '] = None, updated_at_max: Annotated[Any, 'Show script tags last updated before this date. (format: 2014-04-25T16:15:47-04:00) '] = None, updated_at_min: Annotated[Any, 'Show script tags last updated after this date. (format: 2014-04-25T16:15:47-04:00) '] = None) -> dict[str, Any]:
+    def retrieves_alist_of_all_script_tags(self, api_version, limit: str | None = None, since_id: str | None = None, created_at_min: str | None = None, created_at_max: str | None = None, updated_at_min: str | None = None, updated_at_max: str | None = None, src: str | None = None, fields: str | None = None) -> dict[str, Any]:
         """
         Retrieves a list of all script tags with optional filters such as creation date, update date, and source URL.
         
@@ -3770,24 +4069,18 @@ class ShopifyApp(APIApplication):
         Tags:
             list, script-tag, ecommerce, important
         """
-        path = ""
-        url = f"{self.base_url}{path}"
-        query_params = {
-                "limit": limit,
-                "since_id": since_id,
-                "created_at_min": created_at_min,
-                "created_at_max": created_at_max,
-                "updated_at_min": updated_at_min,
-                "updated_at_max": updated_at_max,
-                "src": src,
-                "fields": fields,
-            }
-        query_params = {k: v for k, v in query_params.items() if v is not None}
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/script_tags.json"
+        query_params = {k: v for k, v in [('limit', limit), ('since_id', since_id), ('created_at_min', created_at_min), ('created_at_max', created_at_max), ('updated_at_min', updated_at_min), ('updated_at_max', updated_at_max), ('src', src), ('fields', fields)] if v is not None}
         response = self._get(url, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def creates_anew_script_tag(self, script_tag: Annotated[dict[str, Any], ''] = None) -> dict[str, Any]:
+    def creates_anew_script_tag(self, api_version, script_tag: dict[str, Any] | None = None) -> dict[str, Any]:
         """
         Creates a new script tag resource by making a POST request to the API endpoint.
         
@@ -3803,18 +4096,23 @@ class ShopifyApp(APIApplication):
         Tags:
             script, create, api, online-store, management, important
         """
-        request_body = {
-            "script_tag": script_tag,
+        # Build the request body from parameters
+        request_body_payload = {
+            'script_tag': script_tag,
         }
-        request_body = {k: v for k, v in request_body.items() if v is not None}
-        path = ""
-        url = f"{self.base_url}{path}"
+        request_body_payload = {k: v for k, v in request_body_payload.items() if v is not None}
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/script_tags.json"
         query_params = {}
-        response = self._post(url, data=request_body, params=query_params)
+        response = self._post(url, json=request_body_payload, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def retrieves_acount_of_all_script_tags(self, src: Annotated[Any, 'Count only script tags with a given URL. '] = None) -> dict[str, Any]:
+    def retrieves_acount_of_all_script_tags(self, api_version, src: str | None = None) -> dict[str, Any]:
         """
         Retrieves a count of script tags from an online store, optionally filtered by source URL.
         
@@ -3830,17 +4128,18 @@ class ShopifyApp(APIApplication):
         Tags:
             count, script-tag, online-store, management, important
         """
-        path = ""
-        url = f"{self.base_url}{path}"
-        query_params = {
-                "src": src,
-            }
-        query_params = {k: v for k, v in query_params.items() if v is not None}
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/script_tags/count.json"
+        query_params = {k: v for k, v in [('src', src)] if v is not None}
         response = self._get(url, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def retrieves_asingle_script_tag(self, fields: Annotated[Any, 'A comma-separated list of fields to include in the response. '] = None) -> dict[str, Any]:
+    def retrieves_asingle_script_tag(self, api_version, script_tag_id, fields: str | None = None) -> dict[str, Any]:
         """
         Retrieves a single script tag from the online store with specified response fields.
         
@@ -3856,17 +4155,18 @@ class ShopifyApp(APIApplication):
         Tags:
             script-tag-retrieval, online-store, api-integration, important
         """
-        path = ""
-        url = f"{self.base_url}{path}"
-        query_params = {
-                "fields": fields,
-            }
-        query_params = {k: v for k, v in query_params.items() if v is not None}
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/script_tags/{script_tag_id}.json"
+        query_params = {k: v for k, v in [('fields', fields)] if v is not None}
         response = self._get(url, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def updates_ascript_tag(self, script_tag: Annotated[dict[str, Any], ''] = None) -> dict[str, Any]:
+    def updates_ascript_tag(self, api_version, script_tag_id, script_tag: dict[str, Any] | None = None) -> dict[str, Any]:
         """
         Updates a script tag in an online store by sending a PUT request with the provided script tag details.
         
@@ -3882,18 +4182,23 @@ class ShopifyApp(APIApplication):
         Tags:
             update, script-tag, online-store, important
         """
-        request_body = {
-            "script_tag": script_tag,
+        # Build the request body from parameters
+        request_body_payload = {
+            'script_tag': script_tag,
         }
-        request_body = {k: v for k, v in request_body.items() if v is not None}
-        path = ""
-        url = f"{self.base_url}{path}"
+        request_body_payload = {k: v for k, v in request_body_payload.items() if v is not None}
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/script_tags/{script_tag_id}.json"
         query_params = {}
-        response = self._put(url, data=request_body, params=query_params)
+        response = self._put(url, json=request_body_payload, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def deletes_ascript_tag(self, request_body: Annotated[Any, ''] = None) -> dict[str, Any]:
+    def deletes_ascript_tag(self, api_version, script_tag_id, request_body: Any | None = None) -> dict[str, Any]:
         """
         Deletes a script tag from the system.
         
@@ -3909,15 +4214,18 @@ class ShopifyApp(APIApplication):
         Tags:
             delete, scripttag, management, important
         """
-        request_body = request_body
-        path = ""
-        url = f"{self.base_url}{path}"
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/script_tags/{script_tag_id}.json"
         query_params = {}
-        response = self._delete(url, data=request_body, params=query_params)
+        response = self._delete(url, json=request_body, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def retrieves_alist_of_themes(self, fields: Annotated[Any, 'Show only certain fields, specified by a comma-separated list of field names. '] = None) -> dict[str, Any]:
+    def retrieves_alist_of_themes(self, api_version, fields: str | None = None) -> dict[str, Any]:
         """
         Retrieves a list of themes from the online store with optional field filtering.
         
@@ -3933,17 +4241,18 @@ class ShopifyApp(APIApplication):
         Tags:
             online-store, theme, retrieve, list, important
         """
-        path = ""
-        url = f"{self.base_url}{path}"
-        query_params = {
-                "fields": fields,
-            }
-        query_params = {k: v for k, v in query_params.items() if v is not None}
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/themes.json"
+        query_params = {k: v for k, v in [('fields', fields)] if v is not None}
         response = self._get(url, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def creates_atheme(self, theme: Annotated[dict[str, Any], ''] = None) -> dict[str, Any]:
+    def creates_atheme(self, api_version, theme: dict[str, Any] | None = None) -> dict[str, Any]:
         """
         Creates a theme for an online store using a provided configuration. The theme is created as unpublished by default unless explicitly specified as 'main' in the theme data.
         
@@ -3959,18 +4268,23 @@ class ShopifyApp(APIApplication):
         Tags:
             create, theme, online-store, async-job, important
         """
-        request_body = {
-            "theme": theme,
+        # Build the request body from parameters
+        request_body_payload = {
+            'theme': theme,
         }
-        request_body = {k: v for k, v in request_body.items() if v is not None}
-        path = ""
-        url = f"{self.base_url}{path}"
+        request_body_payload = {k: v for k, v in request_body_payload.items() if v is not None}
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/themes.json"
         query_params = {}
-        response = self._post(url, data=request_body, params=query_params)
+        response = self._post(url, json=request_body_payload, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def retrieves_asingle_theme(self, fields: Annotated[Any, 'Show only certain fields, specified by a comma-separated list of field names. '] = None) -> dict[str, Any]:
+    def retrieves_asingle_theme(self, api_version, theme_id, fields: str | None = None) -> dict[str, Any]:
         """
         Retrieves a single theme from the server.
         
@@ -3986,17 +4300,18 @@ class ShopifyApp(APIApplication):
         Tags:
             retrieve, theme, management, important
         """
-        path = ""
-        url = f"{self.base_url}{path}"
-        query_params = {
-                "fields": fields,
-            }
-        query_params = {k: v for k, v in query_params.items() if v is not None}
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/themes/{theme_id}.json"
+        query_params = {k: v for k, v in [('fields', fields)] if v is not None}
         response = self._get(url, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def modify_an_existing_theme(self, theme: Annotated[dict[str, Any], ''] = None) -> dict[str, Any]:
+    def modify_an_existing_theme(self, api_version, theme_id, theme: dict[str, Any] | None = None) -> dict[str, Any]:
         """
         Updates an existing theme by sending a modified theme configuration to the API.
         
@@ -4012,18 +4327,23 @@ class ShopifyApp(APIApplication):
         Tags:
             modify, theme, update, important
         """
-        request_body = {
-            "theme": theme,
+        # Build the request body from parameters
+        request_body_payload = {
+            'theme': theme,
         }
-        request_body = {k: v for k, v in request_body.items() if v is not None}
-        path = ""
-        url = f"{self.base_url}{path}"
+        request_body_payload = {k: v for k, v in request_body_payload.items() if v is not None}
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/themes/{theme_id}.json"
         query_params = {}
-        response = self._put(url, data=request_body, params=query_params)
+        response = self._put(url, json=request_body_payload, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def remove_an_existing_theme(self, request_body: Annotated[Any, ''] = None) -> dict[str, Any]:
+    def remove_an_existing_theme(self, api_version, theme_id, request_body: Any | None = None) -> dict[str, Any]:
         """
         Remove an existing theme by deleting it from the specified system.
         
@@ -4039,15 +4359,18 @@ class ShopifyApp(APIApplication):
         Tags:
             delete, theme-management, online-store, http-delete, important
         """
-        request_body = request_body
-        path = ""
-        url = f"{self.base_url}{path}"
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/themes/{theme_id}.json"
         query_params = {}
-        response = self._delete(url, data=request_body, params=query_params)
+        response = self._delete(url, json=request_body, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def retrieves_acount_of_checkouts(self, created_at_max: Annotated[Any, 'Count checkouts created before the specified date. (format: 2014-04-25T16:15:47-04:00) '] = None, created_at_min: Annotated[Any, 'Count checkouts created after the specified date. (format: 2014-04-25T16:15:47-04:00) '] = None, since_id: Annotated[Any, 'Restrict results to after the specified ID. '] = None, status: Annotated[Any, 'Count checkouts with a given status.(default: open) '] = None, updated_at_max: Annotated[Any, 'Count checkouts last updated before the specified date. (format: 2014-04-25T16:15:47-04:00) '] = None, updated_at_min: Annotated[Any, 'Count checkouts last updated after the specified date. (format: 2014-04-25T16:15:47-04:00) '] = None) -> dict[str, Any]:
+    def retrieves_acount_of_checkouts(self, api_version, since_id: str | None = None, created_at_min: str | None = None, created_at_max: str | None = None, updated_at_min: str | None = None, updated_at_max: str | None = None, status: str | None = None) -> dict[str, Any]:
         """
         Retrieves a count of checkouts based on specified filters like creation date, status, and update date.
         
@@ -4068,22 +4391,18 @@ class ShopifyApp(APIApplication):
         Tags:
             checkouts, count, filter, management, important
         """
-        path = ""
-        url = f"{self.base_url}{path}"
-        query_params = {
-                "since_id": since_id,
-                "created_at_min": created_at_min,
-                "created_at_max": created_at_max,
-                "updated_at_min": updated_at_min,
-                "updated_at_max": updated_at_max,
-                "status": status,
-            }
-        query_params = {k: v for k, v in query_params.items() if v is not None}
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/checkouts/count.json"
+        query_params = {k: v for k, v in [('since_id', since_id), ('created_at_min', created_at_min), ('created_at_max', created_at_max), ('updated_at_min', updated_at_min), ('updated_at_max', updated_at_max), ('status', status)] if v is not None}
         response = self._get(url, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def retrieves_alist_of_abandoned_checkouts(self, created_at_max: Annotated[Any, 'Show checkouts created before the specified date. (format: 2014-04-25T16:15:47-04:00) '] = None, created_at_min: Annotated[Any, 'Show checkouts created after the specified date. (format: 2014-04-25T16:15:47-04:00) '] = None, limit: Annotated[Any, 'The maximum number of results to show.(default: 50)(maximum: 250) '] = None, since_id: Annotated[Any, 'Restrict results to after the specified ID. '] = None, status: Annotated[Any, 'Show only checkouts with a given status.(default: open) '] = None, updated_at_max: Annotated[Any, 'Show checkouts last updated before the specified date. (format: 2014-04-25T16:15:47-04:00) '] = None, updated_at_min: Annotated[Any, 'Show checkouts last updated after the specified date. (format: 2014-04-25T16:15:47-04:00) '] = None) -> dict[str, Any]:
+    def retrieves_alist_of_abandoned_checkouts(self, api_version, limit: str | None = None, since_id: str | None = None, created_at_min: str | None = None, created_at_max: str | None = None, updated_at_min: str | None = None, updated_at_max: str | None = None, status: str | None = None) -> dict[str, Any]:
         """
         Retrieves a paginated list of abandoned checkouts with optional filtering based on creation/update timestamps, status, and ID ranges.
         
@@ -4105,23 +4424,18 @@ class ShopifyApp(APIApplication):
         Tags:
             retrieve, list, abandoned-checkouts, orders, pagination, important
         """
-        path = ""
-        url = f"{self.base_url}{path}"
-        query_params = {
-                "limit": limit,
-                "since_id": since_id,
-                "created_at_min": created_at_min,
-                "created_at_max": created_at_max,
-                "updated_at_min": updated_at_min,
-                "updated_at_max": updated_at_max,
-                "status": status,
-            }
-        query_params = {k: v for k, v in query_params.items() if v is not None}
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/checkouts.json"
+        query_params = {k: v for k, v in [('limit', limit), ('since_id', since_id), ('created_at_min', created_at_min), ('created_at_max', created_at_max), ('updated_at_min', updated_at_min), ('updated_at_max', updated_at_max), ('status', status)] if v is not None}
         response = self._get(url, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def creates_acheckout(self, checkout: Annotated[dict[str, Any], ''] = None) -> dict[str, Any]:
+    def creates_acheckout(self, api_version, checkout: dict[str, Any] | None = None) -> dict[str, Any]:
         """
         Creates a checkout object via API request with the specified parameters.
         
@@ -4137,18 +4451,23 @@ class ShopifyApp(APIApplication):
         Tags:
             create, checkout, api, sales-channels, management, important
         """
-        request_body = {
-            "checkout": checkout,
+        # Build the request body from parameters
+        request_body_payload = {
+            'checkout': checkout,
         }
-        request_body = {k: v for k, v in request_body.items() if v is not None}
-        path = ""
-        url = f"{self.base_url}{path}"
+        request_body_payload = {k: v for k, v in request_body_payload.items() if v is not None}
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/checkouts.json"
         query_params = {}
-        response = self._post(url, data=request_body, params=query_params)
+        response = self._post(url, json=request_body_payload, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def retrieves_alist_of_draft_orders(self, fields: Annotated[Any, 'A comma-separated list of fields to include in the response '] = None, ids: Annotated[Any, 'Filter by list of IDs '] = None, limit: Annotated[Any, 'Amount of results(default: 50)(maximum: 250) '] = None, since_id: Annotated[Any, 'Restrict results to after the specified ID '] = None, status: Annotated[Any, ''] = None, updated_at_max: Annotated[Any, 'Show orders last updated before date (format: 2014-04-25T16:15:47-04:00) '] = None, updated_at_min: Annotated[Any, 'Show orders last updated after date (format: 2014-04-25T16:15:47-04:00) '] = None) -> dict[str, Any]:
+    def retrieves_alist_of_draft_orders(self, api_version, fields: str | None = None, limit: str | None = None, since_id: str | None = None, updated_at_min: str | None = None, updated_at_max: str | None = None, ids: str | None = None, status: str | None = None) -> dict[str, Any]:
         """
         Retrieves paginated draft orders from the REST Admin API with optional filtering parameters.
         
@@ -4170,23 +4489,18 @@ class ShopifyApp(APIApplication):
         Tags:
             retrieve, list, draft-orders, pagination, api-call, important
         """
-        path = ""
-        url = f"{self.base_url}{path}"
-        query_params = {
-                "fields": fields,
-                "limit": limit,
-                "since_id": since_id,
-                "updated_at_min": updated_at_min,
-                "updated_at_max": updated_at_max,
-                "ids": ids,
-                "status": status,
-            }
-        query_params = {k: v for k, v in query_params.items() if v is not None}
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/draft_orders.json"
+        query_params = {k: v for k, v in [('fields', fields), ('limit', limit), ('since_id', since_id), ('updated_at_min', updated_at_min), ('updated_at_max', updated_at_max), ('ids', ids), ('status', status)] if v is not None}
         response = self._get(url, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def create_anew_draftorder(self, draft_order: Annotated[dict[str, Any], ''] = None) -> dict[str, Any]:
+    def create_anew_draftorder(self, api_version, draft_order: dict[str, Any] | None = None) -> dict[str, Any]:
         """
         Creates a new draft order in Shopify with product variant line items, custom line items, and discount configurations, supporting asynchronous calculation workflows.
         
@@ -4202,18 +4516,23 @@ class ShopifyApp(APIApplication):
         Tags:
             draft-order, shopify, ecommerce, async-job, order-management, important
         """
-        request_body = {
-            "draft_order": draft_order,
+        # Build the request body from parameters
+        request_body_payload = {
+            'draft_order': draft_order,
         }
-        request_body = {k: v for k, v in request_body.items() if v is not None}
-        path = ""
-        url = f"{self.base_url}{path}"
+        request_body_payload = {k: v for k, v in request_body_payload.items() if v is not None}
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/draft_orders.json"
         query_params = {}
-        response = self._post(url, data=request_body, params=query_params)
+        response = self._post(url, json=request_body_payload, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def receive_asingle_draftorder(self, fields: Annotated[Any, 'A comma-separated list of fields to include in the response '] = None) -> dict[str, Any]:
+    def receive_asingle_draftorder(self, api_version, draft_order_id, fields: str | None = None) -> dict[str, Any]:
         """
         Retrieves a single DraftOrder based on the specified criteria.
         
@@ -4229,17 +4548,18 @@ class ShopifyApp(APIApplication):
         Tags:
             receive, draft, order, management, important
         """
-        path = ""
-        url = f"{self.base_url}{path}"
-        query_params = {
-                "fields": fields,
-            }
-        query_params = {k: v for k, v in query_params.items() if v is not None}
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/draft_orders/{draft_order_id}.json"
+        query_params = {k: v for k, v in [('fields', fields)] if v is not None}
         response = self._get(url, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def modify_an_existing_draftorder(self, draft_order: Annotated[dict[str, Any], ''] = None) -> dict[str, Any]:
+    def modify_an_existing_draftorder(self, api_version, draft_order_id, draft_order: dict[str, Any] | None = None) -> dict[str, Any]:
         """
         Modifies an existing draft order by updating its details via REST API request.
         
@@ -4255,18 +4575,23 @@ class ShopifyApp(APIApplication):
         Tags:
             draft-order, modify, orders, management, important
         """
-        request_body = {
-            "draft_order": draft_order,
+        # Build the request body from parameters
+        request_body_payload = {
+            'draft_order': draft_order,
         }
-        request_body = {k: v for k, v in request_body.items() if v is not None}
-        path = ""
-        url = f"{self.base_url}{path}"
+        request_body_payload = {k: v for k, v in request_body_payload.items() if v is not None}
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/draft_orders/{draft_order_id}.json"
         query_params = {}
-        response = self._put(url, data=request_body, params=query_params)
+        response = self._put(url, json=request_body_payload, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def remove_an_existing_draftorder(self, request_body: Annotated[Any, ''] = None) -> dict[str, Any]:
+    def remove_an_existing_draftorder(self, api_version, draft_order_id, request_body: Any | None = None) -> dict[str, Any]:
         """
         Removes an existing DraftOrder by sending a DELETE request to the specified URL.
         
@@ -4282,15 +4607,18 @@ class ShopifyApp(APIApplication):
         Tags:
             remove, draftorder, orders, delete, important
         """
-        request_body = request_body
-        path = ""
-        url = f"{self.base_url}{path}"
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/draft_orders/{draft_order_id}.json"
         query_params = {}
-        response = self._delete(url, data=request_body, params=query_params)
+        response = self._delete(url, json=request_body, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def receive_acount_of_all_draftorders(self, since_id: Annotated[Any, 'Count draft orders after the specified ID. '] = None, status: Annotated[Any, 'Count draft orders that have a given status.(default: open) '] = None, updated_at_max: Annotated[Any, 'Count draft orders last updated before the specified date (format: 2014-04-25T16:15:47-04:00). '] = None, updated_at_min: Annotated[Any, 'Count draft orders last updated after the specified date (format: 2014-04-25T16:15:47-04:00). '] = None) -> dict[str, Any]:
+    def receive_acount_of_all_draftorders(self, api_version, since_id: str | None = None, status: str | None = None, updated_at_max: str | None = None, updated_at_min: str | None = None) -> dict[str, Any]:
         """
         Retrieve the count of draft orders based on optional filtering criteria.
         
@@ -4309,20 +4637,18 @@ class ShopifyApp(APIApplication):
         Tags:
             count, draft-orders, filter, orders, management, important
         """
-        path = ""
-        url = f"{self.base_url}{path}"
-        query_params = {
-                "since_id": since_id,
-                "status": status,
-                "updated_at_max": updated_at_max,
-                "updated_at_min": updated_at_min,
-            }
-        query_params = {k: v for k, v in query_params.items() if v is not None}
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/draft_orders/count.json"
+        query_params = {k: v for k, v in [('since_id', since_id), ('status', status), ('updated_at_max', updated_at_max), ('updated_at_min', updated_at_min)] if v is not None}
         response = self._get(url, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def send_an_invoice(self, draft_order_invoice: Annotated[dict[str, Any], ''] = None) -> dict[str, Any]:
+    def send_an_invoice(self, api_version, draft_order_id, draft_order_invoice: dict[str, Any] | None = None) -> dict[str, Any]:
         """
         Sends an invoice for a draft order via email with customizable recipient, sender, and message details.
         
@@ -4338,18 +4664,23 @@ class ShopifyApp(APIApplication):
         Tags:
             orders, invoice, email, send, management, important
         """
-        request_body = {
-            "draft_order_invoice": draft_order_invoice,
+        # Build the request body from parameters
+        request_body_payload = {
+            'draft_order_invoice': draft_order_invoice,
         }
-        request_body = {k: v for k, v in request_body.items() if v is not None}
-        path = ""
-        url = f"{self.base_url}{path}"
+        request_body_payload = {k: v for k, v in request_body_payload.items() if v is not None}
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/draft_orders/{draft_order_id}/send_invoice.json"
         query_params = {}
-        response = self._post(url, data=request_body, params=query_params)
+        response = self._post(url, json=request_body_payload, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def complete_adraft_order(self, request_body: Annotated[Any, ''] = None) -> dict[str, Any]:
+    def complete_adraft_order(self, api_version, draft_order_id, request_body: Any | None = None) -> dict[str, Any]:
         """
         Completes a draft order by transitioning it to a regular order, supporting flows like external payment acceptance or sending invoices.
         
@@ -4365,15 +4696,18 @@ class ShopifyApp(APIApplication):
         Tags:
             orders, draft-order, complete, shopify, important
         """
-        request_body = request_body
-        path = ""
-        url = f"{self.base_url}{path}"
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/draft_orders/{draft_order_id}/complete.json"
         query_params = {}
-        response = self._put(url, data=request_body, params=query_params)
+        response = self._put(url, json=request_body, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def retrieves_alist_of_all_order_risks_for_an_order(self, ) -> dict[str, Any]:
+    def retrieves_alist_of_all_order_risks_for_an_order(self, api_version, order_id) -> dict[str, Any]:
         """
         Retrieves a list of all order risks for an order.
         
@@ -4389,14 +4723,18 @@ class ShopifyApp(APIApplication):
         Tags:
             order-risk, orders, management, important
         """
-        path = ""
-        url = f"{self.base_url}{path}"
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/orders/{order_id}/risks.json"
         query_params = {}
         response = self._get(url, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def creates_an_order_risk_for_an_order(self, risk: Annotated[dict[str, Any], ''] = None) -> dict[str, Any]:
+    def creates_an_order_risk_for_an_order(self, api_version, order_id, risk: dict[str, Any] | None = None) -> dict[str, Any]:
         """
         Creates an order risk for an order by sending a POST request with the provided risk details.
         
@@ -4412,18 +4750,23 @@ class ShopifyApp(APIApplication):
         Tags:
             create, order-risk, orders, management, important
         """
-        request_body = {
-            "risk": risk,
+        # Build the request body from parameters
+        request_body_payload = {
+            'risk': risk,
         }
-        request_body = {k: v for k, v in request_body.items() if v is not None}
-        path = ""
-        url = f"{self.base_url}{path}"
+        request_body_payload = {k: v for k, v in request_body_payload.items() if v is not None}
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/orders/{order_id}/risks.json"
         query_params = {}
-        response = self._post(url, data=request_body, params=query_params)
+        response = self._post(url, json=request_body_payload, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def retrieves_asingle_order_risk_by_its_id(self, ) -> dict[str, Any]:
+    def retrieves_asingle_order_risk_by_its_id(self, api_version, order_id, risk_id) -> dict[str, Any]:
         """
         Retrieves a single order risk by its ID.
         
@@ -4440,14 +4783,18 @@ class ShopifyApp(APIApplication):
         Tags:
             retrieves, order_risk, management, important
         """
-        path = ""
-        url = f"{self.base_url}{path}"
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/orders/{order_id}/risks/{risk_id}.json"
         query_params = {}
         response = self._get(url, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def updates_an_order_risk(self, risk: Annotated[dict[str, Any], ''] = None) -> dict[str, Any]:
+    def updates_an_order_risk(self, api_version, order_id, risk_id, risk: dict[str, Any] | None = None) -> dict[str, Any]:
         """
         Updates an order risk by sending a risk update request to the API.
         
@@ -4463,18 +4810,23 @@ class ShopifyApp(APIApplication):
         Tags:
             update, orders, risk, management, api, important
         """
-        request_body = {
-            "risk": risk,
+        # Build the request body from parameters
+        request_body_payload = {
+            'risk': risk,
         }
-        request_body = {k: v for k, v in request_body.items() if v is not None}
-        path = ""
-        url = f"{self.base_url}{path}"
+        request_body_payload = {k: v for k, v in request_body_payload.items() if v is not None}
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/orders/{order_id}/risks/{risk_id}.json"
         query_params = {}
-        response = self._put(url, data=request_body, params=query_params)
+        response = self._put(url, json=request_body_payload, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def deletes_an_order_risk_for_an_order(self, request_body: Annotated[Any, ''] = None) -> dict[str, Any]:
+    def deletes_an_order_risk_for_an_order(self, api_version, order_id, risk_id, request_body: Any | None = None) -> dict[str, Any]:
         """
         Deletes an order risk associated with an order, typically used to remove risk assessments that were manually created by the current application.
         
@@ -4490,15 +4842,18 @@ class ShopifyApp(APIApplication):
         Tags:
             delete, order-management, order-risk, important
         """
-        request_body = request_body
-        path = ""
-        url = f"{self.base_url}{path}"
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/orders/{order_id}/risks/{risk_id}.json"
         query_params = {}
-        response = self._delete(url, data=request_body, params=query_params)
+        response = self._delete(url, json=request_body, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def retrieves_alist_of_orders(self, attribution_app_id: Annotated[Any, 'Show orders attributed to a certain app, specified by the app ID. Set as `current` to show orders for the app currently consuming the API. '] = None, created_at_max: Annotated[Any, 'Show orders created at or before date (format: 2014-04-25T16:15:47-04:00). '] = None, created_at_min: Annotated[Any, 'Show orders created at or after date (format: 2014-04-25T16:15:47-04:00). '] = None, fields: Annotated[Any, 'Retrieve only certain fields, specified by a comma-separated list of fields names. '] = None, financial_status: Annotated[Any, 'Filter orders by their financial status.(default: any) '] = None, fulfillment_status: Annotated[Any, 'Filter orders by their fulfillment status.(default: any) '] = None, ids: Annotated[Any, 'Retrieve only orders specified by a comma-separated list of order IDs. '] = None, limit: Annotated[Any, 'The maximum number of results to show on a page.(default: 50)(maximum: 250) '] = None, name: Annotated[Any, ''] = None, processed_at_max: Annotated[Any, 'Show orders imported at or before date (format: 2014-04-25T16:15:47-04:00). '] = None, processed_at_min: Annotated[Any, 'Show orders imported at or after date (format: 2014-04-25T16:15:47-04:00). '] = None, since_id: Annotated[Any, 'Show orders after the specified ID. '] = None, status: Annotated[Any, 'Filter orders by their status.(default: open) '] = None, updated_at_max: Annotated[Any, 'Show orders last updated at or before date (format: 2014-04-25T16:15:47-04:00). '] = None, updated_at_min: Annotated[Any, 'Show orders last updated at or after date (format: 2014-04-25T16:15:47-04:00). '] = None) -> dict[str, Any]:
+    def retrieves_alist_of_orders(self, api_version, ids: str | None = None, name: str | None = None, limit: str | None = None, since_id: str | None = None, created_at_min: str | None = None, created_at_max: str | None = None, updated_at_min: str | None = None, updated_at_max: str | None = None, processed_at_min: str | None = None, processed_at_max: str | None = None, attribution_app_id: str | None = None, status: str | None = None, financial_status: str | None = None, fulfillment_status: str | None = None, fields: str | None = None) -> dict[str, Any]:
         """
         Retrieves a list of orders with optional filtering and pagination support. Note: Uses response header links for pagination (page parameter unsupported in v2019-10+).
         
@@ -4528,31 +4883,18 @@ class ShopifyApp(APIApplication):
         Tags:
             orders, retrieval, pagination, filtering, api, important
         """
-        path = ""
-        url = f"{self.base_url}{path}"
-        query_params = {
-                "ids": ids,
-                "name": name,
-                "limit": limit,
-                "since_id": since_id,
-                "created_at_min": created_at_min,
-                "created_at_max": created_at_max,
-                "updated_at_min": updated_at_min,
-                "updated_at_max": updated_at_max,
-                "processed_at_min": processed_at_min,
-                "processed_at_max": processed_at_max,
-                "attribution_app_id": attribution_app_id,
-                "status": status,
-                "financial_status": financial_status,
-                "fulfillment_status": fulfillment_status,
-                "fields": fields,
-            }
-        query_params = {k: v for k, v in query_params.items() if v is not None}
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/orders.json"
+        query_params = {k: v for k, v in [('ids', ids), ('name', name), ('limit', limit), ('since_id', since_id), ('created_at_min', created_at_min), ('created_at_max', created_at_max), ('updated_at_min', updated_at_min), ('updated_at_max', updated_at_max), ('processed_at_min', processed_at_min), ('processed_at_max', processed_at_max), ('attribution_app_id', attribution_app_id), ('status', status), ('financial_status', financial_status), ('fulfillment_status', fulfillment_status), ('fields', fields)] if v is not None}
         response = self._get(url, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def creates_an_order(self, order: Annotated[dict[str, Any], ''] = None) -> dict[str, Any]:
+    def creates_an_order(self, api_version, order: dict[str, Any] | None = None) -> dict[str, Any]:
         """
         Creates a new order, allowing control over inventory behavior and receipt settings.
         
@@ -4569,18 +4911,23 @@ class ShopifyApp(APIApplication):
         Tags:
             orders, create, inventory-management, ecommerce, important
         """
-        request_body = {
-            "order": order,
+        # Build the request body from parameters
+        request_body_payload = {
+            'order': order,
         }
-        request_body = {k: v for k, v in request_body.items() if v is not None}
-        path = ""
-        url = f"{self.base_url}{path}"
+        request_body_payload = {k: v for k, v in request_body_payload.items() if v is not None}
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/orders.json"
         query_params = {}
-        response = self._post(url, data=request_body, params=query_params)
+        response = self._post(url, json=request_body_payload, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def retrieves_aspecific_order(self, ) -> dict[str, Any]:
+    def retrieves_aspecific_order(self, api_version, order_id) -> dict[str, Any]:
         """
         Retrieves a specific order from a remote source.
         
@@ -4596,14 +4943,18 @@ class ShopifyApp(APIApplication):
         Tags:
             orders, order, retrieve, important
         """
-        path = ""
-        url = f"{self.base_url}{path}"
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/orders/{order_id}.json"
         query_params = {}
         response = self._get(url, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def updates_an_order(self, order: Annotated[dict[str, Any], ''] = None) -> dict[str, Any]:
+    def updates_an_order(self, api_version, order_id, order: dict[str, Any] | None = None) -> dict[str, Any]:
         """
         Updates an existing order with the provided order data
         
@@ -4619,18 +4970,23 @@ class ShopifyApp(APIApplication):
         Tags:
             update, orders, management, important
         """
-        request_body = {
-            "order": order,
+        # Build the request body from parameters
+        request_body_payload = {
+            'order': order,
         }
-        request_body = {k: v for k, v in request_body.items() if v is not None}
-        path = ""
-        url = f"{self.base_url}{path}"
+        request_body_payload = {k: v for k, v in request_body_payload.items() if v is not None}
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/orders/{order_id}.json"
         query_params = {}
-        response = self._put(url, data=request_body, params=query_params)
+        response = self._put(url, json=request_body_payload, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def deletes_an_order(self, request_body: Annotated[Any, ''] = None) -> dict[str, Any]:
+    def deletes_an_order(self, api_version, order_id, request_body: Any | None = None) -> dict[str, Any]:
         """
         Deletes an order by sending a DELETE request to the designated URL. Note that orders interacting with an online gateway cannot be deleted.
         
@@ -4646,15 +5002,18 @@ class ShopifyApp(APIApplication):
         Tags:
             delete, order, management, important
         """
-        request_body = request_body
-        path = ""
-        url = f"{self.base_url}{path}"
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/orders/{order_id}.json"
         query_params = {}
-        response = self._delete(url, data=request_body, params=query_params)
+        response = self._delete(url, json=request_body, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def retrieves_an_order_count(self, created_at_max: Annotated[Any, 'Count orders created before date (format: 2014-04-25T16:15:47-04:00). '] = None, created_at_min: Annotated[Any, 'Count orders created after date (format: 2014-04-25T16:15:47-04:00). '] = None, financial_status: Annotated[Any, 'Count orders of a given financial status.(default: any) '] = None, fulfillment_status: Annotated[Any, 'Filter orders by their fulfillment status.(default: any) '] = None, status: Annotated[Any, 'Count orders of a given status.(default: open) '] = None, updated_at_max: Annotated[Any, 'Count orders last updated before date (format: 2014-04-25T16:15:47-04:00). '] = None, updated_at_min: Annotated[Any, 'Count orders last updated after date (format: 2014-04-25T16:15:47-04:00). '] = None) -> dict[str, Any]:
+    def retrieves_an_order_count(self, api_version, created_at_min: str | None = None, created_at_max: str | None = None, updated_at_min: str | None = None, updated_at_max: str | None = None, status: str | None = None, financial_status: str | None = None, fulfillment_status: str | None = None) -> dict[str, Any]:
         """
         Retrieves the count of orders filtered by the specified date ranges, financial status, fulfillment status, or order status.
         
@@ -4676,23 +5035,18 @@ class ShopifyApp(APIApplication):
         Tags:
             orders, count, retrieve, ecommerce, important
         """
-        path = ""
-        url = f"{self.base_url}{path}"
-        query_params = {
-                "created_at_min": created_at_min,
-                "created_at_max": created_at_max,
-                "updated_at_min": updated_at_min,
-                "updated_at_max": updated_at_max,
-                "status": status,
-                "financial_status": financial_status,
-                "fulfillment_status": fulfillment_status,
-            }
-        query_params = {k: v for k, v in query_params.items() if v is not None}
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/orders/count.json"
+        query_params = {k: v for k, v in [('created_at_min', created_at_min), ('created_at_max', created_at_max), ('updated_at_min', updated_at_min), ('updated_at_max', updated_at_max), ('status', status), ('financial_status', financial_status), ('fulfillment_status', fulfillment_status)] if v is not None}
         response = self._get(url, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def closes_an_order(self, request_body: Annotated[Any, ''] = None) -> dict[str, Any]:
+    def closes_an_order(self, api_version, order_id, request_body: Any | None = None) -> dict[str, Any]:
         """
         Closes an order via API request and returns the response data.
         
@@ -4708,15 +5062,18 @@ class ShopifyApp(APIApplication):
         Tags:
             order, closure, api-request, important
         """
-        request_body = request_body
-        path = ""
-        url = f"{self.base_url}{path}"
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/orders/{order_id}/close.json"
         query_params = {}
-        response = self._post(url, data=request_body, params=query_params)
+        response = self._post(url, json=request_body, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def re_opens_aclosed_order(self, request_body: Annotated[Any, ''] = None) -> dict[str, Any]:
+    def re_opens_aclosed_order(self, api_version, order_id, request_body: Any | None = None) -> dict[str, Any]:
         """
         Re-opens a previously closed order by submitting a request to the API.
         
@@ -4732,15 +5089,18 @@ class ShopifyApp(APIApplication):
         Tags:
             reopen, orders, management, api, important, async_job
         """
-        request_body = request_body
-        path = ""
-        url = f"{self.base_url}{path}"
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/orders/{order_id}/open.json"
         query_params = {}
-        response = self._post(url, data=request_body, params=query_params)
+        response = self._post(url, json=request_body, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def cancels_an_order(self, amount: Annotated[Any, ''] = None, currency: Annotated[Any, ''] = None, note: Annotated[Any, ''] = None) -> dict[str, Any]:
+    def cancels_an_order(self, api_version, order_id, amount: str | None = None, currency: str | None = None, note: str | None = None) -> dict[str, Any]:
         """
         Cancels an order and returns the result. For multi-currency orders, the currency parameter is required when amount is provided. Orders with existing fulfillments cannot be canceled.
         
@@ -4758,20 +5118,25 @@ class ShopifyApp(APIApplication):
         Tags:
             cancel, order, management, important
         """
-        request_body = {
-            "amount": amount,
-            "currency": currency,
-            "note": note,
+        # Build the request body from parameters
+        request_body_payload = {
+            'amount': amount,
+            'currency': currency,
+            'note': note,
         }
-        request_body = {k: v for k, v in request_body.items() if v is not None}
-        path = ""
-        url = f"{self.base_url}{path}"
+        request_body_payload = {k: v for k, v in request_body_payload.items() if v is not None}
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/orders/{order_id}/cancel.json"
         query_params = {}
-        response = self._post(url, data=request_body, params=query_params)
+        response = self._post(url, json=request_body_payload, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def retrieves_alist_of_refunds_for_an_order(self, fields: Annotated[Any, 'Show only certain fields, specified by a comma-separated list of field names. '] = None, in_shop_currency: Annotated[Any, 'Show amounts in the shop currency for the underlying transaction.(default: false) '] = None, limit: Annotated[Any, 'The maximum number of results to retrieve.(default: 50)(maximum: 250) '] = None) -> dict[str, Any]:
+    def retrieves_alist_of_refunds_for_an_order(self, api_version, order_id, limit: str | None = None, fields: str | None = None, in_shop_currency: str | None = None) -> dict[str, Any]:
         """
         Retrieves a list of refunds for an order, allowing customization of returned fields and currency.
         
@@ -4789,19 +5154,18 @@ class ShopifyApp(APIApplication):
         Tags:
             refund, orders, shopify-api, important
         """
-        path = ""
-        url = f"{self.base_url}{path}"
-        query_params = {
-                "limit": limit,
-                "fields": fields,
-                "in_shop_currency": in_shop_currency,
-            }
-        query_params = {k: v for k, v in query_params.items() if v is not None}
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/orders/{order_id}/refunds.json"
+        query_params = {k: v for k, v in [('limit', limit), ('fields', fields), ('in_shop_currency', in_shop_currency)] if v is not None}
         response = self._get(url, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def creates_arefund(self, refund: Annotated[dict[str, Any], ''] = None) -> dict[str, Any]:
+    def creates_arefund(self, api_version, order_id, refund: dict[str, Any] | None = None) -> dict[str, Any]:
         """
         Creates a refund based on the provided refund details.
         
@@ -4817,18 +5181,23 @@ class ShopifyApp(APIApplication):
         Tags:
             refund, orders, ecommerce, important
         """
-        request_body = {
-            "refund": refund,
+        # Build the request body from parameters
+        request_body_payload = {
+            'refund': refund,
         }
-        request_body = {k: v for k, v in request_body.items() if v is not None}
-        path = ""
-        url = f"{self.base_url}{path}"
+        request_body_payload = {k: v for k, v in request_body_payload.items() if v is not None}
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/orders/{order_id}/refunds.json"
         query_params = {}
-        response = self._post(url, data=request_body, params=query_params)
+        response = self._post(url, json=request_body_payload, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def retrieves_aspecific_refund(self, fields: Annotated[Any, 'Show only certain fields, specified by a comma-separated list of field names. '] = None, in_shop_currency: Annotated[Any, 'Show amounts in the shop currency for the underlying transaction.(default: false) '] = None) -> dict[str, Any]:
+    def retrieves_aspecific_refund(self, api_version, order_id, refund_id, fields: str | None = None, in_shop_currency: str | None = None) -> dict[str, Any]:
         """
         Retrieves details of a specific refund including specified fields and currency preferences.
         
@@ -4845,18 +5214,18 @@ class ShopifyApp(APIApplication):
         Tags:
             retrieve, refund, orders, http-client, management, important
         """
-        path = ""
-        url = f"{self.base_url}{path}"
-        query_params = {
-                "fields": fields,
-                "in_shop_currency": in_shop_currency,
-            }
-        query_params = {k: v for k, v in query_params.items() if v is not None}
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/orders/{order_id}/refunds/{refund_id}.json"
+        query_params = {k: v for k, v in [('fields', fields), ('in_shop_currency', in_shop_currency)] if v is not None}
         response = self._get(url, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def calculates_arefund(self, refund: Annotated[dict[str, Any], ''] = None) -> dict[str, Any]:
+    def calculates_arefund(self, api_version, order_id, refund: dict[str, Any] | None = None) -> dict[str, Any]:
         """
         Calculates refund transactions for an order based on line items and shipping, optionally handling multi-currency constraints.
         
@@ -4872,18 +5241,23 @@ class ShopifyApp(APIApplication):
         Tags:
             calculate, refund, orders, important, async_job, multi-currency
         """
-        request_body = {
-            "refund": refund,
+        # Build the request body from parameters
+        request_body_payload = {
+            'refund': refund,
         }
-        request_body = {k: v for k, v in request_body.items() if v is not None}
-        path = ""
-        url = f"{self.base_url}{path}"
+        request_body_payload = {k: v for k, v in request_body_payload.items() if v is not None}
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/orders/{order_id}/refunds/calculate.json"
         query_params = {}
-        response = self._post(url, data=request_body, params=query_params)
+        response = self._post(url, json=request_body_payload, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def retrieves_alist_of_transactions(self, fields: Annotated[Any, 'Show only certain fields, specifed by a comma-separated list of fields names. '] = None, in_shop_currency: Annotated[Any, 'Show amounts in the shop currency.(default: false) '] = None, since_id: Annotated[Any, 'Retrieve only transactions after the specified ID. '] = None) -> dict[str, Any]:
+    def retrieves_alist_of_transactions(self, api_version, order_id, since_id: str | None = None, fields: str | None = None, in_shop_currency: str | None = None) -> dict[str, Any]:
         """
         Retrieves a list of transactions, optionally filtered by specified fields, in-shop currency display preference, and transaction ID boundaries.
         
@@ -4901,19 +5275,18 @@ class ShopifyApp(APIApplication):
         Tags:
             retrieve, list, transactions, api, orders, important
         """
-        path = ""
-        url = f"{self.base_url}{path}"
-        query_params = {
-                "since_id": since_id,
-                "fields": fields,
-                "in_shop_currency": in_shop_currency,
-            }
-        query_params = {k: v for k, v in query_params.items() if v is not None}
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/orders/{order_id}/transactions.json"
+        query_params = {k: v for k, v in [('since_id', since_id), ('fields', fields), ('in_shop_currency', in_shop_currency)] if v is not None}
         response = self._get(url, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def creates_atransaction_for_an_order(self, transaction: Annotated[dict[str, Any], ''] = None) -> dict[str, Any]:
+    def creates_atransaction_for_an_order(self, api_version, order_id, transaction: dict[str, Any] | None = None) -> dict[str, Any]:
         """
         Creates a new transaction for an order, handling the request body and API communication.
         
@@ -4929,18 +5302,23 @@ class ShopifyApp(APIApplication):
         Tags:
             create, transaction, order, important, async_job, api
         """
-        request_body = {
-            "transaction": transaction,
+        # Build the request body from parameters
+        request_body_payload = {
+            'transaction': transaction,
         }
-        request_body = {k: v for k, v in request_body.items() if v is not None}
-        path = ""
-        url = f"{self.base_url}{path}"
+        request_body_payload = {k: v for k, v in request_body_payload.items() if v is not None}
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/orders/{order_id}/transactions.json"
         query_params = {}
-        response = self._post(url, data=request_body, params=query_params)
+        response = self._post(url, json=request_body_payload, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def retrieves_acount_of_an_order_stransactions(self, ) -> dict[str, Any]:
+    def retrieves_acount_of_an_order_stransactions(self, api_version, order_id) -> dict[str, Any]:
         """
         Retrieves the count of an order's transactions.
         
@@ -4956,14 +5334,18 @@ class ShopifyApp(APIApplication):
         Tags:
             orders, transactions, count, api, important
         """
-        path = ""
-        url = f"{self.base_url}{path}"
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/orders/{order_id}/transactions/count.json"
         query_params = {}
         response = self._get(url, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def retrieves_aspecific_transaction(self, fields: Annotated[Any, 'Show only certain fields, specified by a comma-separated list of field names. '] = None, in_shop_currency: Annotated[Any, 'Show amounts in the shop currency.(default: false) '] = None) -> dict[str, Any]:
+    def retrieves_aspecific_transaction(self, api_version, order_id, transaction_id, fields: str | None = None, in_shop_currency: str | None = None) -> dict[str, Any]:
         """
         Retrieves a specific transaction from an API endpoint, allowing field selection and currency format control.
         
@@ -4980,18 +5362,18 @@ class ShopifyApp(APIApplication):
         Tags:
             retrieve, transaction, orders, api-call, important
         """
-        path = ""
-        url = f"{self.base_url}{path}"
-        query_params = {
-                "fields": fields,
-                "in_shop_currency": in_shop_currency,
-            }
-        query_params = {k: v for k, v in query_params.items() if v is not None}
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/orders/{order_id}/transactions/{transaction_id}.json"
+        query_params = {k: v for k, v in [('fields', fields), ('in_shop_currency', in_shop_currency)] if v is not None}
         response = self._get(url, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def retrieves_alist_of_gift_cards(self, fields: Annotated[Any, 'Show only certain fields, specified by a comma-separated list of field names. '] = None, limit: Annotated[Any, 'The maximum number of results to show.(default: 50)(maximum: 250) '] = None, since_id: Annotated[Any, 'Restrict results to after the specified ID. '] = None, status: Annotated[Any, 'Retrieve gift cards with a given status. Valid values: '] = None) -> dict[str, Any]:
+    def retrieves_alist_of_gift_cards(self, api_version, status: str | None = None, limit: str | None = None, since_id: str | None = None, fields: str | None = None) -> dict[str, Any]:
         """
         Retrieves a paginated list of gift cards with optional filters, using Shopify's paginated REST Admin API.
         
@@ -5010,20 +5392,18 @@ class ShopifyApp(APIApplication):
         Tags:
             retrieve, list, gift-cards, api, pagination, important
         """
-        path = ""
-        url = f"{self.base_url}{path}"
-        query_params = {
-                "status": status,
-                "limit": limit,
-                "since_id": since_id,
-                "fields": fields,
-            }
-        query_params = {k: v for k, v in query_params.items() if v is not None}
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/gift_cards.json"
+        query_params = {k: v for k, v in [('status', status), ('limit', limit), ('since_id', since_id), ('fields', fields)] if v is not None}
         response = self._get(url, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def creates_agift_card(self, gift_card: Annotated[dict[str, Any], ''] = None) -> dict[str, Any]:
+    def creates_agift_card(self, api_version, gift_card: dict[str, Any] | None = None) -> dict[str, Any]:
         """
         Creates a new gift card with the provided details.
         
@@ -5040,18 +5420,23 @@ class ShopifyApp(APIApplication):
         Tags:
             create, gift-card, management, important
         """
-        request_body = {
-            "gift_card": gift_card,
+        # Build the request body from parameters
+        request_body_payload = {
+            'gift_card': gift_card,
         }
-        request_body = {k: v for k, v in request_body.items() if v is not None}
-        path = ""
-        url = f"{self.base_url}{path}"
+        request_body_payload = {k: v for k, v in request_body_payload.items() if v is not None}
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/gift_cards.json"
         query_params = {}
-        response = self._post(url, data=request_body, params=query_params)
+        response = self._post(url, json=request_body_payload, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def retrieves_asingle_gift_card(self, ) -> dict[str, Any]:
+    def retrieves_asingle_gift_card(self, api_version, gift_card_id) -> dict[str, Any]:
         """
         Retrieves a single gift card by its ID.
         
@@ -5067,14 +5452,18 @@ class ShopifyApp(APIApplication):
         Tags:
             retrieve, gift-card, important
         """
-        path = ""
-        url = f"{self.base_url}{path}"
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/gift_cards/{gift_card_id}.json"
         query_params = {}
         response = self._get(url, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def updates_an_existing_gift_card(self, gift_card: Annotated[dict[str, Any], ''] = None) -> dict[str, Any]:
+    def updates_an_existing_gift_card(self, api_version, gift_card_id, gift_card: dict[str, Any] | None = None) -> dict[str, Any]:
         """
         Updates an existing gift card, modifying its expiry date, note, and template suffix while preserving the balance.
         
@@ -5090,18 +5479,23 @@ class ShopifyApp(APIApplication):
         Tags:
             update, gift-card, management, important
         """
-        request_body = {
-            "gift_card": gift_card,
+        # Build the request body from parameters
+        request_body_payload = {
+            'gift_card': gift_card,
         }
-        request_body = {k: v for k, v in request_body.items() if v is not None}
-        path = ""
-        url = f"{self.base_url}{path}"
+        request_body_payload = {k: v for k, v in request_body_payload.items() if v is not None}
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/gift_cards/{gift_card_id}.json"
         query_params = {}
-        response = self._put(url, data=request_body, params=query_params)
+        response = self._put(url, json=request_body_payload, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def retrieves_acount_of_gift_cards(self, status: Annotated[Any, 'Count gift cards with a given status. Valid values: '] = None) -> dict[str, Any]:
+    def retrieves_acount_of_gift_cards(self, api_version, status: str | None = None) -> dict[str, Any]:
         """
         Retrieves a count of gift cards filtered by status if provided.
         
@@ -5117,17 +5511,18 @@ class ShopifyApp(APIApplication):
         Tags:
             retrieve, gift-cards, count, important, management
         """
-        path = ""
-        url = f"{self.base_url}{path}"
-        query_params = {
-                "status": status,
-            }
-        query_params = {k: v for k, v in query_params.items() if v is not None}
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/gift_cards/count.json"
+        query_params = {k: v for k, v in [('status', status)] if v is not None}
         response = self._get(url, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def disables_agift_card(self, gift_card: Annotated[dict[str, Any], ''] = None) -> dict[str, Any]:
+    def disables_agift_card(self, api_version, gift_card_id, gift_card: dict[str, Any] | None = None) -> dict[str, Any]:
         """
         Disables a gift card irreversibly.
         
@@ -5143,18 +5538,23 @@ class ShopifyApp(APIApplication):
         Tags:
             disable, gift-card, management, important
         """
-        request_body = {
-            "gift_card": gift_card,
+        # Build the request body from parameters
+        request_body_payload = {
+            'gift_card': gift_card,
         }
-        request_body = {k: v for k, v in request_body.items() if v is not None}
-        path = ""
-        url = f"{self.base_url}{path}"
+        request_body_payload = {k: v for k, v in request_body_payload.items() if v is not None}
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/gift_cards/{gift_card_id}/disable.json"
         query_params = {}
-        response = self._post(url, data=request_body, params=query_params)
+        response = self._post(url, json=request_body_payload, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def searches_for_gift_cards(self, fields: Annotated[Any, 'Show only certain fields, specified by a comma-separated list of field names. '] = None, limit: Annotated[Any, 'The maximum number of results to retrieve.(default: 50)(maximum: 250) '] = None, order: Annotated[Any, 'The field and direction to order results by.(default: disabled\\_at DESC) '] = None, query: Annotated[Any, 'The text to search for. '] = None) -> dict[str, Any]:
+    def searches_for_gift_cards(self, api_version, order: str | None = None, query: str | None = None, limit: str | None = None, fields: str | None = None) -> dict[str, Any]:
         """
         Searches for gift cards based on specified criteria, including indexed fields like creation time, balance, and last characters.
         
@@ -5173,20 +5573,18 @@ class ShopifyApp(APIApplication):
         Tags:
             search, gift-cards, pagination, api, important
         """
-        path = ""
-        url = f"{self.base_url}{path}"
-        query_params = {
-                "order": order,
-                "query": query,
-                "limit": limit,
-                "fields": fields,
-            }
-        query_params = {k: v for k, v in query_params.items() if v is not None}
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/gift_cards/search.json"
+        query_params = {k: v for k, v in [('order', order), ('query', query), ('limit', limit), ('fields', fields)] if v is not None}
         response = self._get(url, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def retrieves_alist_of_all_users(self, ) -> dict[str, Any]:
+    def retrieves_alist_of_all_users(self, api_version) -> dict[str, Any]:
         """
         Retrieves a list of all users from the API endpoint and returns their data.
         
@@ -5202,14 +5600,18 @@ class ShopifyApp(APIApplication):
         Tags:
             list, retrieve, user-management, api, important
         """
-        path = ""
-        url = f"{self.base_url}{path}"
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/users.json"
         query_params = {}
         response = self._get(url, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def retrieves_asingle_user(self, ) -> dict[str, Any]:
+    def retrieves_asingle_user(self, api_version, user_id) -> dict[str, Any]:
         """
         Retrieves a single user's data via API request.
         
@@ -5225,14 +5627,18 @@ class ShopifyApp(APIApplication):
         Tags:
             retrieve, user, api, management, important
         """
-        path = ""
-        url = f"{self.base_url}{path}"
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/users/{user_id}.json"
         query_params = {}
         response = self._get(url, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def retrieves_the_currently_logged_in_user(self, ) -> dict[str, Any]:
+    def retrieves_the_currently_logged_in_user(self, api_version) -> dict[str, Any]:
         """
         Retrieves information about the currently authenticated user account using the access token.
         
@@ -5245,14 +5651,18 @@ class ShopifyApp(APIApplication):
         Tags:
             user, authentication, status, api, important
         """
-        path = ""
-        url = f"{self.base_url}{path}"
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/users/current.json"
         query_params = {}
         response = self._get(url, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def retrieves_alist_of_collects(self, fields: Annotated[Any, 'Show only certain fields, specified by a comma-separated list of field names. '] = None, limit: Annotated[Any, 'The maximum number of results to show.(default: 50)(maximum: 250) '] = None, since_id: Annotated[Any, 'Restrict results to after the specified ID. '] = None) -> dict[str, Any]:
+    def retrieves_alist_of_collects(self, api_version, limit: str | None = None, since_id: str | None = None, fields: str | None = None) -> dict[str, Any]:
         """
         Retrieves a paginated list of collects (product-collection relationships) from the Shopify API, supporting field filtering and result limitations.
         
@@ -5270,19 +5680,18 @@ class ShopifyApp(APIApplication):
         Tags:
             products, collect, list, shopify-api, pagination, important
         """
-        path = ""
-        url = f"{self.base_url}{path}"
-        query_params = {
-                "limit": limit,
-                "since_id": since_id,
-                "fields": fields,
-            }
-        query_params = {k: v for k, v in query_params.items() if v is not None}
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/collects.json"
+        query_params = {k: v for k, v in [('limit', limit), ('since_id', since_id), ('fields', fields)] if v is not None}
         response = self._get(url, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def adds_aproduct_to_acustom_collection(self, collect: Annotated[dict[str, Any], ''] = None) -> dict[str, Any]:
+    def adds_aproduct_to_acustom_collection(self, api_version, collect: dict[str, Any] | None = None) -> dict[str, Any]:
         """
         Adds a product to a custom collection by sending a POST request with the specified collection details.
         
@@ -5298,18 +5707,23 @@ class ShopifyApp(APIApplication):
         Tags:
             add, collection, important, products, management
         """
-        request_body = {
-            "collect": collect,
+        # Build the request body from parameters
+        request_body_payload = {
+            'collect': collect,
         }
-        request_body = {k: v for k, v in request_body.items() if v is not None}
-        path = ""
-        url = f"{self.base_url}{path}"
+        request_body_payload = {k: v for k, v in request_body_payload.items() if v is not None}
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/collects.json"
         query_params = {}
-        response = self._post(url, data=request_body, params=query_params)
+        response = self._post(url, json=request_body_payload, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def retrieves_aspecific_collect_by_its_id(self, fields: Annotated[Any, 'Show only certain fields, specified by a comma-separated list of field names. '] = None) -> dict[str, Any]:
+    def retrieves_aspecific_collect_by_its_id(self, api_version, collect_id, fields: str | None = None) -> dict[str, Any]:
         """
         Retrieves a specific collect entry from the API by its ID, allowing field selection.
         
@@ -5325,17 +5739,18 @@ class ShopifyApp(APIApplication):
         Tags:
             retrieve, collect, api, single-record, important
         """
-        path = ""
-        url = f"{self.base_url}{path}"
-        query_params = {
-                "fields": fields,
-            }
-        query_params = {k: v for k, v in query_params.items() if v is not None}
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/collects/{collect_id}.json"
+        query_params = {k: v for k, v in [('fields', fields)] if v is not None}
         response = self._get(url, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def removes_aproduct_from_acollection(self, request_body: Annotated[Any, ''] = None) -> dict[str, Any]:
+    def removes_aproduct_from_acollection(self, api_version, collect_id, request_body: Any | None = None) -> dict[str, Any]:
         """
         Initiates the removal of a product from a collection via a DELETE request to the API endpoint.
         
@@ -5351,15 +5766,18 @@ class ShopifyApp(APIApplication):
         Tags:
             remove, product, collection, management, delete, api, important
         """
-        request_body = request_body
-        path = ""
-        url = f"{self.base_url}{path}"
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/collects/{collect_id}.json"
         query_params = {}
-        response = self._delete(url, data=request_body, params=query_params)
+        response = self._delete(url, json=request_body, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def retrieves_acount_of_collects(self, ) -> dict[str, Any]:
+    def retrieves_acount_of_collects(self, api_version) -> dict[str, Any]:
         """
         Retrieves a count of collects from the server.
         
@@ -5375,14 +5793,18 @@ class ShopifyApp(APIApplication):
         Tags:
             collect, retrieve, important, management
         """
-        path = ""
-        url = f"{self.base_url}{path}"
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/collects/count.json"
         query_params = {}
         response = self._get(url, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def retrieves_asingle_collection(self, fields: Annotated[Any, 'Show only certain fields, specified by a comma-separated list of field names. '] = None) -> dict[str, Any]:
+    def retrieves_asingle_collection(self, api_version, collection_id, fields: str | None = None) -> dict[str, Any]:
         """
         Retrieves a single collection from the API, with optional field filtering.
         
@@ -5398,17 +5820,18 @@ class ShopifyApp(APIApplication):
         Tags:
             retrieve, collection, api, management, important
         """
-        path = ""
-        url = f"{self.base_url}{path}"
-        query_params = {
-                "fields": fields,
-            }
-        query_params = {k: v for k, v in query_params.items() if v is not None}
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/collections/{collection_id}.json"
+        query_params = {k: v for k, v in [('fields', fields)] if v is not None}
         response = self._get(url, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def retrieve_alist_of_products_belonging_to_acollection(self, limit: Annotated[Any, 'The number of products to retrieve.(default: 50)(maximum: 250) '] = None) -> dict[str, Any]:
+    def retrieve_alist_of_products_belonging_to_acollection(self, api_version, collection_id, limit: str | None = None) -> dict[str, Any]:
         """
         Retrieves a paginated list of products associated with a collection, sorted by the collection's configured order.
         
@@ -5424,17 +5847,18 @@ class ShopifyApp(APIApplication):
         Tags:
             retrieve, products, collection, pagination, management, important
         """
-        path = ""
-        url = f"{self.base_url}{path}"
-        query_params = {
-                "limit": limit,
-            }
-        query_params = {k: v for k, v in query_params.items() if v is not None}
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/collections/{collection_id}/products.json"
+        query_params = {k: v for k, v in [('limit', limit)] if v is not None}
         response = self._get(url, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def retrieves_alist_of_custom_collections(self, fields: Annotated[Any, 'Show only certain fields, specified by a comma-separated list of field names. '] = None, handle: Annotated[Any, 'Filter by custom collection handle. '] = None, ids: Annotated[Any, 'Show only collections specified by a comma-separated list of IDs. '] = None, limit: Annotated[Any, 'The maximum number of results to retrieve.(default: 50)(maximum: 250) '] = None, product_id: Annotated[Any, 'Show custom collections that include a given product. '] = None, published_at_max: Annotated[Any, 'Show custom collections published before date (format: 2014-04-25T16:15:47-04:00). '] = None, published_at_min: Annotated[Any, 'Show custom collections published after date (format: 2014-04-25T16:15:47-04:00). '] = None, published_status: Annotated[Any, 'Show custom collectsion with a given published status.(default: any) '] = None, since_id: Annotated[Any, 'Restrict results to after the specified ID. '] = None, title: Annotated[Any, 'Show custom collections with a given title. '] = None, updated_at_max: Annotated[Any, 'Show custom collections last updated before date (format: 2014-04-25T16:15:47-04:00). '] = None, updated_at_min: Annotated[Any, 'Show custom collections last updated after date (format: 2014-04-25T16:15:47-04:00). '] = None) -> dict[str, Any]:
+    def retrieves_alist_of_custom_collections(self, api_version, limit: str | None = None, ids: str | None = None, since_id: str | None = None, title: str | None = None, product_id: str | None = None, handle: str | None = None, updated_at_min: str | None = None, updated_at_max: str | None = None, published_at_min: str | None = None, published_at_max: str | None = None, published_status: str | None = None, fields: str | None = None) -> dict[str, Any]:
         """
         Retrieves a list of custom collections based on specified criteria.
         
@@ -5461,28 +5885,18 @@ class ShopifyApp(APIApplication):
         Tags:
             retrieve, list, custom, collections, ecommerce, management, important
         """
-        path = ""
-        url = f"{self.base_url}{path}"
-        query_params = {
-                "limit": limit,
-                "ids": ids,
-                "since_id": since_id,
-                "title": title,
-                "product_id": product_id,
-                "handle": handle,
-                "updated_at_min": updated_at_min,
-                "updated_at_max": updated_at_max,
-                "published_at_min": published_at_min,
-                "published_at_max": published_at_max,
-                "published_status": published_status,
-                "fields": fields,
-            }
-        query_params = {k: v for k, v in query_params.items() if v is not None}
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/custom_collections.json"
+        query_params = {k: v for k, v in [('limit', limit), ('ids', ids), ('since_id', since_id), ('title', title), ('product_id', product_id), ('handle', handle), ('updated_at_min', updated_at_min), ('updated_at_max', updated_at_max), ('published_at_min', published_at_min), ('published_at_max', published_at_max), ('published_status', published_status), ('fields', fields)] if v is not None}
         response = self._get(url, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def creates_acustom_collection(self, custom_collection: Annotated[dict[str, Any], ''] = None) -> dict[str, Any]:
+    def creates_acustom_collection(self, api_version, custom_collection: dict[str, Any] | None = None) -> dict[str, Any]:
         """
         Creates a custom collection with the provided specification.
         
@@ -5498,18 +5912,23 @@ class ShopifyApp(APIApplication):
         Tags:
             collections, custom-collection, important
         """
-        request_body = {
-            "custom_collection": custom_collection,
+        # Build the request body from parameters
+        request_body_payload = {
+            'custom_collection': custom_collection,
         }
-        request_body = {k: v for k, v in request_body.items() if v is not None}
-        path = ""
-        url = f"{self.base_url}{path}"
+        request_body_payload = {k: v for k, v in request_body_payload.items() if v is not None}
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/custom_collections.json"
         query_params = {}
-        response = self._post(url, data=request_body, params=query_params)
+        response = self._post(url, json=request_body_payload, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def retrieves_acount_of_custom_collections(self, product_id: Annotated[Any, 'Count custom collections that include a given product. '] = None, published_at_max: Annotated[Any, 'Count custom collections published before date (format: 2014-04-25T16:15:47-04:00). '] = None, published_at_min: Annotated[Any, 'Count custom collections published after date (format: 2014-04-25T16:15:47-04:00). '] = None, published_status: Annotated[Any, 'Count custom collections with a given published status.(default: any) '] = None, title: Annotated[Any, 'Count custom collections with given title. '] = None, updated_at_max: Annotated[Any, 'Count custom collections last updated before date (format: 2014-04-25T16:15:47-04:00). '] = None, updated_at_min: Annotated[Any, 'Count custom collections last updated after date (format: 2014-04-25T16:15:47-04:00). '] = None) -> dict[str, Any]:
+    def retrieves_acount_of_custom_collections(self, api_version, title: str | None = None, product_id: str | None = None, updated_at_min: str | None = None, updated_at_max: str | None = None, published_at_min: str | None = None, published_at_max: str | None = None, published_status: str | None = None) -> dict[str, Any]:
         """
         Retrieves a count of custom collections based on various filters like product ID, published date, updated date, published status, and title.
         
@@ -5531,23 +5950,18 @@ class ShopifyApp(APIApplication):
         Tags:
             search, products, custom-collection, important
         """
-        path = ""
-        url = f"{self.base_url}{path}"
-        query_params = {
-                "title": title,
-                "product_id": product_id,
-                "updated_at_min": updated_at_min,
-                "updated_at_max": updated_at_max,
-                "published_at_min": published_at_min,
-                "published_at_max": published_at_max,
-                "published_status": published_status,
-            }
-        query_params = {k: v for k, v in query_params.items() if v is not None}
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/custom_collections/count.json"
+        query_params = {k: v for k, v in [('title', title), ('product_id', product_id), ('updated_at_min', updated_at_min), ('updated_at_max', updated_at_max), ('published_at_min', published_at_min), ('published_at_max', published_at_max), ('published_status', published_status)] if v is not None}
         response = self._get(url, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def retrieves_asingle_custom_collection(self, fields: Annotated[Any, 'Show only certain fields, specified by a comma-separated list of field names. '] = None) -> dict[str, Any]:
+    def retrieves_asingle_custom_collection(self, api_version, custom_collection_id, fields: str | None = None) -> dict[str, Any]:
         """
         Retrieves a specific custom collection with optional field filtering.
         
@@ -5563,17 +5977,18 @@ class ShopifyApp(APIApplication):
         Tags:
             retrieve, products, custom-collection, filtering, important
         """
-        path = ""
-        url = f"{self.base_url}{path}"
-        query_params = {
-                "fields": fields,
-            }
-        query_params = {k: v for k, v in query_params.items() if v is not None}
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/custom_collections/{custom_collection_id}.json"
+        query_params = {k: v for k, v in [('fields', fields)] if v is not None}
         response = self._get(url, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def updates_an_existing_custom_collection(self, custom_collection: Annotated[dict[str, Any], ''] = None) -> dict[str, Any]:
+    def updates_an_existing_custom_collection(self, api_version, custom_collection_id, custom_collection: dict[str, Any] | None = None) -> dict[str, Any]:
         """
         Updates an existing custom collection using the provided data.
         
@@ -5589,18 +6004,23 @@ class ShopifyApp(APIApplication):
         Tags:
             update, custom-collection, management, products, important
         """
-        request_body = {
-            "custom_collection": custom_collection,
+        # Build the request body from parameters
+        request_body_payload = {
+            'custom_collection': custom_collection,
         }
-        request_body = {k: v for k, v in request_body.items() if v is not None}
-        path = ""
-        url = f"{self.base_url}{path}"
+        request_body_payload = {k: v for k, v in request_body_payload.items() if v is not None}
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/custom_collections/{custom_collection_id}.json"
         query_params = {}
-        response = self._put(url, data=request_body, params=query_params)
+        response = self._put(url, json=request_body_payload, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def deletes_acustom_collection(self, request_body: Annotated[Any, ''] = None) -> dict[str, Any]:
+    def deletes_acustom_collection(self, api_version, custom_collection_id, request_body: Any | None = None) -> dict[str, Any]:
         """
         Deletes a custom collection by sending a DELETE request to the API endpoint.
         
@@ -5616,15 +6036,18 @@ class ShopifyApp(APIApplication):
         Tags:
             delete, custom-collection, api, management, important
         """
-        request_body = request_body
-        path = ""
-        url = f"{self.base_url}{path}"
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/custom_collections/{custom_collection_id}.json"
         query_params = {}
-        response = self._delete(url, data=request_body, params=query_params)
+        response = self._delete(url, json=request_body, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def receive_alist_of_all_product_images(self, fields: Annotated[Any, 'comma-separated list of fields to include in the response '] = None, since_id: Annotated[Any, 'Restrict results to after the specified ID '] = None) -> dict[str, Any]:
+    def receive_alist_of_all_product_images(self, api_version, product_id, since_id: str | None = None, fields: str | None = None) -> dict[str, Any]:
         """
         Retrieve a list of product images, optionally filtering by specified fields and IDs.
         
@@ -5641,18 +6064,18 @@ class ShopifyApp(APIApplication):
         Tags:
             product, image, list, api-call, important
         """
-        path = ""
-        url = f"{self.base_url}{path}"
-        query_params = {
-                "since_id": since_id,
-                "fields": fields,
-            }
-        query_params = {k: v for k, v in query_params.items() if v is not None}
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/products/{product_id}/images.json"
+        query_params = {k: v for k, v in [('since_id', since_id), ('fields', fields)] if v is not None}
         response = self._get(url, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def create_anew_product_image(self, image: Annotated[dict[str, Any], ''] = None) -> dict[str, Any]:
+    def create_anew_product_image(self, api_version, product_id, image: dict[str, Any] | None = None) -> dict[str, Any]:
         """
         Creates a new product image by sending a POST request to the server with the provided image details.
         
@@ -5668,18 +6091,23 @@ class ShopifyApp(APIApplication):
         Tags:
             create, image, product, important
         """
-        request_body = {
-            "image": image,
+        # Build the request body from parameters
+        request_body_payload = {
+            'image': image,
         }
-        request_body = {k: v for k, v in request_body.items() if v is not None}
-        path = ""
-        url = f"{self.base_url}{path}"
+        request_body_payload = {k: v for k, v in request_body_payload.items() if v is not None}
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/products/{product_id}/images.json"
         query_params = {}
-        response = self._post(url, data=request_body, params=query_params)
+        response = self._post(url, json=request_body_payload, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def receive_acount_of_all_product_images(self, since_id: Annotated[Any, 'Restrict results to after the specified ID '] = None) -> dict[str, Any]:
+    def receive_acount_of_all_product_images(self, api_version, product_id, since_id: str | None = None) -> dict[str, Any]:
         """
         Retrieves a count of all product images optionally filtered by a since ID.
         
@@ -5695,17 +6123,18 @@ class ShopifyApp(APIApplication):
         Tags:
             count, product-image, management, important
         """
-        path = ""
-        url = f"{self.base_url}{path}"
-        query_params = {
-                "since_id": since_id,
-            }
-        query_params = {k: v for k, v in query_params.items() if v is not None}
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/products/{product_id}/images/count.json"
+        query_params = {k: v for k, v in [('since_id', since_id)] if v is not None}
         response = self._get(url, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def receive_asingle_product_image(self, fields: Annotated[Any, 'comma-separated list of fields to include in the response '] = None) -> dict[str, Any]:
+    def receive_asingle_product_image(self, api_version, product_id, image_id, fields: str | None = None) -> dict[str, Any]:
         """
         Retrieves a single product image by ID with optional field filtering.
         
@@ -5721,17 +6150,18 @@ class ShopifyApp(APIApplication):
         Tags:
             retrieve, product-image, api-call, products, important
         """
-        path = ""
-        url = f"{self.base_url}{path}"
-        query_params = {
-                "fields": fields,
-            }
-        query_params = {k: v for k, v in query_params.items() if v is not None}
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/products/{product_id}/images/{image_id}.json"
+        query_params = {k: v for k, v in [('fields', fields)] if v is not None}
         response = self._get(url, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def modify_an_existing_product_image(self, image: Annotated[dict[str, Any], ''] = None) -> dict[str, Any]:
+    def modify_an_existing_product_image(self, api_version, product_id, image_id, image: dict[str, Any] | None = None) -> dict[str, Any]:
         """
         Modify an existing product image by updating its details.
         
@@ -5747,18 +6177,23 @@ class ShopifyApp(APIApplication):
         Tags:
             modify, product-image, management, important
         """
-        request_body = {
-            "image": image,
+        # Build the request body from parameters
+        request_body_payload = {
+            'image': image,
         }
-        request_body = {k: v for k, v in request_body.items() if v is not None}
-        path = ""
-        url = f"{self.base_url}{path}"
+        request_body_payload = {k: v for k, v in request_body_payload.items() if v is not None}
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/products/{product_id}/images/{image_id}.json"
         query_params = {}
-        response = self._put(url, data=request_body, params=query_params)
+        response = self._put(url, json=request_body_payload, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def remove_an_existing_product_image(self, request_body: Annotated[Any, ''] = None) -> dict[str, Any]:
+    def remove_an_existing_product_image(self, api_version, product_id, image_id, request_body: Any | None = None) -> dict[str, Any]:
         """
         Remove an existing product image by sending a delete request to the product management API.
         
@@ -5774,15 +6209,18 @@ class ShopifyApp(APIApplication):
         Tags:
             delete, product-image, management, important
         """
-        request_body = request_body
-        path = ""
-        url = f"{self.base_url}{path}"
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/products/{product_id}/images/{image_id}.json"
         query_params = {}
-        response = self._delete(url, data=request_body, params=query_params)
+        response = self._delete(url, json=request_body, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def retrieves_alist_of_product_variants(self, fields: Annotated[Any, 'A comma-separated list of fields to include in the response '] = None, limit: Annotated[Any, 'Return up to this many results per page(default: 50)(maximum: 250) '] = None, presentment_currencies: Annotated[Any, 'Return presentment prices in only certain currencies, specified by a comma-separated list of [ISO 4217][1] currency codes. \n\n[1]: https://en.wikipedia.org/wiki/ISO_4217\n'] = None, since_id: Annotated[Any, 'Restrict results to after the specified ID '] = None) -> dict[str, Any]:
+    def retrieves_alist_of_product_variants(self, api_version, product_id, limit: str | None = None, presentment_currencies: str | None = None, since_id: str | None = None, fields: str | None = None) -> dict[str, Any]:
         """
         Retrieves a paginated list of product variants from Shopify's REST Admin API, including fields, currencies, and pagination controls.
         
@@ -5801,20 +6239,18 @@ class ShopifyApp(APIApplication):
         Tags:
             products, product-variant, rest-api, paginated, management, important
         """
-        path = ""
-        url = f"{self.base_url}{path}"
-        query_params = {
-                "limit": limit,
-                "presentment_currencies": presentment_currencies,
-                "since_id": since_id,
-                "fields": fields,
-            }
-        query_params = {k: v for k, v in query_params.items() if v is not None}
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/products/{product_id}/variants.json"
+        query_params = {k: v for k, v in [('limit', limit), ('presentment_currencies', presentment_currencies), ('since_id', since_id), ('fields', fields)] if v is not None}
         response = self._get(url, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def create_anew_product_variant(self, variant: Annotated[dict[str, Any], ''] = None) -> dict[str, Any]:
+    def create_anew_product_variant(self, api_version, product_id, variant: dict[str, Any] | None = None) -> dict[str, Any]:
         """
         Creates a new product variant by sending a POST request to the API.
         
@@ -5830,18 +6266,23 @@ class ShopifyApp(APIApplication):
         Tags:
             create, product, variant, api, post, management, important
         """
-        request_body = {
-            "variant": variant,
+        # Build the request body from parameters
+        request_body_payload = {
+            'variant': variant,
         }
-        request_body = {k: v for k, v in request_body.items() if v is not None}
-        path = ""
-        url = f"{self.base_url}{path}"
+        request_body_payload = {k: v for k, v in request_body_payload.items() if v is not None}
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/products/{product_id}/variants.json"
         query_params = {}
-        response = self._post(url, data=request_body, params=query_params)
+        response = self._post(url, json=request_body_payload, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def receive_acount_of_all_product_variants(self, ) -> dict[str, Any]:
+    def receive_acount_of_all_product_variants(self, api_version, product_id) -> dict[str, Any]:
         """
         Retrieves a count of all product variants.
         
@@ -5857,14 +6298,18 @@ class ShopifyApp(APIApplication):
         Tags:
             products, product-variant, important
         """
-        path = ""
-        url = f"{self.base_url}{path}"
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/products/{product_id}/variants/count.json"
         query_params = {}
         response = self._get(url, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def receive_asingle_product_variant(self, fields: Annotated[Any, 'A comma-separated list of fields to include in the response '] = None) -> dict[str, Any]:
+    def receive_asingle_product_variant(self, api_version, variant_id, fields: str | None = None) -> dict[str, Any]:
         """
         Retrieves a single product variant by ID.
         
@@ -5880,17 +6325,18 @@ class ShopifyApp(APIApplication):
         Tags:
             get, product-variant, retail, important
         """
-        path = ""
-        url = f"{self.base_url}{path}"
-        query_params = {
-                "fields": fields,
-            }
-        query_params = {k: v for k, v in query_params.items() if v is not None}
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/variants/{variant_id}.json"
+        query_params = {k: v for k, v in [('fields', fields)] if v is not None}
         response = self._get(url, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def modify_an_existing_product_variant(self, variant: Annotated[dict[str, Any], ''] = None) -> dict[str, Any]:
+    def modify_an_existing_product_variant(self, api_version, variant_id, variant: dict[str, Any] | None = None) -> dict[str, Any]:
         """
         Modifies an existing product variant by sending updated details to the API.
         
@@ -5906,18 +6352,23 @@ class ShopifyApp(APIApplication):
         Tags:
             modify, products, product-variant, update, management, important
         """
-        request_body = {
-            "variant": variant,
+        # Build the request body from parameters
+        request_body_payload = {
+            'variant': variant,
         }
-        request_body = {k: v for k, v in request_body.items() if v is not None}
-        path = ""
-        url = f"{self.base_url}{path}"
+        request_body_payload = {k: v for k, v in request_body_payload.items() if v is not None}
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/variants/{variant_id}.json"
         query_params = {}
-        response = self._put(url, data=request_body, params=query_params)
+        response = self._put(url, json=request_body_payload, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def remove_an_existing_product_variant(self, request_body: Annotated[Any, ''] = None) -> dict[str, Any]:
+    def remove_an_existing_product_variant(self, api_version, product_id, variant_id, request_body: Any | None = None) -> dict[str, Any]:
         """
         Remove an existing Product Variant from the system.
         
@@ -5933,15 +6384,18 @@ class ShopifyApp(APIApplication):
         Tags:
             remove, product, product-variant, management, api, important
         """
-        request_body = request_body
-        path = ""
-        url = f"{self.base_url}{path}"
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/products/{product_id}/variants/{variant_id}.json"
         query_params = {}
-        response = self._delete(url, data=request_body, params=query_params)
+        response = self._delete(url, json=request_body, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def retrieves_alist_of_products(self, collection_id: Annotated[Any, 'Filter results by product collection ID. '] = None, created_at_max: Annotated[Any, 'Show products created before date. (format: 2014-04-25T16:15:47-04:00) '] = None, created_at_min: Annotated[Any, 'Show products created after date. (format: 2014-04-25T16:15:47-04:00) '] = None, fields: Annotated[Any, 'Show only certain fields, specified by a comma-separated list of field names. '] = None, handle: Annotated[Any, 'Filter results by product handle. '] = None, ids: Annotated[Any, 'Return only products specified by a comma-separated list of product IDs. '] = None, limit: Annotated[Any, 'Return up to this many results per page.(default: 50)(maximum: 250) '] = None, presentment_currencies: Annotated[Any, 'Return presentment prices in only certain currencies, specified by a comma-separated list of [ISO 4217][1] currency codes. \n\n[1]: https://en.wikipedia.org/wiki/ISO_4217\n'] = None, product_type: Annotated[Any, 'Filter results by product type. '] = None, published_at_max: Annotated[Any, 'Show products published before date. (format: 2014-04-25T16:15:47-04:00) '] = None, published_at_min: Annotated[Any, 'Show products published after date. (format: 2014-04-25T16:15:47-04:00) '] = None, published_status: Annotated[Any, 'Return products by their published status(default: any) '] = None, since_id: Annotated[Any, 'Restrict results to after the specified ID. '] = None, title: Annotated[Any, 'Filter results by product title. '] = None, updated_at_max: Annotated[Any, 'Show products last updated before date. (format: 2014-04-25T16:15:47-04:00) '] = None, updated_at_min: Annotated[Any, 'Show products last updated after date. (format: 2014-04-25T16:15:47-04:00) '] = None, vendor: Annotated[Any, 'Filter results by product vendor. '] = None) -> dict[str, Any]:
+    def retrieves_alist_of_products(self, api_version, ids: str | None = None, limit: str | None = None, since_id: str | None = None, title: str | None = None, vendor: str | None = None, handle: str | None = None, product_type: str | None = None, collection_id: str | None = None, created_at_min: str | None = None, created_at_max: str | None = None, updated_at_min: str | None = None, updated_at_max: str | None = None, published_at_min: str | None = None, published_at_max: str | None = None, published_status: str | None = None, fields: str | None = None, presentment_currencies: str | None = None) -> dict[str, Any]:
         """
         Retrieves a paginated list of products with filtering options, implementing Shopify's REST Admin API pagination via response headers.
         
@@ -5973,33 +6427,18 @@ class ShopifyApp(APIApplication):
         Tags:
             products, list, retrieve, filter, pagination, api, important, shopify, management
         """
-        path = ""
-        url = f"{self.base_url}{path}"
-        query_params = {
-                "ids": ids,
-                "limit": limit,
-                "since_id": since_id,
-                "title": title,
-                "vendor": vendor,
-                "handle": handle,
-                "product_type": product_type,
-                "collection_id": collection_id,
-                "created_at_min": created_at_min,
-                "created_at_max": created_at_max,
-                "updated_at_min": updated_at_min,
-                "updated_at_max": updated_at_max,
-                "published_at_min": published_at_min,
-                "published_at_max": published_at_max,
-                "published_status": published_status,
-                "fields": fields,
-                "presentment_currencies": presentment_currencies,
-            }
-        query_params = {k: v for k, v in query_params.items() if v is not None}
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/products.json"
+        query_params = {k: v for k, v in [('ids', ids), ('limit', limit), ('since_id', since_id), ('title', title), ('vendor', vendor), ('handle', handle), ('product_type', product_type), ('collection_id', collection_id), ('created_at_min', created_at_min), ('created_at_max', created_at_max), ('updated_at_min', updated_at_min), ('updated_at_max', updated_at_max), ('published_at_min', published_at_min), ('published_at_max', published_at_max), ('published_status', published_status), ('fields', fields), ('presentment_currencies', presentment_currencies)] if v is not None}
         response = self._get(url, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def creates_anew_product(self, product: Annotated[dict[str, Any], ''] = None) -> dict[str, Any]:
+    def creates_anew_product(self, api_version, product: dict[str, Any] | None = None) -> dict[str, Any]:
         """
         Creates a new product by sending a POST request with the product details
         
@@ -6015,18 +6454,23 @@ class ShopifyApp(APIApplication):
         Tags:
             create, product, management, important
         """
-        request_body = {
-            "product": product,
+        # Build the request body from parameters
+        request_body_payload = {
+            'product': product,
         }
-        request_body = {k: v for k, v in request_body.items() if v is not None}
-        path = ""
-        url = f"{self.base_url}{path}"
+        request_body_payload = {k: v for k, v in request_body_payload.items() if v is not None}
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/products.json"
         query_params = {}
-        response = self._post(url, data=request_body, params=query_params)
+        response = self._post(url, json=request_body_payload, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def retrieves_acount_of_products(self, collection_id: Annotated[Any, 'Filter results by collection ID. '] = None, created_at_max: Annotated[Any, 'Show products created before date. (format: 2014-04-25T16:15:47-04:00) '] = None, created_at_min: Annotated[Any, 'Show products created after date. (format: 2014-04-25T16:15:47-04:00) '] = None, product_type: Annotated[Any, 'Filter results by product type. '] = None, published_at_max: Annotated[Any, 'Show products published before date. (format: 2014-04-25T16:15:47-04:00) '] = None, published_at_min: Annotated[Any, 'Show products published after date. (format: 2014-04-25T16:15:47-04:00) '] = None, published_status: Annotated[Any, 'Return products by their published status(default: any) '] = None, updated_at_max: Annotated[Any, 'Show products last updated before date. (format: 2014-04-25T16:15:47-04:00) '] = None, updated_at_min: Annotated[Any, 'Show products last updated after date. (format: 2014-04-25T16:15:47-04:00) '] = None, vendor: Annotated[Any, 'Filter results by product vendor. '] = None) -> dict[str, Any]:
+    def retrieves_acount_of_products(self, api_version, vendor: str | None = None, product_type: str | None = None, collection_id: str | None = None, created_at_min: str | None = None, created_at_max: str | None = None, updated_at_min: str | None = None, updated_at_max: str | None = None, published_at_min: str | None = None, published_at_max: str | None = None, published_status: str | None = None) -> dict[str, Any]:
         """
         Retrieve the count of products matching specified filter criteria, including collection ID, publication status, date ranges, and vendor details.
         
@@ -6051,26 +6495,18 @@ class ShopifyApp(APIApplication):
         Tags:
             products, search, count, retrieve, filter, management, important
         """
-        path = ""
-        url = f"{self.base_url}{path}"
-        query_params = {
-                "vendor": vendor,
-                "product_type": product_type,
-                "collection_id": collection_id,
-                "created_at_min": created_at_min,
-                "created_at_max": created_at_max,
-                "updated_at_min": updated_at_min,
-                "updated_at_max": updated_at_max,
-                "published_at_min": published_at_min,
-                "published_at_max": published_at_max,
-                "published_status": published_status,
-            }
-        query_params = {k: v for k, v in query_params.items() if v is not None}
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/products/count.json"
+        query_params = {k: v for k, v in [('vendor', vendor), ('product_type', product_type), ('collection_id', collection_id), ('created_at_min', created_at_min), ('created_at_max', created_at_max), ('updated_at_min', updated_at_min), ('updated_at_max', updated_at_max), ('published_at_min', published_at_min), ('published_at_max', published_at_max), ('published_status', published_status)] if v is not None}
         response = self._get(url, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def retrieves_asingle_product(self, fields: Annotated[Any, 'A comma-separated list of fields to include in the response. '] = None) -> dict[str, Any]:
+    def retrieves_asingle_product(self, api_version, product_id, fields: str | None = None) -> dict[str, Any]:
         """
         Retrieves a single product's data from the API.
         
@@ -6086,17 +6522,18 @@ class ShopifyApp(APIApplication):
         Tags:
             retrieve, product, api, http-get, important
         """
-        path = ""
-        url = f"{self.base_url}{path}"
-        query_params = {
-                "fields": fields,
-            }
-        query_params = {k: v for k, v in query_params.items() if v is not None}
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/products/{product_id}.json"
+        query_params = {k: v for k, v in [('fields', fields)] if v is not None}
         response = self._get(url, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def updates_aproduct(self, product: Annotated[dict[str, Any], ''] = None) -> dict[str, Any]:
+    def updates_aproduct(self, api_version, product_id, product: dict[str, Any] | None = None) -> dict[str, Any]:
         """
         Updates a product and its associated variants, images, and SEO metadata.
         
@@ -6112,18 +6549,23 @@ class ShopifyApp(APIApplication):
         Tags:
             update, products, seo, async_job, management, important
         """
-        request_body = {
-            "product": product,
+        # Build the request body from parameters
+        request_body_payload = {
+            'product': product,
         }
-        request_body = {k: v for k, v in request_body.items() if v is not None}
-        path = ""
-        url = f"{self.base_url}{path}"
+        request_body_payload = {k: v for k, v in request_body_payload.items() if v is not None}
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/products/{product_id}.json"
         query_params = {}
-        response = self._put(url, data=request_body, params=query_params)
+        response = self._put(url, json=request_body_payload, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def deletes_aproduct(self, request_body: Annotated[Any, ''] = None) -> dict[str, Any]:
+    def deletes_aproduct(self, api_version, product_id, request_body: Any | None = None) -> dict[str, Any]:
         """
         Deletes a product from the system by making an HTTP DELETE request to the specified endpoint.
         
@@ -6139,15 +6581,18 @@ class ShopifyApp(APIApplication):
         Tags:
             delete, products, management, http-client, important
         """
-        request_body = request_body
-        path = ""
-        url = f"{self.base_url}{path}"
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/products/{product_id}.json"
         query_params = {}
-        response = self._delete(url, data=request_body, params=query_params)
+        response = self._delete(url, json=request_body, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def retrieves_alist_of_smart_collections(self, fields: Annotated[Any, 'Show only certain fields, specified by a comma-separated list of field names. '] = None, handle: Annotated[Any, 'Filter results by smart collection handle. '] = None, ids: Annotated[Any, 'Show only the smart collections specified by a comma-separated list of IDs. '] = None, limit: Annotated[Any, 'The number of results to show.(default: 50)(maximum: 250) '] = None, product_id: Annotated[Any, 'Show smart collections that includes the specified product. '] = None, published_at_max: Annotated[Any, 'Show smart collections published before this date. (format: 2014-04-25T16:15:47-04:00) '] = None, published_at_min: Annotated[Any, 'Show smart collections published after this date. (format: 2014-04-25T16:15:47-04:00) '] = None, published_status: Annotated[Any, 'Filter results based on the published status of smart collections.(default: any) '] = None, since_id: Annotated[Any, 'Restrict results to after the specified ID. '] = None, title: Annotated[Any, 'Show smart collections with the specified title. '] = None, updated_at_max: Annotated[Any, 'Show smart collections last updated before this date. (format: 2014-04-25T16:15:47-04:00) '] = None, updated_at_min: Annotated[Any, 'Show smart collections last updated after this date. (format: 2014-04-25T16:15:47-04:00) '] = None) -> dict[str, Any]:
+    def retrieves_alist_of_smart_collections(self, api_version, limit: str | None = None, ids: str | None = None, since_id: str | None = None, title: str | None = None, product_id: str | None = None, handle: str | None = None, updated_at_min: str | None = None, updated_at_max: str | None = None, published_at_min: str | None = None, published_at_max: str | None = None, published_status: str | None = None, fields: str | None = None) -> dict[str, Any]:
         """
         Retrieves a list of smart collections with optional filtering by various criteria.
         
@@ -6174,28 +6619,18 @@ class ShopifyApp(APIApplication):
         Tags:
             smart-collection, pagination, shopify-api, important
         """
-        path = ""
-        url = f"{self.base_url}{path}"
-        query_params = {
-                "limit": limit,
-                "ids": ids,
-                "since_id": since_id,
-                "title": title,
-                "product_id": product_id,
-                "handle": handle,
-                "updated_at_min": updated_at_min,
-                "updated_at_max": updated_at_max,
-                "published_at_min": published_at_min,
-                "published_at_max": published_at_max,
-                "published_status": published_status,
-                "fields": fields,
-            }
-        query_params = {k: v for k, v in query_params.items() if v is not None}
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/smart_collections.json"
+        query_params = {k: v for k, v in [('limit', limit), ('ids', ids), ('since_id', since_id), ('title', title), ('product_id', product_id), ('handle', handle), ('updated_at_min', updated_at_min), ('updated_at_max', updated_at_max), ('published_at_min', published_at_min), ('published_at_max', published_at_max), ('published_status', published_status), ('fields', fields)] if v is not None}
         response = self._get(url, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def creates_asmart_collection(self, smart_collection: Annotated[dict[str, Any], ''] = None) -> dict[str, Any]:
+    def creates_asmart_collection(self, api_version, smart_collection: dict[str, Any] | None = None) -> dict[str, Any]:
         """
         Creates a new smart collection using specified rules and configuration.
         
@@ -6211,18 +6646,23 @@ class ShopifyApp(APIApplication):
         Tags:
             create, smart-collection, management, products, async-job, important
         """
-        request_body = {
-            "smart_collection": smart_collection,
+        # Build the request body from parameters
+        request_body_payload = {
+            'smart_collection': smart_collection,
         }
-        request_body = {k: v for k, v in request_body.items() if v is not None}
-        path = ""
-        url = f"{self.base_url}{path}"
+        request_body_payload = {k: v for k, v in request_body_payload.items() if v is not None}
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/smart_collections.json"
         query_params = {}
-        response = self._post(url, data=request_body, params=query_params)
+        response = self._post(url, json=request_body_payload, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def retrieves_acount_of_smart_collections(self, product_id: Annotated[Any, 'Show smart collections that include the specified product. '] = None, published_at_max: Annotated[Any, 'Show smart collections published before this date. (format: 2014-04-25T16:15:47-04:00) '] = None, published_at_min: Annotated[Any, 'Show smart collections published after this date. (format: 2014-04-25T16:15:47-04:00) '] = None, published_status: Annotated[Any, 'Filter results based on the published status of smart collections.(default: any) '] = None, title: Annotated[Any, 'Show smart collections with the specified title. '] = None, updated_at_max: Annotated[Any, 'Show smart collections last updated before this date. (format: 2014-04-25T16:15:47-04:00) '] = None, updated_at_min: Annotated[Any, 'Show smart collections last updated after this date. (format: 2014-04-25T16:15:47-04:00) '] = None) -> dict[str, Any]:
+    def retrieves_acount_of_smart_collections(self, api_version, title: str | None = None, product_id: str | None = None, updated_at_min: str | None = None, updated_at_max: str | None = None, published_at_min: str | None = None, published_at_max: str | None = None, published_status: str | None = None) -> dict[str, Any]:
         """
         Retrieves a count of smart collections filtered by specified criteria including product association, publication/update timestamps, title, and status.
         
@@ -6244,23 +6684,18 @@ class ShopifyApp(APIApplication):
         Tags:
             retrieve, count, smart-collections, products, api, important
         """
-        path = ""
-        url = f"{self.base_url}{path}"
-        query_params = {
-                "title": title,
-                "product_id": product_id,
-                "updated_at_min": updated_at_min,
-                "updated_at_max": updated_at_max,
-                "published_at_min": published_at_min,
-                "published_at_max": published_at_max,
-                "published_status": published_status,
-            }
-        query_params = {k: v for k, v in query_params.items() if v is not None}
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/smart_collections/count.json"
+        query_params = {k: v for k, v in [('title', title), ('product_id', product_id), ('updated_at_min', updated_at_min), ('updated_at_max', updated_at_max), ('published_at_min', published_at_min), ('published_at_max', published_at_max), ('published_status', published_status)] if v is not None}
         response = self._get(url, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def retrieves_asingle_smart_collection(self, fields: Annotated[Any, 'Show only certain fields, specified by a comma-separated list of field names. '] = None) -> dict[str, Any]:
+    def retrieves_asingle_smart_collection(self, api_version, smart_collection_id, fields: str | None = None) -> dict[str, Any]:
         """
         Retrieves a single smart collection, optionally specifying fields to include.
         
@@ -6276,17 +6711,18 @@ class ShopifyApp(APIApplication):
         Tags:
             retrieve, smart-collection, important, ecommerce
         """
-        path = ""
-        url = f"{self.base_url}{path}"
-        query_params = {
-                "fields": fields,
-            }
-        query_params = {k: v for k, v in query_params.items() if v is not None}
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/smart_collections/{smart_collection_id}.json"
+        query_params = {k: v for k, v in [('fields', fields)] if v is not None}
         response = self._get(url, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def updates_an_existing_smart_collection(self, smart_collection: Annotated[dict[str, Any], ''] = None) -> dict[str, Any]:
+    def updates_an_existing_smart_collection(self, api_version, smart_collection_id, smart_collection: dict[str, Any] | None = None) -> dict[str, Any]:
         """
         Updates an existing smart collection with provided parameters.
         
@@ -6302,18 +6738,23 @@ class ShopifyApp(APIApplication):
         Tags:
             update, smart-collection, important, products
         """
-        request_body = {
-            "smart_collection": smart_collection,
+        # Build the request body from parameters
+        request_body_payload = {
+            'smart_collection': smart_collection,
         }
-        request_body = {k: v for k, v in request_body.items() if v is not None}
-        path = ""
-        url = f"{self.base_url}{path}"
+        request_body_payload = {k: v for k, v in request_body_payload.items() if v is not None}
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/smart_collections/{smart_collection_id}.json"
         query_params = {}
-        response = self._put(url, data=request_body, params=query_params)
+        response = self._put(url, json=request_body_payload, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def removes_asmart_collection(self, request_body: Annotated[Any, ''] = None) -> dict[str, Any]:
+    def removes_asmart_collection(self, api_version, smart_collection_id, request_body: Any | None = None) -> dict[str, Any]:
         """
         Removes a smart collection using the provided request data.
         
@@ -6329,15 +6770,18 @@ class ShopifyApp(APIApplication):
         Tags:
             remove, smart-collection, api-client, management, important
         """
-        request_body = request_body
-        path = ""
-        url = f"{self.base_url}{path}"
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/smart_collections/{smart_collection_id}.json"
         query_params = {}
-        response = self._delete(url, data=request_body, params=query_params)
+        response = self._delete(url, json=request_body, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def updates_the_ordering_type_of_products_in_asmart_collection(self, request_body: Annotated[Any, ''] = None) -> dict[str, Any]:
+    def updates_the_ordering_type_of_products_in_asmart_collection(self, api_version, smart_collection_id, request_body: Any | None = None) -> dict[str, Any]:
         """
         Updates the ordering type of products in a smart collection via API request.
         
@@ -6353,15 +6797,18 @@ class ShopifyApp(APIApplication):
         Tags:
             update, products, smart-collection, api, important
         """
-        request_body = request_body
-        path = ""
-        url = f"{self.base_url}{path}"
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/smart_collections/{smart_collection_id}/order.json"
         query_params = {}
-        response = self._put(url, data=request_body, params=query_params)
+        response = self._put(url, json=request_body, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def completes_acheckout(self, request_body: Annotated[Any, ''] = None) -> dict[str, Any]:
+    def completes_acheckout(self, api_version, token, request_body: Any | None = None) -> dict[str, Any]:
         """
         Completes a checkout by sending a POST request to the checkout endpoint.
         
@@ -6377,15 +6824,18 @@ class ShopifyApp(APIApplication):
         Tags:
             checkout, payment, e-commerce, important
         """
-        request_body = request_body
-        path = ""
-        url = f"{self.base_url}{path}"
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/checkouts/{token}/complete.json"
         query_params = {}
-        response = self._post(url, data=request_body, params=query_params)
+        response = self._post(url, json=request_body, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def retrieves_acheckout(self, ) -> dict[str, Any]:
+    def retrieves_acheckout(self, api_version, token) -> dict[str, Any]:
         """
         Retrieves checkout details from the specified API endpoint.
         
@@ -6401,14 +6851,18 @@ class ShopifyApp(APIApplication):
         Tags:
             retrieve, checkout, api, important
         """
-        path = ""
-        url = f"{self.base_url}{path}"
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/checkouts/{token}.json"
         query_params = {}
         response = self._get(url, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def modifies_an_existing_checkout(self, checkout: Annotated[dict[str, Any], ''] = None) -> dict[str, Any]:
+    def modifies_an_existing_checkout(self, api_version, token, checkout: dict[str, Any] | None = None) -> dict[str, Any]:
         """
         Modifies an existing checkout via HTTP PUT request with provided checkout data.
         
@@ -6424,18 +6878,23 @@ class ShopifyApp(APIApplication):
         Tags:
             modify-checkout, sales-channels, checkout-management, http-put, important
         """
-        request_body = {
-            "checkout": checkout,
+        # Build the request body from parameters
+        request_body_payload = {
+            'checkout': checkout,
         }
-        request_body = {k: v for k, v in request_body.items() if v is not None}
-        path = ""
-        url = f"{self.base_url}{path}"
+        request_body_payload = {k: v for k, v in request_body_payload.items() if v is not None}
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/checkouts/{token}.json"
         query_params = {}
-        response = self._put(url, data=request_body, params=query_params)
+        response = self._put(url, json=request_body_payload, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def retrieves_alist_of_shipping_rates(self, ) -> dict[str, Any]:
+    def retrieves_alist_of_shipping_rates(self, api_version, token) -> dict[str, Any]:
         """
         Retrieves a list of available shipping rates for a checkout
         
@@ -6452,14 +6911,18 @@ class ShopifyApp(APIApplication):
         Tags:
             retrieve, shipping, rates, checkout, important
         """
-        path = ""
-        url = f"{self.base_url}{path}"
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/checkouts/{token}/shipping_rates.json"
         query_params = {}
         response = self._get(url, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def retrieve_collection_listings_that_are_published_to_your_app(self, limit: Annotated[Any, 'Amount of results(default: 50)(maximum: 1000) '] = None) -> dict[str, Any]:
+    def retrieve_collection_listings_that_are_published_to_your_app(self, api_version, limit: str | None = None) -> dict[str, Any]:
         """
         Retrieve published collection listings available to your app, implementing pagination via response header links.
         
@@ -6475,17 +6938,18 @@ class ShopifyApp(APIApplication):
         Tags:
             retrieve, collection-listing, sales-channels, api-pagination, pagination-header, important
         """
-        path = ""
-        url = f"{self.base_url}{path}"
-        query_params = {
-                "limit": limit,
-            }
-        query_params = {k: v for k, v in query_params.items() if v is not None}
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/collection_listings.json"
+        query_params = {k: v for k, v in [('limit', limit)] if v is not None}
         response = self._get(url, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def retrieve_code_product_ids_code_that_are_published_to_acode_collection_id_code(self, limit: Annotated[Any, 'Amount of results(default: 50)(maximum: 1000) '] = None) -> dict[str, Any]:
+    def retrieve_code_product_ids_code_that_are_published_to_acode_collection_id_code(self, api_version, collection_listing_id, limit: str | None = None) -> dict[str, Any]:
         """
         Retrieve product IDs published to a specified collection ID from the Shopify REST Admin API, supporting pagination via response headers.
         
@@ -6501,17 +6965,18 @@ class ShopifyApp(APIApplication):
         Tags:
             retrieve, product-ids, collection-listing, pagination, http-client, important
         """
-        path = ""
-        url = f"{self.base_url}{path}"
-        query_params = {
-                "limit": limit,
-            }
-        query_params = {k: v for k, v in query_params.items() if v is not None}
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/collection_listings/{collection_listing_id}/product_ids.json"
+        query_params = {k: v for k, v in [('limit', limit)] if v is not None}
         response = self._get(url, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def retrieve_aspecific_collection_listing_that_is_published_to_your_app(self, ) -> dict[str, Any]:
+    def retrieve_aspecific_collection_listing_that_is_published_to_your_app(self, api_version, collection_listing_id) -> dict[str, Any]:
         """
         Retrieves a specific collection listing published to your app.
         
@@ -6527,14 +6992,18 @@ class ShopifyApp(APIApplication):
         Tags:
             collection-listing, published, important, api-call
         """
-        path = ""
-        url = f"{self.base_url}{path}"
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/collection_listings/{collection_listing_id}.json"
         query_params = {}
         response = self._get(url, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def create_acollection_listing_to_publish_acollection_to_your_app(self, collection_listing: Annotated[dict[str, Any], ''] = None) -> dict[str, Any]:
+    def create_acollection_listing_to_publish_acollection_to_your_app(self, api_version, collection_listing_id, collection_listing: dict[str, Any] | None = None) -> dict[str, Any]:
         """
         Creates or updates a collection listing to publish a specific collection to the application.
         
@@ -6550,18 +7019,23 @@ class ShopifyApp(APIApplication):
         Tags:
             create, publish, collection-listing, management, important
         """
-        request_body = {
-            "collection_listing": collection_listing,
+        # Build the request body from parameters
+        request_body_payload = {
+            'collection_listing': collection_listing,
         }
-        request_body = {k: v for k, v in request_body.items() if v is not None}
-        path = ""
-        url = f"{self.base_url}{path}"
+        request_body_payload = {k: v for k, v in request_body_payload.items() if v is not None}
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/collection_listings/{collection_listing_id}.json"
         query_params = {}
-        response = self._put(url, data=request_body, params=query_params)
+        response = self._put(url, json=request_body_payload, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def delete_acollection_listing_to_unpublish_acollection_from_your_app(self, request_body: Annotated[Any, ''] = None) -> Any:
+    def delete_acollection_listing_to_unpublish_acollection_from_your_app(self, api_version, collection_listing_id, request_body: Any | None = None) -> Any:
         """
         Deletes a collection listing to unpublish it from the app by sending a DELETE request to the API endpoint.
         
@@ -6577,15 +7051,18 @@ class ShopifyApp(APIApplication):
         Tags:
             delete, unpublish, collection-listing, api, http, management, important
         """
-        request_body = request_body
-        path = ""
-        url = f"{self.base_url}{path}"
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/collection_listings/{collection_listing_id}.json"
         query_params = {}
-        response = self._delete(url, data=request_body, params=query_params)
+        response = self._delete(url, json=request_body, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def stores_acredit_card_in_the_card_vault(self, credit_card: Annotated[dict[str, Any], ''] = None) -> dict[str, Any]:
+    def stores_acredit_card_in_the_card_vault(self, credit_card: dict[str, Any] | None = None) -> dict[str, Any]:
         """
         Stores credit card details in a secure vault and returns a session ID for payment processing.
         
@@ -6601,18 +7078,23 @@ class ShopifyApp(APIApplication):
         Tags:
             payment, store, vault, session-id, post, checkout, important
         """
-        request_body = {
-            "credit_card": credit_card,
+        # Build the request body from parameters
+        request_body_payload = {
+            'credit_card': credit_card,
         }
-        request_body = {k: v for k, v in request_body.items() if v is not None}
-        path = ""
-        url = f"{self.base_url}{path}"
+        request_body_payload = {k: v for k, v in request_body_payload.items() if v is not None}
+        url = "https://{{store_name}}.myshopify.com/https:/elb.deposit.shopifycs.com/sessions"
         query_params = {}
-        response = self._post(url, data=request_body, params=query_params)
+        response = self._post(url, json=request_body_payload, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def retrieves_alist_of_payments_on_aparticular_checkout(self, ) -> dict[str, Any]:
+    def retrieves_alist_of_payments_on_aparticular_checkout(self, api_version, token) -> dict[str, Any]:
         """
         Retrieves a list of payments for a specific checkout.
         
@@ -6628,14 +7110,18 @@ class ShopifyApp(APIApplication):
         Tags:
             retrieve, payment, checkout, important
         """
-        path = ""
-        url = f"{self.base_url}{path}"
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/checkouts/{token}/payments.json"
         query_params = {}
         response = self._get(url, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def creates_anew_payment(self, payment: Annotated[dict[str, Any], ''] = None) -> dict[str, Any]:
+    def creates_anew_payment(self, api_version, token, payment: dict[str, Any] | None = None) -> dict[str, Any]:
         """
         Creates a new payment on a checkout using the provided payment details.
         
@@ -6651,18 +7137,23 @@ class ShopifyApp(APIApplication):
         Tags:
             payment, checkout, sales-channel, important
         """
-        request_body = {
-            "payment": payment,
+        # Build the request body from parameters
+        request_body_payload = {
+            'payment': payment,
         }
-        request_body = {k: v for k, v in request_body.items() if v is not None}
-        path = ""
-        url = f"{self.base_url}{path}"
+        request_body_payload = {k: v for k, v in request_body_payload.items() if v is not None}
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/checkouts/{token}/payments.json"
         query_params = {}
-        response = self._post(url, data=request_body, params=query_params)
+        response = self._post(url, json=request_body_payload, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def retrieves_asingle_payment(self, ) -> dict[str, Any]:
+    def retrieves_asingle_payment(self, api_version, token, payment_id) -> dict[str, Any]:
         """
         Retrieves a single payment by fetching payment information for an existing payment.
         
@@ -6678,14 +7169,18 @@ class ShopifyApp(APIApplication):
         Tags:
             payment, fetch, financial, important
         """
-        path = ""
-        url = f"{self.base_url}{path}"
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/checkouts/{token}/payments/{payment_id}.json"
         query_params = {}
         response = self._get(url, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def counts_the_number_of_payments_attempted_on_acheckout(self, ) -> dict[str, Any]:
+    def counts_the_number_of_payments_attempted_on_acheckout(self, api_version, token) -> dict[str, Any]:
         """
         Counts the number of payments attempted on a checkout
         
@@ -6701,14 +7196,18 @@ class ShopifyApp(APIApplication):
         Tags:
             payment, checkout, important
         """
-        path = ""
-        url = f"{self.base_url}{path}"
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/checkouts/{token}/payments/count.json"
         query_params = {}
         response = self._get(url, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def retrieve_product_listings_that_are_published_to_your_app(self, collection_id: Annotated[Any, 'Filter by products belonging to a particular collection '] = None, handle: Annotated[Any, 'Filter by product handle '] = None, limit: Annotated[Any, 'Amount of results(default: 50)(maximum: 1000) '] = None, page: Annotated[Any, 'Page to show(default: 1) '] = None, product_ids: Annotated[Any, 'A comma-separated list of product ids '] = None, updated_at_min: Annotated[Any, 'Filter by products last updated after a certain date and time (formatted in ISO 8601) '] = None) -> dict[str, Any]:
+    def retrieve_product_listings_that_are_published_to_your_app(self, api_version, product_ids: str | None = None, limit: str | None = None, page: str | None = None, collection_id: str | None = None, updated_at_min: str | None = None, handle: str | None = None) -> dict[str, Any]:
         """
         Retrieve product listings that are published to your app.
         
@@ -6729,22 +7228,18 @@ class ShopifyApp(APIApplication):
         Tags:
             management, product-listing, scrape, important
         """
-        path = ""
-        url = f"{self.base_url}{path}"
-        query_params = {
-                "product_ids": product_ids,
-                "limit": limit,
-                "page": page,
-                "collection_id": collection_id,
-                "updated_at_min": updated_at_min,
-                "handle": handle,
-            }
-        query_params = {k: v for k, v in query_params.items() if v is not None}
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/product_listings.json"
+        query_params = {k: v for k, v in [('product_ids', product_ids), ('limit', limit), ('page', page), ('collection_id', collection_id), ('updated_at_min', updated_at_min), ('handle', handle)] if v is not None}
         response = self._get(url, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def retrieve_code_product_ids_code_that_are_published_to_your_app(self, limit: Annotated[Any, 'Amount of results(default: 50)(maximum: 1000) '] = None) -> dict[str, Any]:
+    def retrieve_code_product_ids_code_that_are_published_to_your_app(self, api_version, limit: str | None = None) -> dict[str, Any]:
         """
         Retrieves product IDs published to the associated app, supporting pagination through response headers.
         
@@ -6760,17 +7255,18 @@ class ShopifyApp(APIApplication):
         Tags:
             retrieve, product-ids, api-pagination, important, shopify, rest-admin
         """
-        path = ""
-        url = f"{self.base_url}{path}"
-        query_params = {
-                "limit": limit,
-            }
-        query_params = {k: v for k, v in query_params.items() if v is not None}
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/product_listings/product_ids.json"
+        query_params = {k: v for k, v in [('limit', limit)] if v is not None}
         response = self._get(url, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def retrieve_acount_of_products_that_are_published_to_your_app(self, ) -> dict[str, Any]:
+    def retrieve_acount_of_products_that_are_published_to_your_app(self, api_version) -> dict[str, Any]:
         """
         Retrieves the count of products published to the associated app.
         
@@ -6786,14 +7282,18 @@ class ShopifyApp(APIApplication):
         Tags:
             retrieve, count, products, app, sales-channels, product-listing, important
         """
-        path = ""
-        url = f"{self.base_url}{path}"
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/product_listings/count.json"
         query_params = {}
         response = self._get(url, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def retrieve_aspecific_product_listing_that_is_published_to_your_app(self, ) -> dict[str, Any]:
+    def retrieve_aspecific_product_listing_that_is_published_to_your_app(self, api_version, product_listing_id) -> dict[str, Any]:
         """
         Retrieve a specific published product listing for your app.
         
@@ -6809,14 +7309,18 @@ class ShopifyApp(APIApplication):
         Tags:
             retrieve, product-listing, published, important, sales-channels
         """
-        path = ""
-        url = f"{self.base_url}{path}"
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/product_listings/{product_listing_id}.json"
         query_params = {}
         response = self._get(url, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def create_aproduct_listing_to_publish_aproduct_to_your_app(self, product_listing: Annotated[dict[str, Any], ''] = None) -> dict[str, Any]:
+    def create_aproduct_listing_to_publish_aproduct_to_your_app(self, api_version, product_listing_id, product_listing: dict[str, Any] | None = None) -> dict[str, Any]:
         """
         Creates a product listing to publish a product to your app.
         
@@ -6832,18 +7336,23 @@ class ShopifyApp(APIApplication):
         Tags:
             publish, product-listing, sales-channels, important
         """
-        request_body = {
-            "product_listing": product_listing,
+        # Build the request body from parameters
+        request_body_payload = {
+            'product_listing': product_listing,
         }
-        request_body = {k: v for k, v in request_body.items() if v is not None}
-        path = ""
-        url = f"{self.base_url}{path}"
+        request_body_payload = {k: v for k, v in request_body_payload.items() if v is not None}
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/product_listings/{product_listing_id}.json"
         query_params = {}
-        response = self._put(url, data=request_body, params=query_params)
+        response = self._put(url, json=request_body_payload, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def delete_aproduct_listing_to_unpublish_aproduct_from_your_app(self, request_body: Annotated[Any, ''] = None) -> Any:
+    def delete_aproduct_listing_to_unpublish_aproduct_from_your_app(self, api_version, product_listing_id, request_body: Any | None = None) -> Any:
         """
         Deletes a product listing to remove it from public view in your app's sales channels.
         
@@ -6859,15 +7368,18 @@ class ShopifyApp(APIApplication):
         Tags:
             delete, product-listing, sales-channels, api, important
         """
-        request_body = request_body
-        path = ""
-        url = f"{self.base_url}{path}"
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/product_listings/{product_listing_id}.json"
         query_params = {}
-        response = self._delete(url, data=request_body, params=query_params)
+        response = self._delete(url, json=request_body, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def receive_alist_of_all_resourcefeedbacks(self, ) -> dict[str, Any]:
+    def receive_alist_of_all_resourcefeedbacks(self, api_version) -> dict[str, Any]:
         """
         Retrieve a list of all ResourceFeedbacks as a dictionary.
         
@@ -6883,14 +7395,18 @@ class ShopifyApp(APIApplication):
         Tags:
             resource-feedback, fetch, important
         """
-        path = ""
-        url = f"{self.base_url}{path}"
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/resource_feedback.json"
         query_params = {}
         response = self._get(url, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def create_anew_resourcefeedback(self, resource_feedback: Annotated[dict[str, Any], ''] = None) -> dict[str, Any]:
+    def create_anew_resourcefeedback(self, api_version, resource_feedback: dict[str, Any] | None = None) -> dict[str, Any]:
         """
         Creates a new resource feedback entry for a Shopify shop resource.
         
@@ -6906,18 +7422,23 @@ class ShopifyApp(APIApplication):
         Tags:
             create, resource-feedback, shopify, sales-channels, management, important
         """
-        request_body = {
-            "resource_feedback": resource_feedback,
+        # Build the request body from parameters
+        request_body_payload = {
+            'resource_feedback': resource_feedback,
         }
-        request_body = {k: v for k, v in request_body.items() if v is not None}
-        path = ""
-        url = f"{self.base_url}{path}"
+        request_body_payload = {k: v for k, v in request_body_payload.items() if v is not None}
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/resource_feedback.json"
         query_params = {}
-        response = self._post(url, data=request_body, params=query_params)
+        response = self._post(url, json=request_body_payload, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def retrieves_alist_of_fulfillment_orders_on_ashop_for_aspecific_app(self, assignment_status: Annotated[Any, 'The assigment status of the fulfillment orders that should be returned: '] = None, location_ids: Annotated[Any, 'The IDs of the assigned locations of the fulfillment orders that should be returned. '] = None) -> dict[str, Any]:
+    def retrieves_alist_of_fulfillment_orders_on_ashop_for_aspecific_app(self, api_version, assignment_status: str | None = None, location_ids: str | None = None) -> dict[str, Any]:
         """
         Retrieves a list of fulfillment orders on a shop for a specific app, filtered by assignment status and location IDs.
         
@@ -6934,18 +7455,18 @@ class ShopifyApp(APIApplication):
         Tags:
             shipping-fulfillment, fulfillment-orders, list-retrieval, important, async-job, management
         """
-        path = ""
-        url = f"{self.base_url}{path}"
-        query_params = {
-                "assignment_status": assignment_status,
-                "location_ids": location_ids,
-            }
-        query_params = {k: v for k, v in query_params.items() if v is not None}
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/assigned_fulfillment_orders.json"
+        query_params = {k: v for k, v in [('assignment_status', assignment_status), ('location_ids', location_ids)] if v is not None}
         response = self._get(url, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def sends_acancellation_request(self, cancellation_request: Annotated[dict[str, Any], ''] = None) -> dict[str, Any]:
+    def sends_acancellation_request(self, api_version, fulfillment_order_id, cancellation_request: dict[str, Any] | None = None) -> dict[str, Any]:
         """
         Sends a cancellation request to the fulfillment service for a fulfillment order.
         
@@ -6961,18 +7482,23 @@ class ShopifyApp(APIApplication):
         Tags:
             cancellation, fulfillment, async-job, http-request, management, important
         """
-        request_body = {
-            "cancellation_request": cancellation_request,
+        # Build the request body from parameters
+        request_body_payload = {
+            'cancellation_request': cancellation_request,
         }
-        request_body = {k: v for k, v in request_body.items() if v is not None}
-        path = ""
-        url = f"{self.base_url}{path}"
+        request_body_payload = {k: v for k, v in request_body_payload.items() if v is not None}
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/fulfillment_orders/{fulfillment_order_id}/cancellation_request.json"
         query_params = {}
-        response = self._post(url, data=request_body, params=query_params)
+        response = self._post(url, json=request_body_payload, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def accepts_acancellation_request(self, cancellation_request: Annotated[dict[str, Any], ''] = None) -> dict[str, Any]:
+    def accepts_acancellation_request(self, api_version, fulfillment_order_id, cancellation_request: dict[str, Any] | None = None) -> dict[str, Any]:
         """
         Accepts a cancellation request sent to a fulfillment service for a fulfillment order.
         
@@ -6988,18 +7514,23 @@ class ShopifyApp(APIApplication):
         Tags:
             cancel, fulfillment, shipping, important
         """
-        request_body = {
-            "cancellation_request": cancellation_request,
+        # Build the request body from parameters
+        request_body_payload = {
+            'cancellation_request': cancellation_request,
         }
-        request_body = {k: v for k, v in request_body.items() if v is not None}
-        path = ""
-        url = f"{self.base_url}{path}"
+        request_body_payload = {k: v for k, v in request_body_payload.items() if v is not None}
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/fulfillment_orders/{fulfillment_order_id}/cancellation_request/accept.json"
         query_params = {}
-        response = self._post(url, data=request_body, params=query_params)
+        response = self._post(url, json=request_body_payload, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def rejects_acancellation_request(self, cancellation_request: Annotated[dict[str, Any], ''] = None) -> dict[str, Any]:
+    def rejects_acancellation_request(self, api_version, fulfillment_order_id, cancellation_request: dict[str, Any] | None = None) -> dict[str, Any]:
         """
         Rejects a cancellation request sent to a fulfillment service for a fulfillment order.
         
@@ -7015,18 +7546,23 @@ class ShopifyApp(APIApplication):
         Tags:
             shipping, fulfillment, cancel, important
         """
-        request_body = {
-            "cancellation_request": cancellation_request,
+        # Build the request body from parameters
+        request_body_payload = {
+            'cancellation_request': cancellation_request,
         }
-        request_body = {k: v for k, v in request_body.items() if v is not None}
-        path = ""
-        url = f"{self.base_url}{path}"
+        request_body_payload = {k: v for k, v in request_body_payload.items() if v is not None}
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/fulfillment_orders/{fulfillment_order_id}/cancellation_request/reject.json"
         query_params = {}
-        response = self._post(url, data=request_body, params=query_params)
+        response = self._post(url, json=request_body_payload, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def retrieves_alist_of_carrier_services(self, ) -> dict[str, Any]:
+    def retrieves_alist_of_carrier_services(self, api_version) -> dict[str, Any]:
         """
         Retrieves a list of carrier services available through the API.
         
@@ -7042,14 +7578,18 @@ class ShopifyApp(APIApplication):
         Tags:
             retrieve, list, carrier-services, shipping, fulfillment, api, important
         """
-        path = ""
-        url = f"{self.base_url}{path}"
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/carrier_services.json"
         query_params = {}
         response = self._get(url, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def creates_acarrier_service(self, carrier_service: Annotated[dict[str, Any], ''] = None) -> dict[str, Any]:
+    def creates_acarrier_service(self, api_version, carrier_service: dict[str, Any] | None = None) -> dict[str, Any]:
         """
         Creates a carrier service by sending a request with the specified carrier service details.
         
@@ -7065,18 +7605,23 @@ class ShopifyApp(APIApplication):
         Tags:
             management, shipping, fulfillment, carrier-service, important
         """
-        request_body = {
-            "carrier_service": carrier_service,
+        # Build the request body from parameters
+        request_body_payload = {
+            'carrier_service': carrier_service,
         }
-        request_body = {k: v for k, v in request_body.items() if v is not None}
-        path = ""
-        url = f"{self.base_url}{path}"
+        request_body_payload = {k: v for k, v in request_body_payload.items() if v is not None}
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/carrier_services.json"
         query_params = {}
-        response = self._post(url, data=request_body, params=query_params)
+        response = self._post(url, json=request_body_payload, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def retrieves_asingle_carrier_service(self, ) -> dict[str, Any]:
+    def retrieves_asingle_carrier_service(self, api_version, carrier_service_id) -> dict[str, Any]:
         """
         Retrieves a single carrier service by its ID.
         
@@ -7092,14 +7637,18 @@ class ShopifyApp(APIApplication):
         Tags:
             shipping, fulfillment, carrier-service, important
         """
-        path = ""
-        url = f"{self.base_url}{path}"
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/carrier_services/{carrier_service_id}.json"
         query_params = {}
         response = self._get(url, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def updates_acarrier_service(self, carrier_service: Annotated[dict[str, Any], ''] = None) -> dict[str, Any]:
+    def updates_acarrier_service(self, api_version, carrier_service_id, carrier_service: dict[str, Any] | None = None) -> dict[str, Any]:
         """
         Updates a carrier service. Only the app that creates a carrier service can update it.
         
@@ -7115,18 +7664,23 @@ class ShopifyApp(APIApplication):
         Tags:
             update, carrier-service, shipping, fulfillment, important
         """
-        request_body = {
-            "carrier_service": carrier_service,
+        # Build the request body from parameters
+        request_body_payload = {
+            'carrier_service': carrier_service,
         }
-        request_body = {k: v for k, v in request_body.items() if v is not None}
-        path = ""
-        url = f"{self.base_url}{path}"
+        request_body_payload = {k: v for k, v in request_body_payload.items() if v is not None}
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/carrier_services/{carrier_service_id}.json"
         query_params = {}
-        response = self._put(url, data=request_body, params=query_params)
+        response = self._put(url, json=request_body_payload, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def deletes_acarrier_service(self, request_body: Annotated[Any, ''] = None) -> dict[str, Any]:
+    def deletes_acarrier_service(self, api_version, carrier_service_id, request_body: Any | None = None) -> dict[str, Any]:
         """
         Deletes a carrier service by issuing a DELETE request.
         
@@ -7142,15 +7696,18 @@ class ShopifyApp(APIApplication):
         Tags:
             delete, carrier-service, shipping, fulfillment, important
         """
-        request_body = request_body
-        path = ""
-        url = f"{self.base_url}{path}"
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/carrier_services/{carrier_service_id}.json"
         query_params = {}
-        response = self._delete(url, data=request_body, params=query_params)
+        response = self._delete(url, json=request_body, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def retrieves_fulfillments_associated_with_an_order(self, created_at_max: Annotated[Any, 'Show fulfillments created before date (format: 2014-04-25T16:15:47-04:00). '] = None, created_at_min: Annotated[Any, 'Show fulfillments created after date (format: 2014-04-25T16:15:47-04:00). '] = None, fields: Annotated[Any, 'A comma-separated list of fields to include in the response. '] = None, limit: Annotated[Any, 'Limit the amount of results.(default: 50)(maximum: 250) '] = None, since_id: Annotated[Any, 'Restrict results to after the specified ID. '] = None, updated_at_max: Annotated[Any, 'Show fulfillments last updated before date (format: 2014-04-25T16:15:47-04:00). '] = None, updated_at_min: Annotated[Any, 'Show fulfillments last updated after date (format: 2014-04-25T16:15:47-04:00). '] = None) -> dict[str, Any]:
+    def retrieves_fulfillments_associated_with_an_order(self, api_version, order_id, created_at_max: str | None = None, created_at_min: str | None = None, fields: str | None = None, limit: str | None = None, since_id: str | None = None, updated_at_max: str | None = None, updated_at_min: str | None = None) -> dict[str, Any]:
         """
         Retrieves fulfillments associated with an order based on specified criteria.
         
@@ -7172,23 +7729,18 @@ class ShopifyApp(APIApplication):
         Tags:
             fulfillment, pagination, shipping, async-job, management, important
         """
-        path = ""
-        url = f"{self.base_url}{path}"
-        query_params = {
-                "created_at_max": created_at_max,
-                "created_at_min": created_at_min,
-                "fields": fields,
-                "limit": limit,
-                "since_id": since_id,
-                "updated_at_max": updated_at_max,
-                "updated_at_min": updated_at_min,
-            }
-        query_params = {k: v for k, v in query_params.items() if v is not None}
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/orders/{order_id}/fulfillments.json"
+        query_params = {k: v for k, v in [('created_at_max', created_at_max), ('created_at_min', created_at_min), ('fields', fields), ('limit', limit), ('since_id', since_id), ('updated_at_max', updated_at_max), ('updated_at_min', updated_at_min)] if v is not None}
         response = self._get(url, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def create_anew_fulfillment(self, fulfillment: Annotated[dict[str, Any], ''] = None) -> dict[str, Any]:
+    def create_anew_fulfillment(self, api_version, order_id, fulfillment: dict[str, Any] | None = None) -> dict[str, Any]:
         """
         Create a new fulfillment for an order, specifying line items and fulfillment details.
         
@@ -7204,18 +7756,23 @@ class ShopifyApp(APIApplication):
         Tags:
             fulfillment, shipping, e-commerce, important
         """
-        request_body = {
-            "fulfillment": fulfillment,
+        # Build the request body from parameters
+        request_body_payload = {
+            'fulfillment': fulfillment,
         }
-        request_body = {k: v for k, v in request_body.items() if v is not None}
-        path = ""
-        url = f"{self.base_url}{path}"
+        request_body_payload = {k: v for k, v in request_body_payload.items() if v is not None}
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/orders/{order_id}/fulfillments.json"
         query_params = {}
-        response = self._post(url, data=request_body, params=query_params)
+        response = self._post(url, json=request_body_payload, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def retrieves_fulfillments_associated_with_afulfillment_order(self, fulfillment_order_id: Annotated[Any, 'The ID of the fulfillment order that is associated with the fulfillments. '] = None) -> dict[str, Any]:
+    def retrieves_fulfillments_associated_with_afulfillment_order(self, api_version, fulfillment_order_id) -> dict[str, Any]:
         """
         Retrieves all fulfillments associated with a specified fulfillment order.
         
@@ -7231,17 +7788,18 @@ class ShopifyApp(APIApplication):
         Tags:
             retrieve, fulfillments, shipping, fulfillment-order, api, important
         """
-        path = ""
-        url = f"{self.base_url}{path}"
-        query_params = {
-                "fulfillment_order_id": fulfillment_order_id,
-            }
-        query_params = {k: v for k, v in query_params.items() if v is not None}
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/fulfillment_orders/{fulfillment_order_id}/fulfillments.json"
+        query_params = {k: v for k, v in [('fulfillment_order_id', fulfillment_order_id)] if v is not None}
         response = self._get(url, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def retrieves_acount_of_fulfillments_associated_with_aspecific_order(self, created_at_max: Annotated[Any, 'Count fulfillments created before date (format: 2014-04-25T16:15:47-04:00). '] = None, created_at_min: Annotated[Any, 'Count fulfillments created after date (format: 2014-04-25T16:15:47-04:00). '] = None, updated_at_max: Annotated[Any, 'Count fulfillments last updated before date (format: 2014-04-25T16:15:47-04:00). '] = None, updated_at_min: Annotated[Any, 'Count fulfillments last updated after date (format: 2014-04-25T16:15:47-04:00). '] = None) -> dict[str, Any]:
+    def retrieves_acount_of_fulfillments_associated_with_aspecific_order(self, api_version, order_id, created_at_min: str | None = None, created_at_max: str | None = None, updated_at_min: str | None = None, updated_at_max: str | None = None) -> dict[str, Any]:
         """
         Retrieves a count of fulfillments associated with a specific order based on date filters.
         
@@ -7260,20 +7818,18 @@ class ShopifyApp(APIApplication):
         Tags:
             shipping, fulfillment, important
         """
-        path = ""
-        url = f"{self.base_url}{path}"
-        query_params = {
-                "created_at_min": created_at_min,
-                "created_at_max": created_at_max,
-                "updated_at_min": updated_at_min,
-                "updated_at_max": updated_at_max,
-            }
-        query_params = {k: v for k, v in query_params.items() if v is not None}
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/orders/{order_id}/fulfillments/count.json"
+        query_params = {k: v for k, v in [('created_at_min', created_at_min), ('created_at_max', created_at_max), ('updated_at_min', updated_at_min), ('updated_at_max', updated_at_max)] if v is not None}
         response = self._get(url, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def receive_asingle_fulfillment(self, fields: Annotated[Any, 'Comma-separated list of fields to include in the response. '] = None) -> dict[str, Any]:
+    def receive_asingle_fulfillment(self, api_version, order_id, fulfillment_id, fields: str | None = None) -> dict[str, Any]:
         """
         Retrieves a specific fulfillment entry from the API by making a GET request.
         
@@ -7289,17 +7845,18 @@ class ShopifyApp(APIApplication):
         Tags:
             fulfillment, retrieve, shipping, api, get, important
         """
-        path = ""
-        url = f"{self.base_url}{path}"
-        query_params = {
-                "fields": fields,
-            }
-        query_params = {k: v for k, v in query_params.items() if v is not None}
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/orders/{order_id}/fulfillments/{fulfillment_id}.json"
+        query_params = {k: v for k, v in [('fields', fields)] if v is not None}
         response = self._get(url, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def modify_an_existing_fulfillment(self, fulfillment: Annotated[dict[str, Any], ''] = None) -> dict[str, Any]:
+    def modify_an_existing_fulfillment(self, api_version, order_id, fulfillment_id, fulfillment: dict[str, Any] | None = None) -> dict[str, Any]:
         """
         Updates an existing fulfillment by modifying its details and returns the updated fulfillment data.
         
@@ -7315,18 +7872,23 @@ class ShopifyApp(APIApplication):
         Tags:
             fulfillment, update, shipping, management, put-request, api, important
         """
-        request_body = {
-            "fulfillment": fulfillment,
+        # Build the request body from parameters
+        request_body_payload = {
+            'fulfillment': fulfillment,
         }
-        request_body = {k: v for k, v in request_body.items() if v is not None}
-        path = ""
-        url = f"{self.base_url}{path}"
+        request_body_payload = {k: v for k, v in request_body_payload.items() if v is not None}
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/orders/{order_id}/fulfillments/{fulfillment_id}.json"
         query_params = {}
-        response = self._put(url, data=request_body, params=query_params)
+        response = self._put(url, json=request_body_payload, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def creates_afulfillment_for_one_or_many_fulfillment_orders(self, fulfillment: Annotated[dict[str, Any], ''] = None) -> dict[str, Any]:
+    def creates_afulfillment_for_one_or_many_fulfillment_orders(self, api_version, fulfillment: dict[str, Any] | None = None) -> dict[str, Any]:
         """
         Creates a fulfillment for one or multiple fulfillment orders associated with the same order at the same location.
         
@@ -7343,18 +7905,23 @@ class ShopifyApp(APIApplication):
         Tags:
             fulfillment, shipping, create, batch, api-integration, important
         """
-        request_body = {
-            "fulfillment": fulfillment,
+        # Build the request body from parameters
+        request_body_payload = {
+            'fulfillment': fulfillment,
         }
-        request_body = {k: v for k, v in request_body.items() if v is not None}
-        path = ""
-        url = f"{self.base_url}{path}"
+        request_body_payload = {k: v for k, v in request_body_payload.items() if v is not None}
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/fulfillments.json"
         query_params = {}
-        response = self._post(url, data=request_body, params=query_params)
+        response = self._post(url, json=request_body_payload, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def updates_the_tracking_information_for_afulfillment(self, fulfillment: Annotated[dict[str, Any], ''] = None) -> dict[str, Any]:
+    def updates_the_tracking_information_for_afulfillment(self, api_version, fulfillment_id, fulfillment: dict[str, Any] | None = None) -> dict[str, Any]:
         """
         Updates the tracking information for a fulfillment by sending a POST request with the provided fulfillment data.
         
@@ -7370,18 +7937,23 @@ class ShopifyApp(APIApplication):
         Tags:
             update, fulfillment, shipping, important
         """
-        request_body = {
-            "fulfillment": fulfillment,
+        # Build the request body from parameters
+        request_body_payload = {
+            'fulfillment': fulfillment,
         }
-        request_body = {k: v for k, v in request_body.items() if v is not None}
-        path = ""
-        url = f"{self.base_url}{path}"
+        request_body_payload = {k: v for k, v in request_body_payload.items() if v is not None}
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/fulfillments/{fulfillment_id}/update_tracking.json"
         query_params = {}
-        response = self._post(url, data=request_body, params=query_params)
+        response = self._post(url, json=request_body_payload, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def complete_afulfillment(self, request_body: Annotated[Any, ''] = None) -> dict[str, Any]:
+    def complete_afulfillment(self, api_version, order_id, fulfillment_id, request_body: Any | None = None) -> dict[str, Any]:
         """
         Complete a fulfillment by marking it as complete and processing the request.
         
@@ -7397,15 +7969,18 @@ class ShopifyApp(APIApplication):
         Tags:
             fulfillment, shipping, completion, important
         """
-        request_body = request_body
-        path = ""
-        url = f"{self.base_url}{path}"
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/orders/{order_id}/fulfillments/{fulfillment_id}/complete.json"
         query_params = {}
-        response = self._post(url, data=request_body, params=query_params)
+        response = self._post(url, json=request_body, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def transition_afulfillment_from_pending_to_open(self, request_body: Annotated[Any, ''] = None) -> dict[str, Any]:
+    def transition_afulfillment_from_pending_to_open(self, api_version, order_id, fulfillment_id, request_body: Any | None = None) -> dict[str, Any]:
         """
         Transition a fulfillment from pending to open, marking it as open.
         
@@ -7421,15 +7996,18 @@ class ShopifyApp(APIApplication):
         Tags:
             fulfillment, shipping, transition, important
         """
-        request_body = request_body
-        path = ""
-        url = f"{self.base_url}{path}"
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/orders/{order_id}/fulfillments/{fulfillment_id}/open.json"
         query_params = {}
-        response = self._post(url, data=request_body, params=query_params)
+        response = self._post(url, json=request_body, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def cancel_afulfillment_for_aspecific_order_id(self, request_body: Annotated[Any, ''] = None) -> dict[str, Any]:
+    def cancel_afulfillment_for_aspecific_order_id(self, api_version, order_id, fulfillment_id, request_body: Any | None = None) -> dict[str, Any]:
         """
         Cancels a fulfillment for a specific order ID by sending a POST request to the fulfillment service.
         
@@ -7445,15 +8023,18 @@ class ShopifyApp(APIApplication):
         Tags:
             cancel, fulfillment, shipping, async-job, management, important
         """
-        request_body = request_body
-        path = ""
-        url = f"{self.base_url}{path}"
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/orders/{order_id}/fulfillments/{fulfillment_id}/cancel.json"
         query_params = {}
-        response = self._post(url, data=request_body, params=query_params)
+        response = self._post(url, json=request_body, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def cancels_afulfillment(self, request_body: Annotated[Any, ''] = None) -> dict[str, Any]:
+    def cancels_afulfillment(self, api_version, fulfillment_id, request_body: Any | None = None) -> dict[str, Any]:
         """
         Cancels a fulfillment.
         
@@ -7469,15 +8050,18 @@ class ShopifyApp(APIApplication):
         Tags:
             cancel, fulfillment, shipping-management, important
         """
-        request_body = request_body
-        path = ""
-        url = f"{self.base_url}{path}"
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/fulfillments/{fulfillment_id}/cancel.json"
         query_params = {}
-        response = self._post(url, data=request_body, params=query_params)
+        response = self._post(url, json=request_body, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def retrieves_alist_of_fulfillment_events_for_aspecific_fulfillment(self, fulfillment_id: Annotated[Any, "The ID of the fulfillment that\\'s associated with the fulfillment event. "] = None, order_id: Annotated[Any, "The ID of the order that\\'s associated with the fulfillment event. "] = None) -> dict[str, Any]:
+    def retrieves_alist_of_fulfillment_events_for_aspecific_fulfillment(self, api_version, order_id, fulfillment_id) -> dict[str, Any]:
         """
         Retrieves a list of fulfillment events associated with a specific fulfillment.
         
@@ -7494,18 +8078,18 @@ class ShopifyApp(APIApplication):
         Tags:
             retrieve, list, fulfillment-events, shipping, api, important
         """
-        path = ""
-        url = f"{self.base_url}{path}"
-        query_params = {
-                "fulfillment_id": fulfillment_id,
-                "order_id": order_id,
-            }
-        query_params = {k: v for k, v in query_params.items() if v is not None}
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/orders/{order_id}/fulfillments/{fulfillment_id}/events.json"
+        query_params = {k: v for k, v in [('fulfillment_id', fulfillment_id), ('order_id', order_id)] if v is not None}
         response = self._get(url, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def creates_afulfillment_event(self, event: Annotated[dict[str, Any], ''] = None) -> dict[str, Any]:
+    def creates_afulfillment_event(self, api_version, order_id, fulfillment_id, event: dict[str, Any] | None = None) -> dict[str, Any]:
         """
         Creates a fulfillment event by sending a payload to a configured endpoint.
         
@@ -7521,18 +8105,23 @@ class ShopifyApp(APIApplication):
         Tags:
             create, fulfillment-event, shipping, api-call, important
         """
-        request_body = {
-            "event": event,
+        # Build the request body from parameters
+        request_body_payload = {
+            'event': event,
         }
-        request_body = {k: v for k, v in request_body.items() if v is not None}
-        path = ""
-        url = f"{self.base_url}{path}"
+        request_body_payload = {k: v for k, v in request_body_payload.items() if v is not None}
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/orders/{order_id}/fulfillments/{fulfillment_id}/events.json"
         query_params = {}
-        response = self._post(url, data=request_body, params=query_params)
+        response = self._post(url, json=request_body_payload, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def retrieves_aspecific_fulfillment_event(self, event_id: Annotated[Any, 'The ID of the fulfillment event. '] = None) -> dict[str, Any]:
+    def retrieves_aspecific_fulfillment_event(self, api_version, order_id, fulfillment_id, event_id) -> dict[str, Any]:
         """
         Retrieves a specific fulfillment event from the server.
         
@@ -7548,17 +8137,18 @@ class ShopifyApp(APIApplication):
         Tags:
             retrieves, fulfillment, management, important
         """
-        path = ""
-        url = f"{self.base_url}{path}"
-        query_params = {
-                "event_id": event_id,
-            }
-        query_params = {k: v for k, v in query_params.items() if v is not None}
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/orders/{order_id}/fulfillments/{fulfillment_id}/events/{event_id}.json"
+        query_params = {k: v for k, v in [('event_id', event_id)] if v is not None}
         response = self._get(url, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def deletes_afulfillment_event(self, request_body: Annotated[Any, ''] = None) -> dict[str, Any]:
+    def deletes_afulfillment_event(self, api_version, order_id, fulfillment_id, event_id, request_body: Any | None = None) -> dict[str, Any]:
         """
         Deletes a fulfillment event.
         
@@ -7574,15 +8164,18 @@ class ShopifyApp(APIApplication):
         Tags:
             delete, fulfillment, shipping, important
         """
-        request_body = request_body
-        path = ""
-        url = f"{self.base_url}{path}"
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/orders/{order_id}/fulfillments/{fulfillment_id}/events/{event_id}.json"
         query_params = {}
-        response = self._delete(url, data=request_body, params=query_params)
+        response = self._delete(url, json=request_body, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def retrieves_alist_of_fulfillment_orders_for_aspecific_order(self, order_id: Annotated[Any, 'The ID of the order that is associated with the fulfillment orders. '] = None) -> dict[str, Any]:
+    def retrieves_alist_of_fulfillment_orders_for_aspecific_order(self, api_version, order_id) -> dict[str, Any]:
         """
         Retrieves a list of fulfillment orders associated with a specific order ID.
         
@@ -7598,17 +8191,18 @@ class ShopifyApp(APIApplication):
         Tags:
             retrieve, fulfillment-orders, shipping, management, important
         """
-        path = ""
-        url = f"{self.base_url}{path}"
-        query_params = {
-                "order_id": order_id,
-            }
-        query_params = {k: v for k, v in query_params.items() if v is not None}
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/orders/{order_id}/fulfillment_orders.json"
+        query_params = {k: v for k, v in [('order_id', order_id)] if v is not None}
         response = self._get(url, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def retrieves_aspecific_fulfillment_order(self, ) -> dict[str, Any]:
+    def retrieves_aspecific_fulfillment_order(self, api_version, fulfillment_order_id) -> dict[str, Any]:
         """
         Retrieves a specific fulfillment order from a fulfillment service.
         
@@ -7624,14 +8218,18 @@ class ShopifyApp(APIApplication):
         Tags:
             retrieval, fulfillment, shipping, important
         """
-        path = ""
-        url = f"{self.base_url}{path}"
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/fulfillment_orders/{fulfillment_order_id}.json"
         query_params = {}
         response = self._get(url, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def cancel_afulfillment_order(self, fulfillment_order: Annotated[dict[str, Any], ''] = None) -> dict[str, Any]:
+    def cancel_afulfillment_order(self, api_version, fulfillment_order_id, fulfillment_order: dict[str, Any] | None = None) -> dict[str, Any]:
         """
         Cancel a fulfillment order by marking it as cancelled.
         
@@ -7647,18 +8245,23 @@ class ShopifyApp(APIApplication):
         Tags:
             cancel, fulfillment, shipping, important
         """
-        request_body = {
-            "fulfillment_order": fulfillment_order,
+        # Build the request body from parameters
+        request_body_payload = {
+            'fulfillment_order': fulfillment_order,
         }
-        request_body = {k: v for k, v in request_body.items() if v is not None}
-        path = ""
-        url = f"{self.base_url}{path}"
+        request_body_payload = {k: v for k, v in request_body_payload.items() if v is not None}
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/fulfillment_orders/{fulfillment_order_id}/cancel.json"
         query_params = {}
-        response = self._post(url, data=request_body, params=query_params)
+        response = self._post(url, json=request_body_payload, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def marks_afulfillment_order_as_incomplete(self, fulfillment_order: Annotated[dict[str, Any], ''] = None) -> dict[str, Any]:
+    def marks_afulfillment_order_as_incomplete(self, api_version, fulfillment_order_id, fulfillment_order: dict[str, Any] | None = None) -> dict[str, Any]:
         """
         Marks an in-progress fulfillment order as incomplete, signaling the fulfillment service cannot ship remaining items and intends to close the order.
         
@@ -7674,47 +8277,57 @@ class ShopifyApp(APIApplication):
         Tags:
             fulfillment, order-management, shipping, api, async-job, important
         """
-        request_body = {
-            "fulfillment_order": fulfillment_order,
+        # Build the request body from parameters
+        request_body_payload = {
+            'fulfillment_order': fulfillment_order,
         }
-        request_body = {k: v for k, v in request_body.items() if v is not None}
-        path = ""
-        url = f"{self.base_url}{path}"
+        request_body_payload = {k: v for k, v in request_body_payload.items() if v is not None}
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/fulfillment_orders/{fulfillment_order_id}/close.json"
         query_params = {}
-        response = self._post(url, data=request_body, params=query_params)
+        response = self._post(url, json=request_body_payload, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def moves_afulfillment_order_to_anew_location(self, fulfillment_order: Annotated[dict[str, Any], ''] = None) -> dict[str, Any]:
+    def moves_afulfillment_order_to_anew_location(self, api_version, fulfillment_order_id, fulfillment_order: dict[str, Any] | None = None) -> dict[str, Any]:
         """
         Moves an in-progress fulfillment order to a new location, updating the fulfillment service
         warehouse or pick-up point from which the order will be shipped.
-
+        
         Args:
             fulfillment_order: Dictionary containing fulfillment order details, including the new
                 location information to which the order should be moved (default: None)
-
+        
         Returns:
             Dictionary containing the API response data after processing the request
-
+        
         Raises:
             HTTPError: Raised if the API request fails with an HTTP error status code
-
+        
         Tags:
             fulfillment, order-management, shipping, api, async-job, important
         """
-        request_body = {
-            "fulfillment_order": fulfillment_order,
+        # Build the request body from parameters
+        request_body_payload = {
+            'fulfillment_order': fulfillment_order,
         }
-        request_body = {k: v for k, v in request_body.items() if v is not None}
-        path = ""
-        url = f"{self.base_url}{path}"
+        request_body_payload = {k: v for k, v in request_body_payload.items() if v is not None}
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/fulfillment_orders/{fulfillment_order_id}/move.json"
         query_params = {}
-        response = self._post(url, data=request_body, params=query_params)
+        response = self._post(url, json=request_body_payload, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def sends_afulfillment_request(self, fulfillment_request: Annotated[dict[str, Any], ''] = None) -> dict[str, Any]:
+    def sends_afulfillment_request(self, api_version, fulfillment_order_id, fulfillment_request: dict[str, Any] | None = None) -> dict[str, Any]:
         """
         Sends a fulfillment request to a fulfillment service.
         
@@ -7730,18 +8343,23 @@ class ShopifyApp(APIApplication):
         Tags:
             send, fulfillment, shipping, http, async_job, important
         """
-        request_body = {
-            "fulfillment_request": fulfillment_request,
+        # Build the request body from parameters
+        request_body_payload = {
+            'fulfillment_request': fulfillment_request,
         }
-        request_body = {k: v for k, v in request_body.items() if v is not None}
-        path = ""
-        url = f"{self.base_url}{path}"
+        request_body_payload = {k: v for k, v in request_body_payload.items() if v is not None}
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/fulfillment_orders/{fulfillment_order_id}/fulfillment_request.json"
         query_params = {}
-        response = self._post(url, data=request_body, params=query_params)
+        response = self._post(url, json=request_body_payload, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def accepts_afulfillment_request(self, fulfillment_request: Annotated[dict[str, Any], ''] = None) -> dict[str, Any]:
+    def accepts_afulfillment_request(self, api_version, fulfillment_order_id, fulfillment_request: dict[str, Any] | None = None) -> dict[str, Any]:
         """
         Accepts a fulfillment request sent to a fulfillment service for a fulfillment order.
         
@@ -7757,18 +8375,23 @@ class ShopifyApp(APIApplication):
         Tags:
             fulfillment, shipping, accept, important
         """
-        request_body = {
-            "fulfillment_request": fulfillment_request,
+        # Build the request body from parameters
+        request_body_payload = {
+            'fulfillment_request': fulfillment_request,
         }
-        request_body = {k: v for k, v in request_body.items() if v is not None}
-        path = ""
-        url = f"{self.base_url}{path}"
+        request_body_payload = {k: v for k, v in request_body_payload.items() if v is not None}
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/fulfillment_orders/{fulfillment_order_id}/fulfillment_request/accept.json"
         query_params = {}
-        response = self._post(url, data=request_body, params=query_params)
+        response = self._post(url, json=request_body_payload, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def rejects_afulfillment_request(self, fulfillment_request: Annotated[dict[str, Any], ''] = None) -> dict[str, Any]:
+    def rejects_afulfillment_request(self, api_version, fulfillment_order_id, fulfillment_request: dict[str, Any] | None = None) -> dict[str, Any]:
         """
         Rejects a fulfillment request sent to a fulfillment service for a fulfillment order.
         
@@ -7784,18 +8407,23 @@ class ShopifyApp(APIApplication):
         Tags:
             fulfillment, reject, shipping, async-job, management, important
         """
-        request_body = {
-            "fulfillment_request": fulfillment_request,
+        # Build the request body from parameters
+        request_body_payload = {
+            'fulfillment_request': fulfillment_request,
         }
-        request_body = {k: v for k, v in request_body.items() if v is not None}
-        path = ""
-        url = f"{self.base_url}{path}"
+        request_body_payload = {k: v for k, v in request_body_payload.items() if v is not None}
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/fulfillment_orders/{fulfillment_order_id}/fulfillment_request/reject.json"
         query_params = {}
-        response = self._post(url, data=request_body, params=query_params)
+        response = self._post(url, json=request_body_payload, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def receive_alist_of_all_fulfillmentservices(self, scope: Annotated[Any, ''] = None) -> dict[str, Any]:
+    def receive_alist_of_all_fulfillmentservices(self, api_version, scope: str | None = None) -> dict[str, Any]:
         """
         Retrieves a list of all FulfillmentServices based on the specified scope.
         
@@ -7811,17 +8439,18 @@ class ShopifyApp(APIApplication):
         Tags:
             fulfillment, shipping, important
         """
-        path = ""
-        url = f"{self.base_url}{path}"
-        query_params = {
-                "scope": scope,
-            }
-        query_params = {k: v for k, v in query_params.items() if v is not None}
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/fulfillment_services.json"
+        query_params = {k: v for k, v in [('scope', scope)] if v is not None}
         response = self._get(url, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def create_anew_fulfillmentservice(self, fulfillment_service: Annotated[dict[str, Any], ''] = None) -> dict[str, Any]:
+    def create_anew_fulfillmentservice(self, api_version, fulfillment_service: dict[str, Any] | None = None) -> dict[str, Any]:
         """
         Create a new FulfillmentService by sending a POST request to Shopify.
         
@@ -7837,18 +8466,23 @@ class ShopifyApp(APIApplication):
         Tags:
             create, fulfillment, service, shopify, important
         """
-        request_body = {
-            "fulfillment_service": fulfillment_service,
+        # Build the request body from parameters
+        request_body_payload = {
+            'fulfillment_service': fulfillment_service,
         }
-        request_body = {k: v for k, v in request_body.items() if v is not None}
-        path = ""
-        url = f"{self.base_url}{path}"
+        request_body_payload = {k: v for k, v in request_body_payload.items() if v is not None}
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/fulfillment_services.json"
         query_params = {}
-        response = self._post(url, data=request_body, params=query_params)
+        response = self._post(url, json=request_body_payload, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def receive_asingle_fulfillmentservice(self, ) -> dict[str, Any]:
+    def receive_asingle_fulfillmentservice(self, api_version, fulfillment_service_id) -> dict[str, Any]:
         """
         Receive a single FulfillmentService.
         
@@ -7864,14 +8498,18 @@ class ShopifyApp(APIApplication):
         Tags:
             fulfillment, shipping, receive, important
         """
-        path = ""
-        url = f"{self.base_url}{path}"
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/fulfillment_services/{fulfillment_service_id}.json"
         query_params = {}
         response = self._get(url, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def modify_an_existing_fulfillmentservice(self, fulfillment_service: Annotated[dict[str, Any], ''] = None) -> dict[str, Any]:
+    def modify_an_existing_fulfillmentservice(self, api_version, fulfillment_service_id, fulfillment_service: dict[str, Any] | None = None) -> dict[str, Any]:
         """
         Modifies an existing FulfillmentService using a provided dictionary of fulfillment service details.
         
@@ -7887,18 +8525,23 @@ class ShopifyApp(APIApplication):
         Tags:
             modify, fulfillment, shipping, important
         """
-        request_body = {
-            "fulfillment_service": fulfillment_service,
+        # Build the request body from parameters
+        request_body_payload = {
+            'fulfillment_service': fulfillment_service,
         }
-        request_body = {k: v for k, v in request_body.items() if v is not None}
-        path = ""
-        url = f"{self.base_url}{path}"
+        request_body_payload = {k: v for k, v in request_body_payload.items() if v is not None}
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/fulfillment_services/{fulfillment_service_id}.json"
         query_params = {}
-        response = self._put(url, data=request_body, params=query_params)
+        response = self._put(url, json=request_body_payload, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def remove_an_existing_fulfillmentservice(self, request_body: Annotated[Any, ''] = None) -> dict[str, Any]:
+    def remove_an_existing_fulfillmentservice(self, api_version, fulfillment_service_id, request_body: Any | None = None) -> dict[str, Any]:
         """
         Removes an existing FulfillmentService.
         
@@ -7914,15 +8557,18 @@ class ShopifyApp(APIApplication):
         Tags:
             fulfillment, shipping, management, important, delete-service
         """
-        request_body = request_body
-        path = ""
-        url = f"{self.base_url}{path}"
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/fulfillment_services/{fulfillment_service_id}.json"
         query_params = {}
-        response = self._delete(url, data=request_body, params=query_params)
+        response = self._delete(url, json=request_body, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def retrieves_alist_of_locations_that_afulfillment_order_can_potentially_move_to(self, fulfillment_order_id: Annotated[Any, 'The ID of the fulfillment order. '] = None) -> dict[str, Any]:
+    def retrieves_alist_of_locations_that_afulfillment_order_can_potentially_move_to(self, api_version, fulfillment_order_id) -> dict[str, Any]:
         """
         Retrieves a list of locations to which a fulfillment order can potentially move.
         
@@ -7939,17 +8585,18 @@ class ShopifyApp(APIApplication):
         Tags:
             fulfillment, location-management, shipping, important
         """
-        path = ""
-        url = f"{self.base_url}{path}"
-        query_params = {
-                "fulfillment_order_id": fulfillment_order_id,
-            }
-        query_params = {k: v for k, v in query_params.items() if v is not None}
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/fulfillment_orders/{fulfillment_order_id}/locations_for_move.json"
+        query_params = {k: v for k, v in [('fulfillment_order_id', fulfillment_order_id)] if v is not None}
         response = self._get(url, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def return_the_current_balance(self, ) -> dict[str, Any]:
+    def return_the_current_balance(self, api_version) -> dict[str, Any]:
         """
         Retrieve the current balance of an account.
         
@@ -7965,14 +8612,18 @@ class ShopifyApp(APIApplication):
         Tags:
             balance, shopify-payments, important, get-account-data
         """
-        path = ""
-        url = f"{self.base_url}{path}"
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/shopify_payments/balance.json"
         query_params = {}
         response = self._get(url, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def return_alist_of_all_disputes(self, initiated_at: Annotated[Any, 'Return only disputes with the specified `initiated_at` date ([ISO 8601][1] format). \n\n[1]: https://en.wikipedia.org/wiki/ISO_8601\n'] = None, last_id: Annotated[Any, 'Return only disputes before the specified ID. '] = None, since_id: Annotated[Any, 'Return only disputes after the specified ID. '] = None, status: Annotated[Any, 'Return only disputes with the specified status. '] = None) -> dict[str, Any]:
+    def return_alist_of_all_disputes(self, api_version, since_id: str | None = None, last_id: str | None = None, status: str | None = None, initiated_at: str | None = None) -> dict[str, Any]:
         """
         Retrieve a list of all disputes, filtered by optional parameters for initiate date, IDs, and status. The disputes are ordered by initiation date in descending order.
         
@@ -7991,20 +8642,18 @@ class ShopifyApp(APIApplication):
         Tags:
             retrieve, dispute, management, important
         """
-        path = ""
-        url = f"{self.base_url}{path}"
-        query_params = {
-                "since_id": since_id,
-                "last_id": last_id,
-                "status": status,
-                "initiated_at": initiated_at,
-            }
-        query_params = {k: v for k, v in query_params.items() if v is not None}
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/shopify_payments/disputes.json"
+        query_params = {k: v for k, v in [('since_id', since_id), ('last_id', last_id), ('status', status), ('initiated_at', initiated_at)] if v is not None}
         response = self._get(url, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def return_asingle_dispute(self, ) -> dict[str, Any]:
+    def return_asingle_dispute(self, api_version, dispute_id) -> dict[str, Any]:
         """
         Retrieves a single dispute by ID via Shopify Payments.
         
@@ -8020,14 +8669,18 @@ class ShopifyApp(APIApplication):
         Tags:
             shopify, payments, dispute, important
         """
-        path = ""
-        url = f"{self.base_url}{path}"
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/shopify_payments/disputes/{dispute_id}.json"
         query_params = {}
         response = self._get(url, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def return_alist_of_all_payouts(self, date: Annotated[Any, 'Filter response to payouts on the specified date. '] = None, date_max: Annotated[Any, 'Filter response to payouts inclusively before the specified date. '] = None, date_min: Annotated[Any, 'Filter response to payouts inclusively after the specified date. '] = None, last_id: Annotated[Any, 'Filter response to payouts exclusively before the specified ID '] = None, since_id: Annotated[Any, 'Filter response to payouts exclusively after the specified ID. '] = None, status: Annotated[Any, 'Filter response to payouts with the specified status '] = None) -> dict[str, Any]:
+    def return_alist_of_all_payouts(self, api_version, since_id: str | None = None, last_id: str | None = None, date_min: str | None = None, date_max: str | None = None, date: str | None = None, status: str | None = None) -> dict[str, Any]:
         """
         Retrieve a paginated list of payouts ordered by date (most recent first) with filtering options.
         
@@ -8048,22 +8701,18 @@ class ShopifyApp(APIApplication):
         Tags:
             shopify-payments, payouts, list, filter, pagination, api, management, important
         """
-        path = ""
-        url = f"{self.base_url}{path}"
-        query_params = {
-                "since_id": since_id,
-                "last_id": last_id,
-                "date_min": date_min,
-                "date_max": date_max,
-                "date": date,
-                "status": status,
-            }
-        query_params = {k: v for k, v in query_params.items() if v is not None}
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/shopify_payments/payouts.json"
+        query_params = {k: v for k, v in [('since_id', since_id), ('last_id', last_id), ('date_min', date_min), ('date_max', date_max), ('date', date), ('status', status)] if v is not None}
         response = self._get(url, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def return_asingle_payout(self, ) -> dict[str, Any]:
+    def return_asingle_payout(self, api_version, payout_id) -> dict[str, Any]:
         """
         Retrieves a single payout by ID from Shopify Payments.
         
@@ -8079,14 +8728,18 @@ class ShopifyApp(APIApplication):
         Tags:
             shopify-payments, payouts, retrieve, http, important
         """
-        path = ""
-        url = f"{self.base_url}{path}"
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/shopify_payments/payouts/{payout_id}.json"
         query_params = {}
         response = self._get(url, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def return_alist_of_all_balance_transactions(self, last_id: Annotated[Any, 'Filter response to transactions exclusively before the specified ID '] = None, payout_id: Annotated[Any, 'Filter response to transactions paid out in the specified payout. '] = None, payout_status: Annotated[Any, 'Filter response to transactions with the specified payout status '] = None, since_id: Annotated[Any, 'Filter response to transactions exclusively after the specified ID. '] = None, test: Annotated[Any, 'Filter response to transactions placed in test mode. '] = None) -> dict[str, Any]:
+    def return_alist_of_all_balance_transactions(self, api_version, since_id: str | None = None, last_id: str | None = None, test: str | None = None, payout_id: str | None = None, payout_status: str | None = None) -> dict[str, Any]:
         """
         Retrieves a list of balance transactions ordered by processing time, with the most recent first. Supports filtering by transaction IDs, payout status, and test mode.
         
@@ -8106,21 +8759,18 @@ class ShopifyApp(APIApplication):
         Tags:
             retrieve, list, transactions, shopify-payments, important
         """
-        path = ""
-        url = f"{self.base_url}{path}"
-        query_params = {
-                "since_id": since_id,
-                "last_id": last_id,
-                "test": test,
-                "payout_id": payout_id,
-                "payout_status": payout_status,
-            }
-        query_params = {k: v for k, v in query_params.items() if v is not None}
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/shopify_payments/balance/transactions.json"
+        query_params = {k: v for k, v in [('since_id', since_id), ('last_id', last_id), ('test', test), ('payout_id', payout_id), ('payout_status', payout_status)] if v is not None}
         response = self._get(url, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def receive_alist_of_all_countries(self, fields: Annotated[Any, 'Show only certain fields, specified by a comma-separated list of field names. '] = None, since_id: Annotated[Any, 'Restrict results to after the specified ID. '] = None) -> dict[str, Any]:
+    def receive_alist_of_all_countries(self, api_version, since_id: str | None = None, fields: str | None = None) -> dict[str, Any]:
         """
         Retrieves a list of all countries, optionally filtering by specific fields or since a specified ID.
         
@@ -8137,18 +8787,18 @@ class ShopifyApp(APIApplication):
         Tags:
             receive, list, country, important
         """
-        path = ""
-        url = f"{self.base_url}{path}"
-        query_params = {
-                "since_id": since_id,
-                "fields": fields,
-            }
-        query_params = {k: v for k, v in query_params.items() if v is not None}
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/countries.json"
+        query_params = {k: v for k, v in [('since_id', since_id), ('fields', fields)] if v is not None}
         response = self._get(url, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def creates_acountry(self, country: Annotated[dict[str, Any], ''] = None) -> dict[str, Any]:
+    def creates_acountry(self, api_version, country: dict[str, Any] | None = None) -> dict[str, Any]:
         """
         Creates a new country entry in the system via API request.
         
@@ -8164,18 +8814,23 @@ class ShopifyApp(APIApplication):
         Tags:
             create, country, api-call, important, data-management
         """
-        request_body = {
-            "country": country,
+        # Build the request body from parameters
+        request_body_payload = {
+            'country': country,
         }
-        request_body = {k: v for k, v in request_body.items() if v is not None}
-        path = ""
-        url = f"{self.base_url}{path}"
+        request_body_payload = {k: v for k, v in request_body_payload.items() if v is not None}
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/countries.json"
         query_params = {}
-        response = self._post(url, data=request_body, params=query_params)
+        response = self._post(url, json=request_body_payload, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def retrieves_acount_of_countries(self, ) -> dict[str, Any]:
+    def retrieves_acount_of_countries(self, api_version) -> dict[str, Any]:
         """
         Retrieves a count of countries from a remote API.
         
@@ -8191,14 +8846,18 @@ class ShopifyApp(APIApplication):
         Tags:
             retrieve, country, important
         """
-        path = ""
-        url = f"{self.base_url}{path}"
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/countries/count.json"
         query_params = {}
         response = self._get(url, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def retrieves_aspecific_county(self, fields: Annotated[Any, 'Show only certain fields, specified by a comma-separated list of field names. '] = None) -> dict[str, Any]:
+    def retrieves_aspecific_county(self, api_version, country_id, fields: str | None = None) -> dict[str, Any]:
         """
         Retrieves detailed information about a specific county from an API endpoint, allowing field filtering.
         
@@ -8214,17 +8873,18 @@ class ShopifyApp(APIApplication):
         Tags:
             retrieve, county, api, fields, important, async-jobs
         """
-        path = ""
-        url = f"{self.base_url}{path}"
-        query_params = {
-                "fields": fields,
-            }
-        query_params = {k: v for k, v in query_params.items() if v is not None}
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/countries/{country_id}.json"
+        query_params = {k: v for k, v in [('fields', fields)] if v is not None}
         response = self._get(url, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def updates_an_existing_country(self, country: Annotated[dict[str, Any], ''] = None) -> dict[str, Any]:
+    def updates_an_existing_country(self, api_version, country_id, country: dict[str, Any] | None = None) -> dict[str, Any]:
         """
         Updates an existing country's data by sending a PUT request to the API endpoint.
         
@@ -8240,18 +8900,23 @@ class ShopifyApp(APIApplication):
         Tags:
             update, country, management, api, put, important
         """
-        request_body = {
-            "country": country,
+        # Build the request body from parameters
+        request_body_payload = {
+            'country': country,
         }
-        request_body = {k: v for k, v in request_body.items() if v is not None}
-        path = ""
-        url = f"{self.base_url}{path}"
+        request_body_payload = {k: v for k, v in request_body_payload.items() if v is not None}
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/countries/{country_id}.json"
         query_params = {}
-        response = self._put(url, data=request_body, params=query_params)
+        response = self._put(url, json=request_body_payload, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def remove_an_existing_country(self, request_body: Annotated[Any, ''] = None) -> dict[str, Any]:
+    def remove_an_existing_country(self, api_version, country_id, request_body: Any | None = None) -> dict[str, Any]:
         """
         Removes an existing country by sending a DELETE request.
         
@@ -8267,15 +8932,18 @@ class ShopifyApp(APIApplication):
         Tags:
             delete, country, management, api-call, important
         """
-        request_body = request_body
-        path = ""
-        url = f"{self.base_url}{path}"
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/countries/{country_id}.json"
         query_params = {}
-        response = self._delete(url, data=request_body, params=query_params)
+        response = self._delete(url, json=request_body, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def retrieves_alist_of_currencies_enabled_on_ashop(self, ) -> dict[str, Any]:
+    def retrieves_alist_of_currencies_enabled_on_ashop(self, api_version) -> dict[str, Any]:
         """
         Retrieves a list of currencies enabled on a shop.
         
@@ -8291,14 +8959,18 @@ class ShopifyApp(APIApplication):
         Tags:
             retrieve, currencies, store-properties, important
         """
-        path = ""
-        url = f"{self.base_url}{path}"
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/currencies.json"
         query_params = {}
         response = self._get(url, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def retrieves_alist_of_the_shop_spolicies(self, ) -> dict[str, Any]:
+    def retrieves_alist_of_the_shop_spolicies(self, api_version) -> dict[str, Any]:
         """
         Retrieves a list of the shop's policies including refunds, shipping, and other store-related terms.
         
@@ -8311,14 +8983,18 @@ class ShopifyApp(APIApplication):
         Tags:
             retrieve, list, store-properties, policy, important
         """
-        path = ""
-        url = f"{self.base_url}{path}"
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/policies.json"
         query_params = {}
         response = self._get(url, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def retrieves_alist_of_provinces_for_acountry(self, fields: Annotated[Any, 'Show only certain fields, specified by a comma-separated list of fields names. '] = None, since_id: Annotated[Any, 'Restrict results to after the specified ID. '] = None) -> dict[str, Any]:
+    def retrieves_alist_of_provinces_for_acountry(self, api_version, country_id, since_id: str | None = None, fields: str | None = None) -> dict[str, Any]:
         """
         Retrieves a list of provinces for a country, optionally filtering by specific fields and IDs.
         
@@ -8335,18 +9011,18 @@ class ShopifyApp(APIApplication):
         Tags:
             retrieve, province, country, import, important
         """
-        path = ""
-        url = f"{self.base_url}{path}"
-        query_params = {
-                "since_id": since_id,
-                "fields": fields,
-            }
-        query_params = {k: v for k, v in query_params.items() if v is not None}
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/countries/{country_id}/provinces.json"
+        query_params = {k: v for k, v in [('since_id', since_id), ('fields', fields)] if v is not None}
         response = self._get(url, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def retrieves_acount_of_provinces_for_acountry(self, ) -> dict[str, Any]:
+    def retrieves_acount_of_provinces_for_acountry(self, api_version, country_id) -> dict[str, Any]:
         """
         Retrieves a count of provinces for a country through an API request.
         
@@ -8362,14 +9038,18 @@ class ShopifyApp(APIApplication):
         Tags:
             retrieve, count, provinces, api, management, important
         """
-        path = ""
-        url = f"{self.base_url}{path}"
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/countries/{country_id}/provinces/count.json"
         query_params = {}
         response = self._get(url, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def retrieves_asingle_province_for_acountry(self, fields: Annotated[Any, 'Show only certain fields, specified by a comma-separated list of field names. '] = None) -> dict[str, Any]:
+    def retrieves_asingle_province_for_acountry(self, api_version, country_id, province_id, fields: str | None = None) -> dict[str, Any]:
         """
         Retrieves a single province's details for a specified country from the API.
         
@@ -8385,17 +9065,18 @@ class ShopifyApp(APIApplication):
         Tags:
             retrieve, province, api, store-properties, geodata, important
         """
-        path = ""
-        url = f"{self.base_url}{path}"
-        query_params = {
-                "fields": fields,
-            }
-        query_params = {k: v for k, v in query_params.items() if v is not None}
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/countries/{country_id}/provinces/{province_id}.json"
+        query_params = {k: v for k, v in [('fields', fields)] if v is not None}
         response = self._get(url, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def updates_an_existing_province_for_acountry(self, province: Annotated[dict[str, Any], ''] = None) -> dict[str, Any]:
+    def updates_an_existing_province_for_acountry(self, api_version, country_id, province_id, province: dict[str, Any] | None = None) -> dict[str, Any]:
         """
         Updates an existing province for a country by sending a PUT request with the new province details.
         
@@ -8411,18 +9092,23 @@ class ShopifyApp(APIApplication):
         Tags:
             update, province, ai-management, important
         """
-        request_body = {
-            "province": province,
+        # Build the request body from parameters
+        request_body_payload = {
+            'province': province,
         }
-        request_body = {k: v for k, v in request_body.items() if v is not None}
-        path = ""
-        url = f"{self.base_url}{path}"
+        request_body_payload = {k: v for k, v in request_body_payload.items() if v is not None}
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/countries/{country_id}/provinces/{province_id}.json"
         query_params = {}
-        response = self._put(url, data=request_body, params=query_params)
+        response = self._put(url, json=request_body_payload, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def retrieves_the_shop_sconfiguration(self, fields: Annotated[Any, 'A comma-separated list of fields to include in the response. '] = None) -> dict[str, Any]:
+    def retrieves_the_shop_sconfiguration(self, api_version, fields: str | None = None) -> dict[str, Any]:
         """
         Retrieves the shop's configuration details including specified fields.
         
@@ -8438,17 +9124,18 @@ class ShopifyApp(APIApplication):
         Tags:
             retrieve, shop-configuration, store-properties, shop, important
         """
-        path = ""
-        url = f"{self.base_url}{path}"
-        query_params = {
-                "fields": fields,
-            }
-        query_params = {k: v for k, v in query_params.items() if v is not None}
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/shop.json"
+        query_params = {k: v for k, v in [('fields', fields)] if v is not None}
         response = self._get(url, params=query_params)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
 
-    def retrieves_alist_of_tender_transactions(self, limit: Annotated[Any, 'The maximum number of results to retrieve.(default: 50)(maximum: 250) '] = None, order: Annotated[Any, 'Show tender transactions ordered by processed\\_at in ascending or descending order. '] = None, processed_at: Annotated[Any, 'Show tender transactions processed at the specified date. '] = None, processed_at_max: Annotated[Any, 'Show tender transactions processed\\_at or before the specified date. '] = None, processed_at_min: Annotated[Any, 'Show tender transactions processed\\_at or after the specified date. '] = None, since_id: Annotated[Any, 'Retrieve only transactions after the specified ID. '] = None) -> dict[str, Any]:
+    def retrieves_alist_of_tender_transactions(self, api_version, limit: str | None = None, since_id: str | None = None, processed_at_min: str | None = None, processed_at_max: str | None = None, processed_at: str | None = None, order: str | None = None) -> dict[str, Any]:
         """
         Retrieves a paginated list of tender transactions, supporting filters by date ranges, order, and pagination markers. Implements Shopify API pagination via response headers as of version 2019-10.
         
@@ -8470,333 +9157,326 @@ class ShopifyApp(APIApplication):
         Tags:
             tender-transactions, pagination, shopify-api, retrieval, important, financial-transactions
         """
-        path = ""
-        url = f"{self.base_url}{path}"
-        query_params = {
-                "limit": limit,
-                "since_id": since_id,
-                "processed_at_min": processed_at_min,
-                "processed_at_max": processed_at_max,
-                "processed_at": processed_at,
-                "order": order,
-            }
-        query_params = {k: v for k, v in query_params.items() if v is not None}
+        url = "https://{{store_name}}.myshopify.com/admin/api/{api_version}/tender_transactions.json"
+        query_params = {k: v for k, v in [('limit', limit), ('since_id', since_id), ('processed_at_min', processed_at_min), ('processed_at_max', processed_at_max), ('processed_at', processed_at), ('order', order)] if v is not None}
         response = self._get(url, params=query_params)
         response.raise_for_status()
-        return response.json()
-
-
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text
+        except Exception as e:
+            raise
     def list_tools(self):
         return [
-
-            self.retrieves_alist_of_access_scopes_associated_to_the_access_token,
-            self.retrieves_alist_of_storefront_access_tokens_that_have_been_issued,
-            self.creates_anew_storefrontaccesstoken,
-            self.deletes_an_existing_storefront_access_token,
-            self.retrieves_alist_of_reports,
-            self.creates_anew_report,
-            self.retrieves_asingle_report,
-            self.updates_areport,
-            self.deletes_areport,
-            self.retrieves_alist_of_application_charges,
-            self.creates_an_application_charge,
-            self.retrieves_an_application_charge,
+            self.accepts_acancellation_request,
+            self.accepts_afulfillment_request,
             self.activates_an_application_charge,
-            self.retrieves_all_application_credits,
-            self.creates_an_application_credit,
-            self.retrieves_asingle_application_credit,
-            self.retrieves_alist_of_recurring_application_charges,
-            self.creates_arecurring_application_charge,
-            self.retrieves_asingle_charge,
-            self.cancels_arecurring_application_charge,
             self.activates_arecurring_application_charge,
-            self.updates_the_capped_amount_of_arecurring_application_charge,
-            self.retrieves_alist_of_usage_charges,
-            self.creates_ausage_charge,
-            self.retrieves_asingle_charge1,
-            self.retrieves_alist_of_addresses_for_acustomer,
-            self.creates_anew_address_for_acustomer,
-            self.retrieves_details_for_asingle_customer_address,
-            self.updates_an_existing_customer_address,
-            self.removes_an_address_from_acustomer_saddress_list,
-            self.performs_bulk_operations_for_multiple_customer_addresses,
-            self.sets_the_default_address_for_acustomer,
-            self.retrieves_alist_of_customers,
-            self.creates_acustomer,
-            self.searches_for_customers_that_match_asupplied_query,
-            self.retrieves_asingle_customer,
-            self.updates_acustomer,
-            self.deletes_acustomer,
-            self.creates_an_account_activation_url_for_acustomer,
-            self.sends_an_account_invite_to_acustomer,
-            self.retrieves_acount_of_customers,
-            self.retrieves_all_orders_belonging_to_acustomer,
-            self.retrieves_alist_of_customer_saved_searches,
-            self.creates_acustomer_saved_search,
-            self.retrieves_acount_of_all_customer_saved_searches,
-            self.retrieves_asingle_customer_saved_search,
-            self.updates_acustomer_saved_search,
-            self.deletes_acustomer_saved_search,
-            self.retrieves_all_customers_returned_by_acustomer_saved_search,
-            self.retrieves_alist_of_discount_codes,
-            self.creates_adiscount_code,
-            self.retrieves_asingle_discount_code,
-            self.updates_an_existing_discount_code,
-            self.deletes_adiscount_code,
-            self.retrieves_the_location_of_adiscount_code,
-            self.creates_adiscount_code_creation_job,
-            self.retrieves_adiscount_code_creation_job,
-            self.retrieves_alist_of_discount_codes_for_adiscount_code_creation_job,
-            self.retrieves_alist_of_price_rules,
-            self.creates_aprice_rule,
-            self.retrieves_asingle_price_rule,
-            self.updates_an_existing_aprice_rule,
-            self.remove_an_existing_pricerule,
-            self.retrieves_acount_of_all_price_rules,
-            self.retrieves_alist_of_events,
-            self.retrieves_asingle_event,
-            self.retrieves_acount_of_events,
-            self.retrieves_alist_of_webhooks,
-            self.create_anew_webhook,
-            self.receive_acount_of_all_webhooks,
-            self.receive_asingle_webhook,
-            self.modify_an_existing_webhook,
-            self.remove_an_existing_webhook,
-            self.retrieves_alist_of_inventory_items,
-            self.retrieves_asingle_inventory_item_by_id,
-            self.updates_an_existing_inventory_item,
-            self.retrieves_alist_of_inventory_levels,
-            self.deletes_an_inventory_level_from_alocation,
+            self.adds_aproduct_to_acustom_collection,
             self.adjusts_the_inventory_level_of_an_inventory_item_at_alocation,
+            self.approves_acomment,
+            self.calculates_arefund,
+            self.cancel_afulfillment_for_aspecific_order_id,
+            self.cancel_afulfillment_order,
+            self.cancels_afulfillment,
+            self.cancels_an_order,
+            self.cancels_arecurring_application_charge,
+            self.closes_an_order,
+            self.complete_adraft_order,
+            self.complete_afulfillment,
+            self.completes_acheckout,
             self.connects_an_inventory_item_to_alocation,
-            self.sets_the_inventory_level_for_an_inventory_item_at_alocation,
-            self.retrieves_alist_of_locations,
-            self.retrieves_asingle_location_by_its_id,
-            self.retrieves_acount_of_locations,
-            self.retrieves_alist_of_inventory_levels_for_alocation,
-            self.retrieves_alist_of_all_marketing_events,
+            self.counts_the_number_of_payments_attempted_on_acheckout,
+            self.create_acollection_listing_to_publish_acollection_to_your_app,
+            self.create_anew_blog,
+            self.create_anew_draftorder,
+            self.create_anew_fulfillment,
+            self.create_anew_fulfillmentservice,
+            self.create_anew_page,
+            self.create_anew_product_image,
+            self.create_anew_product_variant,
+            self.create_anew_resourcefeedback,
+            self.create_anew_webhook,
+            self.create_aproduct_listing_to_publish_aproduct_to_your_app,
+            self.creates_acarrier_service,
+            self.creates_acheckout,
+            self.creates_acomment_for_an_article,
+            self.creates_acountry,
+            self.creates_acustom_collection,
+            self.creates_acustomer,
+            self.creates_acustomer_saved_search,
+            self.creates_adiscount_code,
+            self.creates_adiscount_code_creation_job,
+            self.creates_afulfillment_event,
+            self.creates_afulfillment_for_one_or_many_fulfillment_orders,
+            self.creates_agift_card,
             self.creates_amarketing_event,
-            self.retrieves_acount_of_all_marketing_events,
-            self.retrieves_asingle_marketing_event,
-            self.updates_amarketing_event,
-            self.deletes_amarketing_event,
-            self.creates_marketing_engagements_on_amarketing_event,
-            self.retrieves_alist_of_metafields_that_belong_to_aresource,
-            self.creates_anew_metafield_for_aresource,
-            self.retrieves_acount_of_aresource_smetafields,
-            self.retrieves_asingle_metafield_from_aresource_by_its_id,
-            self.updates_ametafield,
-            self.deletes_ametafield_by_its_id,
-            self.retrieves_alist_of_all_articles_from_ablog,
+            self.creates_an_account_activation_url_for_acustomer,
+            self.creates_an_application_charge,
+            self.creates_an_application_credit,
             self.creates_an_article_for_ablog,
-            self.retrieves_acount_of_all_articles_from_ablog,
-            self.receive_asingle_article,
-            self.updates_an_article,
+            self.creates_an_order,
+            self.creates_an_order_risk_for_an_order,
+            self.creates_anew_address_for_acustomer,
+            self.creates_anew_metafield_for_aresource,
+            self.creates_anew_payment,
+            self.creates_anew_product,
+            self.creates_anew_report,
+            self.creates_anew_script_tag,
+            self.creates_anew_storefrontaccesstoken,
+            self.creates_aprice_rule,
+            self.creates_arecurring_application_charge,
+            self.creates_aredirect,
+            self.creates_arefund,
+            self.creates_asmart_collection,
+            self.creates_atheme,
+            self.creates_atransaction_for_an_order,
+            self.creates_ausage_charge,
+            self.creates_marketing_engagements_on_amarketing_event,
+            self.creates_or_updates_an_asset_for_atheme,
+            self.delete_acollection_listing_to_unpublish_acollection_from_your_app,
+            self.delete_aproduct_listing_to_unpublish_aproduct_from_your_app,
+            self.deletes_acarrier_service,
+            self.deletes_acustom_collection,
+            self.deletes_acustomer,
+            self.deletes_acustomer_saved_search,
+            self.deletes_adiscount_code,
+            self.deletes_afulfillment_event,
+            self.deletes_amarketing_event,
+            self.deletes_ametafield_by_its_id,
             self.deletes_an_article,
+            self.deletes_an_asset_from_atheme,
+            self.deletes_an_existing_storefront_access_token,
+            self.deletes_an_inventory_level_from_alocation,
+            self.deletes_an_order,
+            self.deletes_an_order_risk_for_an_order,
+            self.deletes_apage,
+            self.deletes_aproduct,
+            self.deletes_aredirect,
+            self.deletes_areport,
+            self.deletes_ascript_tag,
+            self.disables_agift_card,
+            self.marks_acomment_as_not_spam,
+            self.marks_acomment_as_spam,
+            self.marks_afulfillment_order_as_incomplete,
+            self.modifies_an_existing_checkout,
+            self.modify_an_existing_blog,
+            self.modify_an_existing_draftorder,
+            self.modify_an_existing_fulfillment,
+            self.modify_an_existing_fulfillmentservice,
+            self.modify_an_existing_product_image,
+            self.modify_an_existing_product_variant,
+            self.modify_an_existing_theme,
+            self.modify_an_existing_webhook,
+            self.moves_afulfillment_order_to_anew_location,
+            self.performs_bulk_operations_for_multiple_customer_addresses,
+            self.re_opens_aclosed_order,
+            self.receive_acount_of_all_blogs,
+            self.receive_acount_of_all_draftorders,
+            self.receive_acount_of_all_product_images,
+            self.receive_acount_of_all_product_variants,
+            self.receive_acount_of_all_webhooks,
+            self.receive_alist_of_all_countries,
+            self.receive_alist_of_all_fulfillmentservices,
+            self.receive_alist_of_all_product_images,
+            self.receive_alist_of_all_resourcefeedbacks,
+            self.receive_asingle_article,
+            self.receive_asingle_blog,
+            self.receive_asingle_draftorder,
+            self.receive_asingle_fulfillment,
+            self.receive_asingle_fulfillmentservice,
+            self.receive_asingle_product_image,
+            self.receive_asingle_product_variant,
+            self.receive_asingle_webhook,
+            self.rejects_acancellation_request,
+            self.rejects_afulfillment_request,
+            self.remove_an_existing_blog,
+            self.remove_an_existing_country,
+            self.remove_an_existing_draftorder,
+            self.remove_an_existing_fulfillmentservice,
+            self.remove_an_existing_pricerule,
+            self.remove_an_existing_product_image,
+            self.remove_an_existing_product_variant,
+            self.remove_an_existing_theme,
+            self.remove_an_existing_webhook,
+            self.removes_acomment,
+            self.removes_an_address_from_acustomer_saddress_list,
+            self.removes_aproduct_from_acollection,
+            self.removes_asmart_collection,
+            self.restores_apreviously_removed_comment,
+            self.retrieve_acount_of_products_that_are_published_to_your_app,
+            self.retrieve_alist_of_all_blogs,
+            self.retrieve_alist_of_products_belonging_to_acollection,
+            self.retrieve_aspecific_collection_listing_that_is_published_to_your_app,
+            self.retrieve_aspecific_product_listing_that_is_published_to_your_app,
+            self.retrieve_code_product_ids_code_that_are_published_to_acode_collection_id_code,
+            self.retrieve_code_product_ids_code_that_are_published_to_your_app,
+            self.retrieve_collection_listings_that_are_published_to_your_app,
+            self.retrieve_product_listings_that_are_published_to_your_app,
+            self.retrieves_acheckout,
+            self.retrieves_acount_of_all_articles_from_ablog,
+            self.retrieves_acount_of_all_customer_saved_searches,
+            self.retrieves_acount_of_all_marketing_events,
+            self.retrieves_acount_of_all_price_rules,
+            self.retrieves_acount_of_all_script_tags,
+            self.retrieves_acount_of_an_order_stransactions,
+            self.retrieves_acount_of_aresource_smetafields,
+            self.retrieves_acount_of_checkouts,
+            self.retrieves_acount_of_collects,
+            self.retrieves_acount_of_comments,
+            self.retrieves_acount_of_countries,
+            self.retrieves_acount_of_custom_collections,
+            self.retrieves_acount_of_customers,
+            self.retrieves_acount_of_events,
+            self.retrieves_acount_of_fulfillments_associated_with_aspecific_order,
+            self.retrieves_acount_of_gift_cards,
+            self.retrieves_acount_of_locations,
+            self.retrieves_acount_of_products,
+            self.retrieves_acount_of_provinces_for_acountry,
+            self.retrieves_acount_of_smart_collections,
+            self.retrieves_acount_of_url_redirects,
+            self.retrieves_adiscount_code_creation_job,
+            self.retrieves_alist_of_abandoned_checkouts,
+            self.retrieves_alist_of_access_scopes_associated_to_the_access_token,
+            self.retrieves_alist_of_addresses_for_acustomer,
             self.retrieves_alist_of_all_article_authors,
             self.retrieves_alist_of_all_article_tags,
-            self.retrieves_alist_of_assets_for_atheme,
-            self.creates_or_updates_an_asset_for_atheme,
-            self.deletes_an_asset_from_atheme,
-            self.retrieve_alist_of_all_blogs,
-            self.create_anew_blog,
-            self.receive_acount_of_all_blogs,
-            self.receive_asingle_blog,
-            self.modify_an_existing_blog,
-            self.remove_an_existing_blog,
-            self.retrieves_alist_of_comments,
-            self.creates_acomment_for_an_article,
-            self.retrieves_acount_of_comments,
-            self.retrieves_asingle_comment_by_its_id,
-            self.updates_acomment_of_an_article,
-            self.marks_acomment_as_spam,
-            self.marks_acomment_as_not_spam,
-            self.approves_acomment,
-            self.removes_acomment,
-            self.restores_apreviously_removed_comment,
-            self.retrieves_alist_of_pages,
-            self.create_anew_page,
-            self.retrieves_apage_count,
-            self.retrieves_asingle_page_by_its_id,
-            self.updates_apage,
-            self.deletes_apage,
-            self.retrieves_alist_of_url_redirects,
-            self.creates_aredirect,
-            self.retrieves_acount_of_url_redirects,
-            self.retrieves_asingle_redirect,
-            self.updates_an_existing_redirect,
-            self.deletes_aredirect,
-            self.retrieves_alist_of_all_script_tags,
-            self.creates_anew_script_tag,
-            self.retrieves_acount_of_all_script_tags,
-            self.retrieves_asingle_script_tag,
-            self.updates_ascript_tag,
-            self.deletes_ascript_tag,
-            self.retrieves_alist_of_themes,
-            self.creates_atheme,
-            self.retrieves_asingle_theme,
-            self.modify_an_existing_theme,
-            self.remove_an_existing_theme,
-            self.retrieves_acount_of_checkouts,
-            self.retrieves_alist_of_abandoned_checkouts,
-            self.creates_acheckout,
-            self.retrieves_alist_of_draft_orders,
-            self.create_anew_draftorder,
-            self.receive_asingle_draftorder,
-            self.modify_an_existing_draftorder,
-            self.remove_an_existing_draftorder,
-            self.receive_acount_of_all_draftorders,
-            self.send_an_invoice,
-            self.complete_adraft_order,
+            self.retrieves_alist_of_all_articles_from_ablog,
+            self.retrieves_alist_of_all_marketing_events,
             self.retrieves_alist_of_all_order_risks_for_an_order,
-            self.creates_an_order_risk_for_an_order,
-            self.retrieves_asingle_order_risk_by_its_id,
-            self.updates_an_order_risk,
-            self.deletes_an_order_risk_for_an_order,
-            self.retrieves_alist_of_orders,
-            self.creates_an_order,
-            self.retrieves_aspecific_order,
-            self.updates_an_order,
-            self.deletes_an_order,
-            self.retrieves_an_order_count,
-            self.closes_an_order,
-            self.re_opens_aclosed_order,
-            self.cancels_an_order,
-            self.retrieves_alist_of_refunds_for_an_order,
-            self.creates_arefund,
-            self.retrieves_aspecific_refund,
-            self.calculates_arefund,
-            self.retrieves_alist_of_transactions,
-            self.creates_atransaction_for_an_order,
-            self.retrieves_acount_of_an_order_stransactions,
-            self.retrieves_aspecific_transaction,
-            self.retrieves_alist_of_gift_cards,
-            self.creates_agift_card,
-            self.retrieves_asingle_gift_card,
-            self.updates_an_existing_gift_card,
-            self.retrieves_acount_of_gift_cards,
-            self.disables_agift_card,
-            self.searches_for_gift_cards,
+            self.retrieves_alist_of_all_script_tags,
             self.retrieves_alist_of_all_users,
-            self.retrieves_asingle_user,
-            self.retrieves_the_currently_logged_in_user,
-            self.retrieves_alist_of_collects,
-            self.adds_aproduct_to_acustom_collection,
-            self.retrieves_aspecific_collect_by_its_id,
-            self.removes_aproduct_from_acollection,
-            self.retrieves_acount_of_collects,
-            self.retrieves_asingle_collection,
-            self.retrieve_alist_of_products_belonging_to_acollection,
-            self.retrieves_alist_of_custom_collections,
-            self.creates_acustom_collection,
-            self.retrieves_acount_of_custom_collections,
-            self.retrieves_asingle_custom_collection,
-            self.updates_an_existing_custom_collection,
-            self.deletes_acustom_collection,
-            self.receive_alist_of_all_product_images,
-            self.create_anew_product_image,
-            self.receive_acount_of_all_product_images,
-            self.receive_asingle_product_image,
-            self.modify_an_existing_product_image,
-            self.remove_an_existing_product_image,
-            self.retrieves_alist_of_product_variants,
-            self.create_anew_product_variant,
-            self.receive_acount_of_all_product_variants,
-            self.receive_asingle_product_variant,
-            self.modify_an_existing_product_variant,
-            self.remove_an_existing_product_variant,
-            self.retrieves_alist_of_products,
-            self.creates_anew_product,
-            self.retrieves_acount_of_products,
-            self.retrieves_asingle_product,
-            self.updates_aproduct,
-            self.deletes_aproduct,
-            self.retrieves_alist_of_smart_collections,
-            self.creates_asmart_collection,
-            self.retrieves_acount_of_smart_collections,
-            self.retrieves_asingle_smart_collection,
-            self.updates_an_existing_smart_collection,
-            self.removes_asmart_collection,
-            self.updates_the_ordering_type_of_products_in_asmart_collection,
-            self.completes_acheckout,
-            self.retrieves_acheckout,
-            self.modifies_an_existing_checkout,
-            self.retrieves_alist_of_shipping_rates,
-            self.retrieve_collection_listings_that_are_published_to_your_app,
-            self.retrieve_code_product_ids_code_that_are_published_to_acode_collection_id_code,
-            self.retrieve_aspecific_collection_listing_that_is_published_to_your_app,
-            self.create_acollection_listing_to_publish_acollection_to_your_app,
-            self.delete_acollection_listing_to_unpublish_acollection_from_your_app,
-            self.stores_acredit_card_in_the_card_vault,
-            self.retrieves_alist_of_payments_on_aparticular_checkout,
-            self.creates_anew_payment,
-            self.retrieves_asingle_payment,
-            self.counts_the_number_of_payments_attempted_on_acheckout,
-            self.retrieve_product_listings_that_are_published_to_your_app,
-            self.retrieve_code_product_ids_code_that_are_published_to_your_app,
-            self.retrieve_acount_of_products_that_are_published_to_your_app,
-            self.retrieve_aspecific_product_listing_that_is_published_to_your_app,
-            self.create_aproduct_listing_to_publish_aproduct_to_your_app,
-            self.delete_aproduct_listing_to_unpublish_aproduct_from_your_app,
-            self.receive_alist_of_all_resourcefeedbacks,
-            self.create_anew_resourcefeedback,
-            self.retrieves_alist_of_fulfillment_orders_on_ashop_for_aspecific_app,
-            self.sends_acancellation_request,
-            self.accepts_acancellation_request,
-            self.rejects_acancellation_request,
+            self.retrieves_alist_of_application_charges,
+            self.retrieves_alist_of_assets_for_atheme,
             self.retrieves_alist_of_carrier_services,
-            self.creates_acarrier_service,
-            self.retrieves_asingle_carrier_service,
-            self.updates_acarrier_service,
-            self.deletes_acarrier_service,
-            self.retrieves_fulfillments_associated_with_an_order,
-            self.create_anew_fulfillment,
-            self.retrieves_fulfillments_associated_with_afulfillment_order,
-            self.retrieves_acount_of_fulfillments_associated_with_aspecific_order,
-            self.receive_asingle_fulfillment,
-            self.modify_an_existing_fulfillment,
-            self.creates_afulfillment_for_one_or_many_fulfillment_orders,
-            self.updates_the_tracking_information_for_afulfillment,
-            self.complete_afulfillment,
-            self.transition_afulfillment_from_pending_to_open,
-            self.cancel_afulfillment_for_aspecific_order_id,
-            self.cancels_afulfillment,
-            self.retrieves_alist_of_fulfillment_events_for_aspecific_fulfillment,
-            self.creates_afulfillment_event,
-            self.retrieves_aspecific_fulfillment_event,
-            self.deletes_afulfillment_event,
-            self.retrieves_alist_of_fulfillment_orders_for_aspecific_order,
-            self.retrieves_aspecific_fulfillment_order,
-            self.cancel_afulfillment_order,
-            self.marks_afulfillment_order_as_incomplete,
-            self.moves_afulfillment_order_to_anew_location,
-            self.sends_afulfillment_request,
-            self.accepts_afulfillment_request,
-            self.rejects_afulfillment_request,
-            self.receive_alist_of_all_fulfillmentservices,
-            self.create_anew_fulfillmentservice,
-            self.receive_asingle_fulfillmentservice,
-            self.modify_an_existing_fulfillmentservice,
-            self.remove_an_existing_fulfillmentservice,
-            self.retrieves_alist_of_locations_that_afulfillment_order_can_potentially_move_to,
-            self.return_the_current_balance,
-            self.return_alist_of_all_disputes,
-            self.return_asingle_dispute,
-            self.return_alist_of_all_payouts,
-            self.return_asingle_payout,
-            self.return_alist_of_all_balance_transactions,
-            self.receive_alist_of_all_countries,
-            self.creates_acountry,
-            self.retrieves_acount_of_countries,
-            self.retrieves_aspecific_county,
-            self.updates_an_existing_country,
-            self.remove_an_existing_country,
+            self.retrieves_alist_of_collects,
+            self.retrieves_alist_of_comments,
             self.retrieves_alist_of_currencies_enabled_on_ashop,
-            self.retrieves_alist_of_the_shop_spolicies,
+            self.retrieves_alist_of_custom_collections,
+            self.retrieves_alist_of_customer_saved_searches,
+            self.retrieves_alist_of_customers,
+            self.retrieves_alist_of_discount_codes,
+            self.retrieves_alist_of_discount_codes_for_adiscount_code_creation_job,
+            self.retrieves_alist_of_draft_orders,
+            self.retrieves_alist_of_events,
+            self.retrieves_alist_of_fulfillment_events_for_aspecific_fulfillment,
+            self.retrieves_alist_of_fulfillment_orders_for_aspecific_order,
+            self.retrieves_alist_of_fulfillment_orders_on_ashop_for_aspecific_app,
+            self.retrieves_alist_of_gift_cards,
+            self.retrieves_alist_of_inventory_items,
+            self.retrieves_alist_of_inventory_levels,
+            self.retrieves_alist_of_inventory_levels_for_alocation,
+            self.retrieves_alist_of_locations,
+            self.retrieves_alist_of_locations_that_afulfillment_order_can_potentially_move_to,
+            self.retrieves_alist_of_metafields_that_belong_to_aresource,
+            self.retrieves_alist_of_orders,
+            self.retrieves_alist_of_pages,
+            self.retrieves_alist_of_payments_on_aparticular_checkout,
+            self.retrieves_alist_of_price_rules,
+            self.retrieves_alist_of_product_variants,
+            self.retrieves_alist_of_products,
             self.retrieves_alist_of_provinces_for_acountry,
-            self.retrieves_acount_of_provinces_for_acountry,
+            self.retrieves_alist_of_recurring_application_charges,
+            self.retrieves_alist_of_refunds_for_an_order,
+            self.retrieves_alist_of_reports,
+            self.retrieves_alist_of_shipping_rates,
+            self.retrieves_alist_of_smart_collections,
+            self.retrieves_alist_of_storefront_access_tokens_that_have_been_issued,
+            self.retrieves_alist_of_tender_transactions,
+            self.retrieves_alist_of_the_shop_spolicies,
+            self.retrieves_alist_of_themes,
+            self.retrieves_alist_of_transactions,
+            self.retrieves_alist_of_url_redirects,
+            self.retrieves_alist_of_usage_charges,
+            self.retrieves_alist_of_webhooks,
+            self.retrieves_all_application_credits,
+            self.retrieves_all_customers_returned_by_acustomer_saved_search,
+            self.retrieves_all_orders_belonging_to_acustomer,
+            self.retrieves_an_application_charge,
+            self.retrieves_an_order_count,
+            self.retrieves_apage_count,
+            self.retrieves_asingle_application_credit,
+            self.retrieves_asingle_carrier_service,
+            self.retrieves_asingle_charge,
+            self.retrieves_asingle_charge1,
+            self.retrieves_asingle_collection,
+            self.retrieves_asingle_comment_by_its_id,
+            self.retrieves_asingle_custom_collection,
+            self.retrieves_asingle_customer,
+            self.retrieves_asingle_customer_saved_search,
+            self.retrieves_asingle_discount_code,
+            self.retrieves_asingle_event,
+            self.retrieves_asingle_gift_card,
+            self.retrieves_asingle_inventory_item_by_id,
+            self.retrieves_asingle_location_by_its_id,
+            self.retrieves_asingle_marketing_event,
+            self.retrieves_asingle_metafield_from_aresource_by_its_id,
+            self.retrieves_asingle_order_risk_by_its_id,
+            self.retrieves_asingle_page_by_its_id,
+            self.retrieves_asingle_payment,
+            self.retrieves_asingle_price_rule,
+            self.retrieves_asingle_product,
             self.retrieves_asingle_province_for_acountry,
-            self.updates_an_existing_province_for_acountry,
+            self.retrieves_asingle_redirect,
+            self.retrieves_asingle_report,
+            self.retrieves_asingle_script_tag,
+            self.retrieves_asingle_smart_collection,
+            self.retrieves_asingle_theme,
+            self.retrieves_asingle_user,
+            self.retrieves_aspecific_collect_by_its_id,
+            self.retrieves_aspecific_county,
+            self.retrieves_aspecific_fulfillment_event,
+            self.retrieves_aspecific_fulfillment_order,
+            self.retrieves_aspecific_order,
+            self.retrieves_aspecific_refund,
+            self.retrieves_aspecific_transaction,
+            self.retrieves_details_for_asingle_customer_address,
+            self.retrieves_fulfillments_associated_with_afulfillment_order,
+            self.retrieves_fulfillments_associated_with_an_order,
+            self.retrieves_the_currently_logged_in_user,
+            self.retrieves_the_location_of_adiscount_code,
             self.retrieves_the_shop_sconfiguration,
-            self.retrieves_alist_of_tender_transactions
+            self.return_alist_of_all_balance_transactions,
+            self.return_alist_of_all_disputes,
+            self.return_alist_of_all_payouts,
+            self.return_asingle_dispute,
+            self.return_asingle_payout,
+            self.return_the_current_balance,
+            self.searches_for_customers_that_match_asupplied_query,
+            self.searches_for_gift_cards,
+            self.send_an_invoice,
+            self.sends_acancellation_request,
+            self.sends_afulfillment_request,
+            self.sends_an_account_invite_to_acustomer,
+            self.sets_the_default_address_for_acustomer,
+            self.sets_the_inventory_level_for_an_inventory_item_at_alocation,
+            self.stores_acredit_card_in_the_card_vault,
+            self.transition_afulfillment_from_pending_to_open,
+            self.updates_acarrier_service,
+            self.updates_acomment_of_an_article,
+            self.updates_acustomer,
+            self.updates_acustomer_saved_search,
+            self.updates_amarketing_event,
+            self.updates_ametafield,
+            self.updates_an_article,
+            self.updates_an_existing_aprice_rule,
+            self.updates_an_existing_country,
+            self.updates_an_existing_custom_collection,
+            self.updates_an_existing_customer_address,
+            self.updates_an_existing_discount_code,
+            self.updates_an_existing_gift_card,
+            self.updates_an_existing_inventory_item,
+            self.updates_an_existing_province_for_acountry,
+            self.updates_an_existing_redirect,
+            self.updates_an_existing_smart_collection,
+            self.updates_an_order,
+            self.updates_an_order_risk,
+            self.updates_apage,
+            self.updates_aproduct,
+            self.updates_areport,
+            self.updates_ascript_tag,
+            self.updates_the_capped_amount_of_arecurring_application_charge,
+            self.updates_the_ordering_type_of_products_in_asmart_collection,
+            self.updates_the_tracking_information_for_afulfillment
         ]
