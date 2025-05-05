@@ -9,313 +9,295 @@ This is automatically generated from OpenAPI schema for the Shopify API.
 
 | Tool | Description |
 |------|-------------|
-| `accepts_acancellation_request` | Accepts a cancellation request sent to a fulfillment service for a fulfillment order. |
-| `accepts_afulfillment_request` | Accepts a fulfillment request sent to a fulfillment service for a fulfillment order. |
-| `activates_an_application_charge` | Activates an accepted application charge. |
-| `activates_arecurring_application_charge` | Activates a previously accepted recurring application charge. |
-| `adds_aproduct_to_acustom_collection` | Adds a product to a custom collection by sending a POST request with the specified collection details. |
-| `adjusts_the_inventory_level_of_an_inventory_item_at_alocation` | Adjusts inventory levels for a specific item at a given location. |
-| `approves_acomment` | Approves a comment in an online store system. |
-| `calculates_arefund` | Calculates refund transactions for an order based on line items and shipping, optionally handling multi-currency constraints. |
-| `cancel_afulfillment_for_aspecific_order_id` | Cancels a fulfillment for a specific order ID by sending a POST request to the fulfillment service. |
-| `cancel_afulfillment_order` | Cancel a fulfillment order by marking it as cancelled. |
-| `cancels_afulfillment` | Cancels a fulfillment. |
-| `cancels_an_order` | Cancels an order and returns the result. For multi-currency orders, the currency parameter is required when amount is provided. Orders with existing fulfillments cannot be canceled. |
-| `cancels_arecurring_application_charge` | Cancels a recurring application charge, typically used in billing systems to stop periodic charges. |
-| `closes_an_order` | Closes an order via API request and returns the response data. |
-| `complete_adraft_order` | Completes a draft order by transitioning it to a regular order, supporting flows like external payment acceptance or sending invoices. |
-| `complete_afulfillment` | Complete a fulfillment by marking it as complete and processing the request. |
-| `completes_acheckout` | Completes a checkout by sending a POST request to the checkout endpoint. |
-| `connects_an_inventory_item_to_alocation` | Connects an inventory item to a specific location by creating an inventory level at that location. |
-| `counts_the_number_of_payments_attempted_on_acheckout` | Counts the number of payments attempted on a checkout |
-| `create_acollection_listing_to_publish_acollection_to_your_app` | Creates or updates a collection listing to publish a specific collection to the application. |
-| `create_anew_blog` | Create a new blog with the provided blog details. |
-| `create_anew_draftorder` | Creates a new draft order in Shopify with product variant line items, custom line items, and discount configurations, supporting asynchronous calculation workflows. |
-| `create_anew_fulfillment` | Create a new fulfillment for an order, specifying line items and fulfillment details. |
-| `create_anew_fulfillmentservice` | Create a new FulfillmentService by sending a POST request to Shopify. |
-| `create_anew_page` | Creates a new page with the provided data. |
-| `create_anew_product_image` | Creates a new product image by sending a POST request to the server with the provided image details. |
-| `create_anew_product_variant` | Creates a new product variant by sending a POST request to the API. |
-| `create_anew_resourcefeedback` | Creates a new resource feedback entry for a Shopify shop resource. |
-| `create_anew_webhook` | Creates a new webhook subscription by sending a POST request with a webhook configuration. |
-| `create_aproduct_listing_to_publish_aproduct_to_your_app` | Creates a product listing to publish a product to your app. |
-| `creates_acarrier_service` | Creates a carrier service by sending a request with the specified carrier service details. |
-| `creates_acheckout` | Creates a checkout object via API request with the specified parameters. |
-| `creates_acomment_for_an_article` | Creates a new comment for an article by sending a POST request to the API endpoint. |
-| `creates_acountry` | Creates a new country entry in the system via API request. |
-| `creates_acustom_collection` | Creates a custom collection with the provided specification. |
-| `creates_acustomer` | Creates a new customer record by sending customer data to the API endpoint. |
-| `creates_acustomer_saved_search` | Creates a customer saved search using the provided data. |
-| `creates_adiscount_code` | Creates a discount code by sending a POST request with the specified parameters. |
-| `creates_adiscount_code_creation_job` | Creates an asynchronous batch job to generate discount codes, enqueuing the request for background processing. |
-| `creates_afulfillment_event` | Creates a fulfillment event by sending a payload to a configured endpoint. |
-| `creates_afulfillment_for_one_or_many_fulfillment_orders` | Creates a fulfillment for one or multiple fulfillment orders associated with the same order at the same location. |
-| `creates_agift_card` | Creates a new gift card with the provided details. |
-| `creates_amarketing_event` | Creates a marketing event by sending a POST request with the provided marketing event data. |
-| `creates_an_account_activation_url_for_acustomer` | Generates a one-time-use account activation URL for a customer with an inactive account. |
-| `creates_an_application_charge` | Creates a new application charge for billing purposes. |
-| `creates_an_application_credit` | Creates an application credit by sending a POST request to the API endpoint. |
-| `creates_an_article_for_ablog` | Creates an article entry for a blog by sending a POST request to the API endpoint. |
-| `creates_an_order` | Creates a new order, allowing control over inventory behavior and receipt settings. |
-| `creates_an_order_risk_for_an_order` | Creates an order risk for an order by sending a POST request with the provided risk details. |
-| `creates_anew_address_for_acustomer` | Creates a new address for a customer by sending a POST request with the provided address details. |
-| `creates_anew_metafield_for_aresource` | Creates a new metafield for a resource by sending a POST request with the provided metafield details. |
-| `creates_anew_payment` | Creates a new payment on a checkout using the provided payment details. |
-| `creates_anew_product` | Creates a new product by sending a POST request with the product details |
-| `creates_anew_report` | Creates a new report by sending a POST request with the provided report data to a specific URL. |
-| `creates_anew_script_tag` | Creates a new script tag resource by making a POST request to the API endpoint. |
-| `creates_anew_storefrontaccesstoken` | Creates a new Storefront Access Token. |
-| `creates_aprice_rule` | Creates a new price rule based on the provided parameters. |
-| `creates_arecurring_application_charge` | Creates a recurring application charge. |
-| `creates_aredirect` | Creates a redirect by sending a POST request to the server with the redirect details. |
-| `creates_arefund` | Creates a refund based on the provided refund details. |
-| `creates_asmart_collection` | Creates a new smart collection using specified rules and configuration. |
-| `creates_atheme` | Creates a theme for an online store using a provided configuration. The theme is created as unpublished by default unless explicitly specified as 'main' in the theme data. |
-| `creates_atransaction_for_an_order` | Creates a new transaction for an order, handling the request body and API communication. |
-| `creates_ausage_charge` | Creates a usage charge for a billing resource, typically in a SaaS or subscription-based system. |
-| `creates_marketing_engagements_on_amarketing_event` | Creates or updates marketing engagements for a marketing event, with daily aggregation and overwrites for existing entries on the same date. |
-| `creates_or_updates_an_asset_for_atheme` | Creates or updates an asset for a theme by sending a PUT request. |
-| `delete_acollection_listing_to_unpublish_acollection_from_your_app` | Deletes a collection listing to unpublish it from the app by sending a DELETE request to the API endpoint. |
-| `delete_aproduct_listing_to_unpublish_aproduct_from_your_app` | Deletes a product listing to remove it from public view in your app's sales channels. |
-| `deletes_acarrier_service` | Deletes a carrier service by issuing a DELETE request. |
-| `deletes_acustom_collection` | Deletes a custom collection by sending a DELETE request to the API endpoint. |
-| `deletes_acustomer` | Deletes a customer from the system if they have no existing orders. |
-| `deletes_acustomer_saved_search` | Deletes a customer saved search from the system. |
-| `deletes_adiscount_code` | Deletes a discount code by sending a DELETE request to the API endpoint. |
-| `deletes_afulfillment_event` | Deletes a fulfillment event. |
-| `deletes_amarketing_event` | Deletes a marketing event by sending a DELETE request to the specified base URL. |
-| `deletes_ametafield_by_its_id` | Deletes a metafield by its ID. |
-| `deletes_an_article` | Deletes an article by sending a DELETE request to the specified URL. |
-| `deletes_an_asset_from_atheme` | Deletes an asset from a theme by sending a DELETE request to a specified URL. |
-| `deletes_an_existing_storefront_access_token` | Deletes an existing storefront access token. |
-| `deletes_an_inventory_level_from_alocation` | Deletes an inventory level of an inventory item at a specified location. |
-| `deletes_an_order` | Deletes an order by sending a DELETE request to the designated URL. Note that orders interacting with an online gateway cannot be deleted. |
-| `deletes_an_order_risk_for_an_order` | Deletes an order risk associated with an order, typically used to remove risk assessments that were manually created by the current application. |
-| `deletes_apage` | Deletes a page based on the provided request body. |
-| `deletes_aproduct` | Deletes a product from the system by making an HTTP DELETE request to the specified endpoint. |
-| `deletes_aredirect` | Deletes a redirect from the system using provided request data. |
-| `deletes_areport` | Deletes a report by making a DELETE request to the API endpoint. |
-| `deletes_ascript_tag` | Deletes a script tag from the system. |
-| `disables_agift_card` | Disables a gift card irreversibly. |
-| `marks_acomment_as_not_spam` | Marks a comment as not spam by sending a POST request to the server. |
-| `marks_acomment_as_spam` | Marks a comment as spam by sending a POST request to the target URL with provided request body |
-| `marks_afulfillment_order_as_incomplete` | Marks an in-progress fulfillment order as incomplete, signaling the fulfillment service cannot ship remaining items and intends to close the order. |
-| `modifies_an_existing_checkout` | Modifies an existing checkout via HTTP PUT request with provided checkout data. |
-| `modify_an_existing_blog` | Modifies an existing blog by sending a PUT request with the provided blog data. |
-| `modify_an_existing_draftorder` | Modifies an existing draft order by updating its details via REST API request. |
-| `modify_an_existing_fulfillment` | Updates an existing fulfillment by modifying its details and returns the updated fulfillment data. |
-| `modify_an_existing_fulfillmentservice` | Modifies an existing FulfillmentService using a provided dictionary of fulfillment service details. |
-| `modify_an_existing_product_image` | Modify an existing product image by updating its details. |
-| `modify_an_existing_product_variant` | Modifies an existing product variant by sending updated details to the API. |
-| `modify_an_existing_theme` | Updates an existing theme by sending a modified theme configuration to the API. |
-| `modify_an_existing_webhook` | Modify an existing webhook by updating its subscription's topic or address URIs. |
-| `moves_afulfillment_order_to_anew_location` | Moves an in-progress fulfillment order to a new location, updating the fulfillment service |
-| `performs_bulk_operations_for_multiple_customer_addresses` | Performs bulk operations on multiple customer addresses using a provided request body. |
-| `re_opens_aclosed_order` | Re-opens a previously closed order by submitting a request to the API. |
-| `receive_acount_of_all_blogs` | Retrieve a count of all blogs from a remote endpoint. |
-| `receive_acount_of_all_draftorders` | Retrieve the count of draft orders based on optional filtering criteria. |
-| `receive_acount_of_all_product_images` | Retrieves a count of all product images optionally filtered by a since ID. |
-| `receive_acount_of_all_product_variants` | Retrieves a count of all product variants. |
-| `receive_acount_of_all_webhooks` | Retrieves a count of existing webhook subscriptions based on specified filters. |
-| `receive_alist_of_all_countries` | Retrieves a list of all countries, optionally filtering by specific fields or since a specified ID. |
-| `receive_alist_of_all_fulfillmentservices` | Retrieves a list of all FulfillmentServices based on the specified scope. |
-| `receive_alist_of_all_product_images` | Retrieve a list of product images, optionally filtering by specified fields and IDs. |
-| `receive_alist_of_all_resourcefeedbacks` | Retrieve a list of all ResourceFeedbacks as a dictionary. |
-| `receive_asingle_article` | Retrieve a single article from an online source. |
-| `receive_asingle_blog` | Retrieves a single Blog by its ID, optionally specifying fields to include in the response. |
-| `receive_asingle_draftorder` | Retrieves a single DraftOrder based on the specified criteria. |
-| `receive_asingle_fulfillment` | Retrieves a specific fulfillment entry from the API by making a GET request. |
-| `receive_asingle_fulfillmentservice` | Receive a single FulfillmentService. |
-| `receive_asingle_product_image` | Retrieves a single product image by ID with optional field filtering. |
-| `receive_asingle_product_variant` | Retrieves a single product variant by ID. |
-| `receive_asingle_webhook` | Retrieves a single webhook subscription from the API endpoint. |
-| `rejects_acancellation_request` | Rejects a cancellation request sent to a fulfillment service for a fulfillment order. |
-| `rejects_afulfillment_request` | Rejects a fulfillment request sent to a fulfillment service for a fulfillment order. |
-| `remove_an_existing_blog` | Removes an existing blog by sending a delete request to the specified endpoint. |
-| `remove_an_existing_country` | Removes an existing country by sending a DELETE request. |
-| `remove_an_existing_draftorder` | Removes an existing DraftOrder by sending a DELETE request to the specified URL. |
-| `remove_an_existing_fulfillmentservice` | Removes an existing FulfillmentService. |
-| `remove_an_existing_pricerule` | Delete an existing PriceRule using the provided request body to specify which rule to remove. |
-| `remove_an_existing_product_image` | Remove an existing product image by sending a delete request to the product management API. |
-| `remove_an_existing_product_variant` | Remove an existing Product Variant from the system. |
-| `remove_an_existing_theme` | Remove an existing theme by deleting it from the specified system. |
-| `remove_an_existing_webhook` | Deletes an existing webhook subscription by sending a delete request to the API endpoint. |
-| `removes_acomment` | Removes a comment by sending a POST request to the specified URL endpoint. |
-| `removes_an_address_from_acustomer_saddress_list` | Removes a specified address from a customer's address list by sending a DELETE request. |
-| `removes_aproduct_from_acollection` | Initiates the removal of a product from a collection via a DELETE request to the API endpoint. |
-| `removes_asmart_collection` | Removes a smart collection using the provided request data. |
-| `restores_apreviously_removed_comment` | Restores a previously removed comment. |
-| `retrieve_acount_of_products_that_are_published_to_your_app` | Retrieves the count of products published to the associated app. |
-| `retrieve_alist_of_all_blogs` | Retrieve a paginated list of blogs from the Shopify REST Admin API, supporting field selection, filtering, and result limiting. |
-| `retrieve_alist_of_products_belonging_to_acollection` | Retrieves a paginated list of products associated with a collection, sorted by the collection's configured order. |
-| `retrieve_aspecific_collection_listing_that_is_published_to_your_app` | Retrieves a specific collection listing published to your app. |
-| `retrieve_aspecific_product_listing_that_is_published_to_your_app` | Retrieve a specific published product listing for your app. |
-| `retrieve_code_product_ids_code_that_are_published_to_acode_collection_id_code` | Retrieve product IDs published to a specified collection ID from the Shopify REST Admin API, supporting pagination via response headers. |
-| `retrieve_code_product_ids_code_that_are_published_to_your_app` | Retrieves product IDs published to the associated app, supporting pagination through response headers. |
-| `retrieve_collection_listings_that_are_published_to_your_app` | Retrieve published collection listings available to your app, implementing pagination via response header links. |
-| `retrieve_product_listings_that_are_published_to_your_app` | Retrieve product listings that are published to your app. |
-| `retrieves_acheckout` | Retrieves checkout details from the specified API endpoint. |
-| `retrieves_acount_of_all_articles_from_ablog` | Retrieves a count of articles from a blog based on specified creation, publication, and update dates, as well as publication status. |
-| `retrieves_acount_of_all_customer_saved_searches` | Retrieves a count of all customer saved searches, optionally filtering results to after a specified ID. |
-| `retrieves_acount_of_all_marketing_events` | Retrieves a count of all marketing events. |
-| `retrieves_acount_of_all_price_rules` | Retrieves a count of all price rules from the API endpoint. |
-| `retrieves_acount_of_all_script_tags` | Retrieves a count of script tags from an online store, optionally filtered by source URL. |
-| `retrieves_acount_of_an_order_stransactions` | Retrieves the count of an order's transactions. |
-| `retrieves_acount_of_aresource_smetafields` | Retrieves the count of a resource's metafields. |
-| `retrieves_acount_of_checkouts` | Retrieves a count of checkouts based on specified filters like creation date, status, and update date. |
-| `retrieves_acount_of_collects` | Retrieves a count of collects from the server. |
-| `retrieves_acount_of_comments` | Retrieves the count of comments filtered by creation, update, publication dates, and statuses. |
-| `retrieves_acount_of_countries` | Retrieves a count of countries from a remote API. |
-| `retrieves_acount_of_custom_collections` | Retrieves a count of custom collections based on various filters like product ID, published date, updated date, published status, and title. |
-| `retrieves_acount_of_customers` | Retrieves a count of all customers from the API endpoint. |
-| `retrieves_acount_of_events` | Retrieves a count of events based on the specified creation time range. |
-| `retrieves_acount_of_fulfillments_associated_with_aspecific_order` | Retrieves a count of fulfillments associated with a specific order based on date filters. |
-| `retrieves_acount_of_gift_cards` | Retrieves a count of gift cards filtered by status if provided. |
-| `retrieves_acount_of_locations` | Retrieves the count of locations from the API. |
-| `retrieves_acount_of_products` | Retrieve the count of products matching specified filter criteria, including collection ID, publication status, date ranges, and vendor details. |
-| `retrieves_acount_of_provinces_for_acountry` | Retrieves a count of provinces for a country through an API request. |
-| `retrieves_acount_of_smart_collections` | Retrieves a count of smart collections filtered by specified criteria including product association, publication/update timestamps, title, and status. |
-| `retrieves_acount_of_url_redirects` | Retrieves a count of URL redirects matching specified path and/or target parameters. |
-| `retrieves_adiscount_code_creation_job` | Retrieves details of a discount code creation job from the API. |
-| `retrieves_alist_of_abandoned_checkouts` | Retrieves a paginated list of abandoned checkouts with optional filtering based on creation/update timestamps, status, and ID ranges. |
-| `retrieves_alist_of_access_scopes_associated_to_the_access_token` | Retrieves access scopes associated with the current authentication token. |
-| `retrieves_alist_of_addresses_for_acustomer` | Retrieves a list of addresses for a customer. |
-| `retrieves_alist_of_all_article_authors` | Retrieves a list of all article authors. |
-| `retrieves_alist_of_all_article_tags` | Retrieves a list of all article tags with optional filtering by popularity and limit. |
-| `retrieves_alist_of_all_articles_from_ablog` | Retrieve a paginated list of blog articles with filtering options via Shopify's REST Admin API. |
-| `retrieves_alist_of_all_marketing_events` | Retrieves a list of all marketing events with pagination based on provided limit and offset. |
-| `retrieves_alist_of_all_order_risks_for_an_order` | Retrieves a list of all order risks for an order. |
-| `retrieves_alist_of_all_script_tags` | Retrieves a list of all script tags with optional filters such as creation date, update date, and source URL. |
-| `retrieves_alist_of_all_users` | Retrieves a list of all users from the API endpoint and returns their data. |
-| `retrieves_alist_of_application_charges` | Retrieves a list of application charges from the API, filtered by specified criteria. |
-| `retrieves_alist_of_assets_for_atheme` | Retrieves a list of assets for a theme, returning metadata about each asset. |
-| `retrieves_alist_of_carrier_services` | Retrieves a list of carrier services available through the API. |
-| `retrieves_alist_of_collects` | Retrieves a paginated list of collects (product-collection relationships) from the Shopify API, supporting field filtering and result limitations. |
-| `retrieves_alist_of_comments` | Retrieves a list of comments based on various filter criteria, including creation and publication dates, fields, limit, and status. |
-| `retrieves_alist_of_currencies_enabled_on_ashop` | Retrieves a list of currencies enabled on a shop. |
-| `retrieves_alist_of_custom_collections` | Retrieves a list of custom collections based on specified criteria. |
-| `retrieves_alist_of_customer_saved_searches` | Retrieves a list of customer saved searches with pagination support via response headers. |
-| `retrieves_alist_of_customers` | Retrieves a list of customers based on specified criteria, including creation and update dates, customer IDs, and select fields. |
-| `retrieves_alist_of_discount_codes` | Retrieves a paginated list of discount codes from the Shopify REST Admin API, adhering to API version 2019-10 pagination rules. |
-| `retrieves_alist_of_discount_codes_for_adiscount_code_creation_job` | Retrieves a list of discount codes for a discount code creation job. |
-| `retrieves_alist_of_draft_orders` | Retrieves paginated draft orders from the REST Admin API with optional filtering parameters. |
-| `retrieves_alist_of_events` | Retrieves a list of events with optional pagination and filtering capabilities. |
-| `retrieves_alist_of_fulfillment_events_for_aspecific_fulfillment` | Retrieves a list of fulfillment events associated with a specific fulfillment. |
-| `retrieves_alist_of_fulfillment_orders_for_aspecific_order` | Retrieves a list of fulfillment orders associated with a specific order ID. |
-| `retrieves_alist_of_fulfillment_orders_on_ashop_for_aspecific_app` | Retrieves a list of fulfillment orders on a shop for a specific app, filtered by assignment status and location IDs. |
-| `retrieves_alist_of_gift_cards` | Retrieves a paginated list of gift cards with optional filters, using Shopify's paginated REST Admin API. |
-| `retrieves_alist_of_inventory_items` | Retrieves a list of inventory items based on provided IDs and a specified limit. |
-| `retrieves_alist_of_inventory_levels` | Retrieves a list of inventory levels based on specified parameters |
-| `retrieves_alist_of_inventory_levels_for_alocation` | Retrieves a dictionary of inventory levels for a location. |
-| `retrieves_alist_of_locations` | Retrieves a list of locations from the API endpoint. |
-| `retrieves_alist_of_locations_that_afulfillment_order_can_potentially_move_to` | Retrieves a list of locations to which a fulfillment order can potentially move. |
-| `retrieves_alist_of_metafields_that_belong_to_aresource` | Retrieves a list of metafields belonging to a resource using pagination via response headers (note: explicit pagination parameters are not supported). |
-| `retrieves_alist_of_orders` | Retrieves a list of orders with optional filtering and pagination support. Note: Uses response header links for pagination (page parameter unsupported in v2019-10+). |
-| `retrieves_alist_of_pages` | Retrieves a list of pages from the Shopify REST Admin API with pagination support via response header links. |
-| `retrieves_alist_of_payments_on_aparticular_checkout` | Retrieves a list of payments for a specific checkout. |
-| `retrieves_alist_of_price_rules` | Retrieves a list of price rules with optional filters for creation, update, start/end dates, and usage history, following Shopify's pagination guidelines. |
-| `retrieves_alist_of_product_variants` | Retrieves a paginated list of product variants from Shopify's REST Admin API, including fields, currencies, and pagination controls. |
-| `retrieves_alist_of_products` | Retrieves a paginated list of products with filtering options, implementing Shopify's REST Admin API pagination via response headers. |
-| `retrieves_alist_of_provinces_for_acountry` | Retrieves a list of provinces for a country, optionally filtering by specific fields and IDs. |
-| `retrieves_alist_of_recurring_application_charges` | Retrieves a list of recurring application charges with optional filtering parameters. |
-| `retrieves_alist_of_refunds_for_an_order` | Retrieves a list of refunds for an order, allowing customization of returned fields and currency. |
-| `retrieves_alist_of_reports` | Retrieves a list of reports based on the specified filters and parameters. |
-| `retrieves_alist_of_shipping_rates` | Retrieves a list of available shipping rates for a checkout |
-| `retrieves_alist_of_smart_collections` | Retrieves a list of smart collections with optional filtering by various criteria. |
-| `retrieves_alist_of_storefront_access_tokens_that_have_been_issued` | Retrieves a list of issued storefront access tokens. |
-| `retrieves_alist_of_tender_transactions` | Retrieves a paginated list of tender transactions, supporting filters by date ranges, order, and pagination markers. Implements Shopify API pagination via response headers as of version 2019-10. |
-| `retrieves_alist_of_the_shop_spolicies` | Retrieves a list of the shop's policies including refunds, shipping, and other store-related terms. |
-| `retrieves_alist_of_themes` | Retrieves a list of themes from the online store with optional field filtering. |
-| `retrieves_alist_of_transactions` | Retrieves a list of transactions, optionally filtered by specified fields, in-shop currency display preference, and transaction ID boundaries. |
-| `retrieves_alist_of_url_redirects` | Retrieves a list of URL redirects with optional filtering parameters. Results are paginated through response headers (page parameters are not supported). |
-| `retrieves_alist_of_usage_charges` | Retrieves a list of usage charges from a specified endpoint. |
-| `retrieves_alist_of_webhooks` | Retrieves a paginated list of webhook subscriptions filtered by specified criteria such as date ranges, address, topic, and ID. |
-| `retrieves_all_application_credits` | Retrieves all application credits from the server. |
-| `retrieves_all_customers_returned_by_acustomer_saved_search` | Retrieves all customers associated with a customer saved search using specified filters and ordering. |
-| `retrieves_all_orders_belonging_to_acustomer` | Retrieves all orders belonging to a customer. |
-| `retrieves_an_application_charge` | Retrieves application charge details from the billing system. |
-| `retrieves_an_order_count` | Retrieves the count of orders filtered by the specified date ranges, financial status, fulfillment status, or order status. |
-| `retrieves_apage_count` | Retrieves a page count based on specified filters like creation, publication, and update dates, page title, and publication status. |
-| `retrieves_asingle_application_credit` | Retrieves a single application credit from the API, including specified fields. |
-| `retrieves_asingle_carrier_service` | Retrieves a single carrier service by its ID. |
-| `retrieves_asingle_charge` | Retrieves a single charge's data from the API, including specified fields. |
-| `retrieves_asingle_charge1` | Retrieves a single charge including specified fields from the API. |
-| `retrieves_asingle_collection` | Retrieves a single collection from the API, with optional field filtering. |
-| `retrieves_asingle_comment_by_its_id` | Retrieves a single comment by its unique identifier from the API. |
-| `retrieves_asingle_custom_collection` | Retrieves a specific custom collection with optional field filtering. |
-| `retrieves_asingle_customer` | Retrieves information about a single customer, allowing specification of which fields to include. |
-| `retrieves_asingle_customer_saved_search` | Retrieves a single customer saved search. |
-| `retrieves_asingle_discount_code` | Retrieves a single discount code. |
-| `retrieves_asingle_event` | Retrieves a single event by its ID, optionally specifying which fields to include. |
-| `retrieves_asingle_gift_card` | Retrieves a single gift card by its ID. |
-| `retrieves_asingle_inventory_item_by_id` | Retrieves a single inventory item by ID from a specified inventory source. |
-| `retrieves_asingle_location_by_its_id` | Retrieves a single location by its unique identifier from the inventory system. |
-| `retrieves_asingle_marketing_event` | Retrieves a single marketing event's details from the API endpoint. |
-| `retrieves_asingle_metafield_from_aresource_by_its_id` | Retrieves a single metafield from a specified resource by its ID. |
-| `retrieves_asingle_order_risk_by_its_id` | Retrieves a single order risk by its ID. |
-| `retrieves_asingle_page_by_its_id` | Retrieves a single page by its ID, optionally selecting specific fields. |
-| `retrieves_asingle_payment` | Retrieves a single payment by fetching payment information for an existing payment. |
-| `retrieves_asingle_price_rule` | Retrieves a single price rule from the server. |
-| `retrieves_asingle_product` | Retrieves a single product's data from the API. |
-| `retrieves_asingle_province_for_acountry` | Retrieves a single province's details for a specified country from the API. |
-| `retrieves_asingle_redirect` | Retrieves details of a single redirect entry from the API. |
-| `retrieves_asingle_report` | Retrieves a single report from the application. |
-| `retrieves_asingle_script_tag` | Retrieves a single script tag from the online store with specified response fields. |
-| `retrieves_asingle_smart_collection` | Retrieves a single smart collection, optionally specifying fields to include. |
-| `retrieves_asingle_theme` | Retrieves a single theme from the server. |
-| `retrieves_asingle_user` | Retrieves a single user's data via API request. |
-| `retrieves_aspecific_collect_by_its_id` | Retrieves a specific collect entry from the API by its ID, allowing field selection. |
-| `retrieves_aspecific_county` | Retrieves detailed information about a specific county from an API endpoint, allowing field filtering. |
-| `retrieves_aspecific_fulfillment_event` | Retrieves a specific fulfillment event from the server. |
-| `retrieves_aspecific_fulfillment_order` | Retrieves a specific fulfillment order from a fulfillment service. |
-| `retrieves_aspecific_order` | Retrieves a specific order from a remote source. |
-| `retrieves_aspecific_refund` | Retrieves details of a specific refund including specified fields and currency preferences. |
-| `retrieves_aspecific_transaction` | Retrieves a specific transaction from an API endpoint, allowing field selection and currency format control. |
-| `retrieves_details_for_asingle_customer_address` | Retrieves details for a customer's address by making a GET request to the specified API endpoint. |
-| `retrieves_fulfillments_associated_with_afulfillment_order` | Retrieves all fulfillments associated with a specified fulfillment order. |
-| `retrieves_fulfillments_associated_with_an_order` | Retrieves fulfillments associated with an order based on specified criteria. |
-| `retrieves_the_currently_logged_in_user` | Retrieves information about the currently authenticated user account using the access token. |
-| `retrieves_the_location_of_adiscount_code` | Retrieves the location of a discount code via HTTP response headers. |
-| `retrieves_the_shop_sconfiguration` | Retrieves the shop's configuration details including specified fields. |
-| `return_alist_of_all_balance_transactions` | Retrieves a list of balance transactions ordered by processing time, with the most recent first. Supports filtering by transaction IDs, payout status, and test mode. |
-| `return_alist_of_all_disputes` | Retrieve a list of all disputes, filtered by optional parameters for initiate date, IDs, and status. The disputes are ordered by initiation date in descending order. |
-| `return_alist_of_all_payouts` | Retrieve a paginated list of payouts ordered by date (most recent first) with filtering options. |
-| `return_asingle_dispute` | Retrieves a single dispute by ID via Shopify Payments. |
-| `return_asingle_payout` | Retrieves a single payout by ID from Shopify Payments. |
-| `return_the_current_balance` | Retrieve the current balance of an account. |
-| `searches_for_customers_that_match_asupplied_query` | Searches for customers that match a supplied query, allowing filtering by fields, limit, ordering, and query text. |
-| `searches_for_gift_cards` | Searches for gift cards based on specified criteria, including indexed fields like creation time, balance, and last characters. |
-| `send_an_invoice` | Sends an invoice for a draft order via email with customizable recipient, sender, and message details. |
-| `sends_acancellation_request` | Sends a cancellation request to the fulfillment service for a fulfillment order. |
-| `sends_afulfillment_request` | Sends a fulfillment request to a fulfillment service. |
-| `sends_an_account_invite_to_acustomer` | Sends an account invitation to a customer via API request. |
-| `sets_the_default_address_for_acustomer` | Sets the default address for a customer. |
-| `sets_the_inventory_level_for_an_inventory_item_at_alocation` | Updates the available inventory quantity for a specific item at a designated location, automatically connecting the location if not already linked. |
-| `stores_acredit_card_in_the_card_vault` | Stores credit card details in a secure vault and returns a session ID for payment processing. |
-| `transition_afulfillment_from_pending_to_open` | Transition a fulfillment from pending to open, marking it as open. |
-| `updates_acarrier_service` | Updates a carrier service. Only the app that creates a carrier service can update it. |
-| `updates_acomment_of_an_article` | Updates a specific comment on an article by sending a PUT request with the updated comment details. |
-| `updates_acustomer` | Updates a customer by sending a PUT request with the provided customer data. |
-| `updates_acustomer_saved_search` | Updates a customer saved search by sending a PUT request to the specified URL. |
-| `updates_amarketing_event` | Updates an existing marketing event by sending the provided data to the API endpoint. |
-| `updates_ametafield` | Updates a metafield by sending a PUT request with the provided metafield data. |
-| `updates_an_article` | Updates an article by sending a PUT request with the provided article data. |
-| `updates_an_existing_aprice_rule` | Updates an existing price rule with new parameters. |
-| `updates_an_existing_country` | Updates an existing country's data by sending a PUT request to the API endpoint. |
-| `updates_an_existing_custom_collection` | Updates an existing custom collection using the provided data. |
-| `updates_an_existing_customer_address` | Updates an existing customer address by sending a PUT request with the new address details. |
-| `updates_an_existing_discount_code` | Updates an existing discount code with new data via a PUT request. |
-| `updates_an_existing_gift_card` | Updates an existing gift card, modifying its expiry date, note, and template suffix while preserving the balance. |
-| `updates_an_existing_inventory_item` | Updates an existing inventory item by sending a PUT request with the provided item details. |
-| `updates_an_existing_province_for_acountry` | Updates an existing province for a country by sending a PUT request with the new province details. |
-| `updates_an_existing_redirect` | Updates an existing redirect by sending a PUT request with the specified redirect details. |
-| `updates_an_existing_smart_collection` | Updates an existing smart collection with provided parameters. |
-| `updates_an_order` | Updates an existing order with the provided order data |
-| `updates_an_order_risk` | Updates an order risk by sending a risk update request to the API. |
-| `updates_apage` | Updates a specific page with the provided data. |
-| `updates_aproduct` | Updates a product and its associated variants, images, and SEO metadata. |
-| `updates_areport` | Updates an existing report by sending a PUT request to the API endpoint with the provided report data. |
-| `updates_ascript_tag` | Updates a script tag in an online store by sending a PUT request with the provided script tag details. |
-| `updates_the_capped_amount_of_arecurring_application_charge` | Updates the capped amount of an active recurring application charge. |
-| `updates_the_ordering_type_of_products_in_asmart_collection` | Updates the ordering type of products in a smart collection via API request. |
-| `updates_the_tracking_information_for_afulfillment` | Updates the tracking information for a fulfillment by sending a POST request with the provided fulfillment data. |
+| `retrieves_alist_of_access_scopes_associated_to_the_access_token` | Retrieves the list of OAuth access scopes (permissions) granted to an application using the Shopify Admin REST API. |
+| `retrieves_alist_of_storefront_access_tokens_that_have_been_issued` | Retrieves a list of storefront access tokens, which are used to authenticate requests to the Shopify Storefront API, allowing access to data such as products and checkout functionality. |
+| `creates_anew_storefrontaccesstoken` | Creates a Shopify Storefront API access token for client-side GraphQL requests, enabling access to store data like products, collections, and checkout. |
+| `deletes_an_existing_storefront_access_token` | Deletes a storefront access token and returns a success status upon completion. |
+| `retrieves_alist_of_reports` | Retrieves reports data for specified parameters, such as IDs, limit, and date ranges, using the GET method. |
+| `creates_anew_report` | Submits a report generation request and returns a success status upon creation. |
+| `retrieves_asingle_report` | Retrieves a report by its ID using the specified API version and optionally includes additional fields in the response. |
+| `updates_areport` | Updates or replaces a specific report resource at the specified report ID in JSON format using the PUT method. |
+| `deletes_areport` | Deletes the specified report using the DELETE method and returns a successful status upon completion. |
+| `retrieves_alist_of_application_charges` | Retrieves a list of application charges in JSON format, allowing filtering by specific fields and starting from a given ID. |
+| `creates_an_application_charge` | Creates a new application charge through the API, returning a success response upon creation or an error if validation fails. |
+| `retrieves_an_application_charge` | Retrieves details of a specific application charge transaction using specified fields from the Stripe Connect API. |
+| `activates_an_application_charge` | Activates a previously created application charge using the specified ID and returns a success status upon completion. |
+| `retrieves_all_application_credits` | Retrieves a list of application credits issued to merchants through the Shopify API, allowing optional field filtering via query parameters. |
+| `creates_an_application_credit` | Issues application credits to merchants, which can be used towards future app purchases in Shopify, using the POST method at "/admin/api/{api_version}/application_credits.json". |
+| `retrieves_asingle_application_credit` | Retrieves a specific application credit from Shopify's admin API, including optional field filtering parameters. |
+| `retrieves_alist_of_recurring_application_charges` | Retrieves a list of recurring application charges with optional filtering by ID and field selection. |
+| `creates_arecurring_application_charge` | Creates a new recurring application charge using the API, handling the setup and management of periodic billing. |
+| `retrieves_asingle_charge` | Retrieves details for a specific recurring application charge by ID using the "GET" method, optionally including additional fields specified in the query parameters. |
+| `cancels_arecurring_application_charge` | Cancels an existing recurring application charge for a Shopify store. |
+| `activates_arecurring_application_charge` | Activates a recurring application charge using the API and returns a status message in response. |
+| `retrieves_alist_of_usage_charges` | Retrieves usage charges for a specific recurring application charge via the Shopify Admin API, filtering results based on specified fields. |
+| `creates_ausage_charge` | Creates a usage-based charge on a recurring billing subscription and returns the charge details upon success. |
+| `retrieves_asingle_charge1` | Retrieves a specific usage charge associated with a recurring application charge for tracking and billing purposes. |
+| `retrieves_alist_of_addresses_for_acustomer` | Retrieves a list of customer addresses associated with a specific customer ID. |
+| `creates_anew_address_for_acustomer` | Creates a new address for a specified customer using the POST method. |
+| `retrieves_details_for_asingle_customer_address` | Retrieves a specific customer address using the provided customer ID and address ID, returning details about the address. |
+| `updates_an_existing_customer_address` | Updates an existing customer address using the HTTP PUT method at a specified API path, returning a successful status message upon completion. |
+| `removes_an_address_from_acustomer_saddress_list` | Deletes a customer's address specified by the customer ID and address ID using a DELETE request. |
+| `retrieves_alist_of_customers` | Retrieves a list of customers with optional filtering by IDs, creation/update timestamps, and field selection. |
+| `creates_acustomer` | Creates a new customer resource using the API and returns a status message upon successful creation. |
+| `searches_for_customers_that_match_asupplied_query` | Searches customer records using specified filters, sorting options, and field selections, returning matching results in a structured format. |
+| `retrieves_asingle_customer` | Retrieves a customer's details in JSON format using the specified API version and customer ID, with optional fields specified via the query parameters. |
+| `updates_acustomer` | Updates or replaces the customer resource at the specified ID and returns the updated entity. |
+| `deletes_acustomer` | Deletes a customer's data permanently using the "DELETE" method at the specified API path, immediately canceling any active subscriptions and preventing further operations. |
+| `sends_an_account_invite_to_acustomer` | Sends an invitation to a specified customer using the "POST" method. |
+| `retrieves_acount_of_customers` | Retrieves the count of customers using the specified API version. |
+| `retrieves_all_orders_belonging_to_acustomer` | Retrieves a list of orders for a specified customer using the "GET" method via the API endpoint "/admin/api/{api_version}/customers/{customer_id}/orders.json". |
+| `retrieves_alist_of_customer_saved_searches` | Retrieves a list of customer-saved searches in JSON format, allowing for optional filtering by limit, since_id, and specific fields. |
+| `creates_acustomer_saved_search` | Creates a new customer saved search entry via the specified API version and returns an empty response on success or validation errors. |
+| `retrieves_acount_of_all_customer_saved_searches` | Retrieves a count of customer saved searches with optional filtering by creation time using the "since_id" parameter. |
+| `retrieves_asingle_customer_saved_search` | Retrieves a customer saved search by ID using the Shopify API, optionally specifying fields to include in the response. |
+| `updates_acustomer_saved_search` | Updates a customer's saved search identified by the `{customer_saved_search_id}` at the specified `{api_version}`, allowing modifications to its details. |
+| `deletes_acustomer_saved_search` | Deletes a specified customer saved search using its unique identifier and returns a success status upon completion. |
+| `retrieves_all_customers_returned_by_acustomer_saved_search` | Retrieves a list of customers associated with a specific customer saved search, allowing for optional filtering by order, limited results, and customizable fields. |
+| `retrieves_alist_of_discount_codes` | Retrieves discount codes associated with a specific price rule using the specified API version. |
+| `creates_adiscount_code` | Creates a discount code associated with a specific price rule in Shopify and returns the created resource. |
+| `retrieves_asingle_discount_code` | Retrieves information about a specific discount code for a given price rule using the API. |
+| `updates_an_existing_discount_code` | Updates an existing discount code associated with a specified price rule in Shopify, allowing merchants to modify the discount code details within the defined price rule. |
+| `deletes_adiscount_code` | Deletes a specific discount code associated with a price rule. |
+| `retrieves_the_location_of_adiscount_code` | Retrieves discount code information using the "GET" method at the "/admin/api/{api_version}/discount_codes/lookup.json" endpoint. |
+| `creates_adiscount_code_creation_job` | Applies batch operations to a specific price rule using the POST method, allowing for efficient management of price rules in bulk. |
+| `retrieves_adiscount_code_creation_job` | Retrieves a batch of price rule details for a specific batch and price rule ID using the specified API version. |
+| `retrieves_alist_of_discount_codes_for_adiscount_code_creation_job` | Retrieves a list of discount codes associated with a specific batch under a price rule using the "GET" method. |
+| `retrieves_alist_of_price_rules` | Retrieves a paginated list of price rules with optional filters for time ranges, usage, and creation/modification dates. |
+| `creates_aprice_rule` | Creates a new price rule using the POST method, enabling the management of pricing configurations for specific products or customer groups at the specified API endpoint. |
+| `retrieves_asingle_price_rule` | Retrieves a specific price rule's details including entitlements, prerequisites, and discount conditions from the store's pricing system. |
+| `updates_an_existing_aprice_rule` | Updates a price rule configuration for a specific ID using the Shopify Admin REST API. |
+| `remove_an_existing_pricerule` | Deletes a specified price rule with the provided ID using the "DELETE" method, returning a successful response with a 204 status code. |
+| `retrieves_acount_of_all_price_rules` | Retrieves the total count of price rules configured in the system. |
+| `retrieves_alist_of_events` | Retrieves a filtered list of administrative events with parameters for date ranges, pagination, and field selection. |
+| `retrieves_asingle_event` | Retrieves event details in JSON format from the admin API for a specified event ID and API version with optional field filtering. |
+| `retrieves_acount_of_events` | Retrieves the count of events using the "GET" method, allowing filtering by creation date range via "created_at_min" and "created_at_max" query parameters. |
+| `retrieves_alist_of_webhooks` | Retrieves a list of webhooks in JSON format, allowing filtering by address, creation and update times, specific fields, limit, and topic, using the "GET" method. |
+| `create_anew_webhook` | Creates a new webhook subscription for event notifications from the admin API. |
+| `receive_acount_of_all_webhooks` | Retrieves the count of webhooks for a specified address and topic using the GET method. |
+| `receive_asingle_webhook` | Retrieves a specific webhook's details in JSON format using the specified API version and webhook ID from the admin API. |
+| `modify_an_existing_webhook` | Updates the specified webhook's configuration using the provided data and returns a success status upon completion. |
+| `remove_an_existing_webhook` | Deletes a webhook identified by its ID using the DELETE method, effectively removing the webhook endpoint. |
+| `retrieves_alist_of_inventory_items` | Retrieves a list of inventory items with support for filtering by IDs and limiting results. |
+| `retrieves_asingle_inventory_item_by_id` | Retrieves inventory item details using the API at the specified version, returning information for the specified inventory item ID. |
+| `updates_an_existing_inventory_item` | Updates an inventory item with the specified ID by modifying its characteristics or details using the PUT method at the "/admin/api/{api_version}/inventory_items/{inventory_item_id}.json" endpoint. |
+| `retrieves_alist_of_inventory_levels` | Retrieves inventory level information for specified inventory items and locations using the "GET" method, allowing for filtering by item IDs, location IDs, and update time, and returns the data in JSON format. |
+| `deletes_an_inventory_level_from_alocation` | Deletes inventory levels from the system and returns a success status without content. |
+| `adjusts_the_inventory_level_of_an_inventory_item_at_alocation` | Adjusts the inventory level for a specific item at a location using a relative quantity change. |
+| `connects_an_inventory_item_to_alocation` | Connects inventory levels to a specified location or system and returns a success status upon creation. |
+| `sets_the_inventory_level_for_an_inventory_item_at_alocation` | Updates inventory levels for specific items and returns a success status. |
+| `retrieves_alist_of_locations` | Retrieves a list of locations accessible through the admin API and returns them in JSON format. |
+| `retrieves_asingle_location_by_its_id` | Retrieves the details of a specific location by its ID from the admin API. |
+| `retrieves_acount_of_locations` | Retrieves the count of locations in JSON format using the specified API version. |
+| `retrieves_alist_of_inventory_levels_for_alocation` | Retrieves the current inventory levels for products at a specified store location using the GET method and returns this information in JSON format. |
+| `retrieves_alist_of_all_marketing_events` | Retrieves a paginated list of marketing events using the specified limit and offset parameters. |
+| `creates_amarketing_event` | Creates a marketing event using the specified API version and returns a status message upon successful creation. |
+| `retrieves_acount_of_all_marketing_events` | Retrieves the total count of marketing events matching specified criteria using filtering parameters. |
+| `retrieves_asingle_marketing_event` | Retrieves the details of a specific marketing event by its ID from the Shopify API. |
+| `updates_amarketing_event` | Updates a marketing event's details via the specified marketing_event_id and returns a success status upon completion. |
+| `deletes_amarketing_event` | Deletes a specific marketing event using its unique identifier and returns a success status upon removal. |
+| `creates_marketing_engagements_on_amarketing_event` | Creates an engagement record for a specified marketing event using the POST method. |
+| `retrieves_alist_of_metafields_that_belong_to_aresource` | Retrieves a list of metafields across all resources with optional filters like namespace, key, value type, and date ranges. |
+| `creates_anew_metafield_for_aresource` | Creates a new metafield entry in Shopify's system for storing custom data associated with various resources. |
+| `retrieves_acount_of_aresource_smetafields` | Retrieves the count of metafields for a specified resource using the "GET" method at the "/admin/api/{api_version}/metafields/count.json" endpoint. |
+| `retrieves_asingle_metafield_from_aresource_by_its_id` | Retrieves a specific metafield by its ID using the Shopify API, allowing for optional filtering of returned fields. |
+| `updates_ametafield` | Updates an existing metafield's data in Shopify via the specified API endpoint. |
+| `deletes_ametafield_by_its_id` | Deletes a metafield by its ID using the Shopify API, removing the specified metafield's data from a store. |
+| `retrieves_alist_of_all_articles_from_ablog` | Retrieves a list of articles from a specified blog using the GET method with optional filtering by parameters such as creation date, publication status, author, and tags. |
+| `creates_an_article_for_ablog` | Creates a new article in the specified blog using the Blogger API and returns the created article on success. |
+| `retrieves_acount_of_all_articles_from_ablog` | Retrieves the count of articles in a specific blog with optional time-based and status filters. |
+| `receive_asingle_article` | Retrieves a specific article from a blog by its ID, returning the requested fields in the response. |
+| `updates_an_article` | Updates an article in a blog using the "PUT" method, replacing the existing resource with a new representation at the specified API path. |
+| `deletes_an_article` | Deletes a specific article from a blog using the provided blog and article identifiers and returns a success status upon completion. |
+| `retrieves_alist_of_all_article_authors` | Retrieves a list of article authors in JSON format using the specified API version. |
+| `retrieves_alist_of_all_article_tags` | Retrieves article tags with optional parameters for limiting results and filtering by popularity. |
+| `retrieves_alist_of_assets_for_atheme` | Retrieves a list of theme assets for a specified theme in Shopify using the GET method at the "/admin/api/{api_version}/themes/{theme_id}/assets.json" endpoint, optionally filtering the response by fields specified in the query parameters. |
+| `creates_or_updates_an_asset_for_atheme` | Updates or creates theme assets in Shopify stores using the Asset REST API, enabling modification of theme files like Liquid templates or CSS. |
+| `deletes_an_asset_from_atheme` | Deletes a theme asset in a Shopify store using the "DELETE" method at the specified API path, returning a status message based on the outcome of the deletion request. |
+| `retrieve_alist_of_all_blogs` | Retrieves a list of blogs with configurable filters (limit, handle, etc.) and optional field selection in the specified API version. |
+| `create_anew_blog` | Creates a new blog using the API at "/admin/api/{api_version}/blogs.json" with the "POST" method, returning a status indicating success or failure. |
+| `receive_acount_of_all_blogs` | Retrieves the count of blogs using the "GET" method at the specified API endpoint. |
+| `receive_asingle_blog` | Retrieves a blog with the specified ID and optional fields using the "GET" method. |
+| `modify_an_existing_blog` | Updates or replaces an entire blog entry at the specified blog ID using the provided data and returns a success status. |
+| `remove_an_existing_blog` | Deletes a blog with the specified ID using the DELETE method via the API endpoint "/admin/api/{api_version}/blogs/{blog_id}.json" and returns a successful status message if the operation is completed. |
+| `retrieves_alist_of_comments` | Retrieves a list of comments with filtering by date ranges, status, and field selection parameters via a GET request. |
+| `creates_acomment_for_an_article` | Creates comments through an administrative API endpoint. |
+| `retrieves_acount_of_comments` | Retrieves the count of comments filtered by creation, update, and publication timestamps or status using specific query parameters. |
+| `retrieves_asingle_comment_by_its_id` | Retrieves a specific comment's details by its ID in the GitHub API, supporting optional field filtering. |
+| `updates_acomment_of_an_article` | Updates a comment identified by `{comment_id}` using the "PUT" method, enabling modifications to existing comments in a structured API environment. |
+| `retrieves_alist_of_pages` | Retrieves a list of pages in JSON format using the Shopify API, allowing filtering by parameters such as limit, title, handle, creation and update dates, and publication status. |
+| `create_anew_page` | Creates a new page in the Shopify admin using the POST method and returns a status message. |
+| `retrieves_apage_count` | Retrieves the count of pages in a Shopify store based on specified criteria such as title, creation date, update date, publication date, and publication status using the GET method. |
+| `retrieves_asingle_page_by_its_id` | Retrieves a specific page's details from the admin API, filtered by the requested fields, and returns the structured data in JSON format. |
+| `updates_apage` | Updates a specific page with the given ID using the PUT method, replacing its existing content with new data. |
+| `deletes_apage` | Deletes a page identified by the given page ID using the DELETE method, returning a status message upon successful deletion. |
+| `retrieves_alist_of_url_redirects` | Retrieves a list of redirects in JSON format using the "GET" method at the "/admin/api/{api_version}/redirects.json" endpoint, allowing filtering by parameters such as limit, since_id, path, target, and fields. |
+| `creates_aredirect` | Creates a new URL redirect using the API, returning a successful response with a status code of 201 upon completion, or an error response with a status code of 422 if validation fails. |
+| `retrieves_acount_of_url_redirects` | Retrieves the count of redirects for a specified path using the GET method at "/admin/api/{api_version}/redirects/count.json". |
+| `retrieves_asingle_redirect` | Retrieves details of a specific redirect ID in JSON format, allowing optional field selection via query parameters. |
+| `updates_an_existing_redirect` | Updates or replaces a specific redirect resource identified by `{redirect_id}` using the REST API, returning a status message if successful. |
+| `deletes_aredirect` | Deletes a specific URL redirect identified by the provided `redirect_id`, removing the associated redirection rule from the system. |
+| `retrieves_alist_of_all_script_tags` | Retrieves a list of script tags using the Shopify API, allowing filtering by parameters such as creation and update times, source URL, and specific fields. |
+| `creates_anew_script_tag` | Creates a script tag for loading remote JavaScript into a storefront or checkout page via the Shopify Admin API. |
+| `retrieves_acount_of_all_script_tags` | Retrieves the count of script tags using the "GET" method, with an optional query parameter "src" to refine the request. |
+| `retrieves_asingle_script_tag` | Retrieves a script tag by its ID using the API, allowing for optional specification of fields to include in the response. |
+| `updates_ascript_tag` | Updates a script tag by its ID using the PUT method and returns a successful response with a status code of 200. |
+| `deletes_ascript_tag` | Deletes a specified script tag from a Shopify store using the provided script tag ID. |
+| `retrieves_alist_of_themes` | Retrieves a list of store themes (including active, unpublished, and legacy themes) with optional field filtering via query parameters. |
+| `creates_atheme` | Creates a new theme in a Shopify store via the Admin API, returning a success status on creation or validation errors. |
+| `retrieves_asingle_theme` | Retrieves detailed information about a specific theme by ID from the Shopify admin, including customizable fields. |
+| `modify_an_existing_theme` | Updates a theme resource by replacing or modifying it using the provided JSON data. |
+| `remove_an_existing_theme` | Deletes a specified theme and returns a success status upon completion. |
+| `retrieves_acount_of_checkouts` | Retrieves the count of checkouts using the "GET" method at "/admin/api/{api_version}/checkouts/count.json", allowing filtering by parameters such as since_id, creation date, update date, and status. |
+| `retrieves_alist_of_abandoned_checkouts` | Retrieves a list of checkouts with optional filters like date ranges, status, and pagination controls. |
+| `creates_acheckout` | Creates a new checkout session for processing payments and managing order details. |
+| `retrieves_alist_of_draft_orders` | Retrieves a list of draft orders from a Shopify store, allowing specification of fields, limits, and filters by ID, status, and update time, using the GET method. |
+| `create_anew_draftorder` | Creates a new draft order in a Shopify store, allowing merchants to generate provisional sales transactions for custom or wholesale purchases, manage inventory, and facilitate secure payment processing when the order is finalized. |
+| `receive_asingle_draftorder` | Retrieves a specific draft order by its ID using the GET method, allowing optional filtering by specific fields to customize the response. |
+| `modify_an_existing_draftorder` | Updates a specific draft order using the Shopify Draft Order API, allowing for modifications such as changing products, quantities, or applying discounts. |
+| `remove_an_existing_draftorder` | Deletes a draft order specified by its ID using the DELETE method, removing it from the system. |
+| `receive_acount_of_all_draftorders` | Retrieves the count of draft orders matching specified conditions, such as status, update time, and since ID, using the Shopify API. |
+| `send_an_invoice` | Sends an email invoice for a specified draft order using the Shopify Admin API. |
+| `retrieves_alist_of_all_order_risks_for_an_order` | Retrieves the risk assessment details for a specific order using the "GET" method. |
+| `creates_an_order_risk_for_an_order` | Submits a fraud risk assessment for an order to Shopify's deprecated legacy API, returning a 201 status upon creation. |
+| `retrieves_asingle_order_risk_by_its_id` | Retrieves a specific risk associated with an order using the specified API version. |
+| `updates_an_order_risk` | Updates or replaces a specific risk associated with an order in the system using the PUT method. |
+| `deletes_an_order_risk_for_an_order` | Deletes a specific risk associated with an order using the API endpoint at "/admin/api/{api_version}/orders/{order_id}/risks/{risk_id}.json" via the DELETE method. |
+| `retrieves_alist_of_orders` | Retrieves a list of Shopify orders using the "GET" method at "/admin/api/{api_version}/orders.json," allowing for filtering by various criteria such as order IDs, creation and update times, status, and more. |
+| `creates_an_order` | Creates a new order in a Shopify store using the Admin API, returning a response with a status code based on the operation's success or failure. |
+| `retrieves_aspecific_order` | Retrieves details for a specific order using the specified API version and order ID in the admin API. |
+| `updates_an_order` | Updates an existing order or creates a new one at the specified order ID using the PUT method. |
+| `deletes_an_order` | Deletes a specified order using the provided order ID, returning a successful status if the operation is completed. |
+| `retrieves_an_order_count` | Retrieves the count of orders from a Shopify store with optional filters for date ranges, status, and fulfillment/financial states. |
+| `cancels_an_order` | Cancels a specified order using a POST request and returns status codes for success (200) or invalid request (422). |
+| `retrieves_alist_of_refunds_for_an_order` | Retrieves a list of refunds for a specified order, allowing optional filtering by the number of results, specific fields, and currency. |
+| `creates_arefund` | Creates a refund for an order using the specified order ID, allowing merchants to process partial or full refunds through the API. |
+| `retrieves_aspecific_refund` | Retrieves a specific refund associated with an order by its ID, allowing customization of the response with optional fields and currency settings. |
+| `calculates_arefund` | Calculates refund amounts for an order, including line items, shipping, and taxes, based on specified criteria. |
+| `retrieves_alist_of_transactions` | Retrieves a list of transactions for a specified order using the Shopify API, optionally filtered by since_id, specified fields, and currency. |
+| `creates_atransaction_for_an_order` | Creates a new transaction for a specified order using the Shopify Admin API and returns the result with a 201 Created status. |
+| `retrieves_acount_of_an_order_stransactions` | Retrieves the transaction count for a specific order using the "GET" method. |
+| `retrieves_aspecific_transaction` | Retrieves a specific transaction from an order, optionally filtering response fields and currency format using query parameters. |
+| `retrieves_alist_of_gift_cards` | Retrieves a list of gift cards in JSON format, allowing filtering by status, limiting the number of results, specifying a starting point with an ID, and selecting specific fields for the response. |
+| `creates_agift_card` | Creates a new gift card and returns the created resource with a 201 status code. |
+| `retrieves_asingle_gift_card` | Retrieves information about a specific gift card using the provided gift card ID. |
+| `updates_an_existing_gift_card` | Updates the details of a specific gift card using the PUT method at the "/admin/api/{api_version}/gift_cards/{gift_card_id}.json" endpoint. |
+| `retrieves_acount_of_gift_cards` | Retrieves the count of gift cards filtered by status using the Shopify Admin REST API. |
+| `disables_agift_card` | Deactivates a gift card and invalidates its remaining balance via a POST request. |
+| `searches_for_gift_cards` | Retrieves a list of gift cards matching specified criteria such as search query, order, limit, and requested fields. |
+| `retrieves_alist_of_all_users` | Retrieves a list of users in the system as JSON data using the "GET" method. |
+| `retrieves_asingle_user` | Retrieves a specific user's details from the administrative API in JSON format for the specified API version and user ID. |
+| `retrieves_the_currently_logged_in_user` | Retrieves the current authenticated user's details in the specified API version. |
+| `retrieves_alist_of_collects` | Retrieves a list of data collections in JSON format, allowing filtering by limit, since_id, and specific fields. |
+| `adds_aproduct_to_acustom_collection` | Creates a new collection in a store using the POST method, returning a status message upon successful creation or an error response if the request is invalid. |
+| `retrieves_aspecific_collect_by_its_id` | Retrieves a specific collect entry from the Shopify admin API, returning JSON data with fields optionally filtered by the request. |
+| `removes_aproduct_from_acollection` | Deletes a specific collect entry by ID using the specified API version and returns a success status. |
+| `retrieves_acount_of_collects` | Retrieves the count of collections using the GET method at the specified API endpoint "/admin/api/{api_version}/collects/count.json". |
+| `retrieves_asingle_collection` | Retrieves information about a specific collection using the "GET" method, allowing optional filtering through the "fields" query parameter. |
+| `retrieve_alist_of_products_belonging_to_acollection` | Retrieves a list of products from a specific collection using the "GET" method, allowing optional filtering by a limit parameter. |
+| `retrieves_alist_of_custom_collections` | Retrieves a paginated list of custom collections (manually curated product groupings) with optional filtering by parameters like IDs, titles, product associations, and publication status. |
+| `creates_acustom_collection` | Creates a new custom collection in a Shopify store using the API, allowing merchants to group products together for easier navigation. |
+| `retrieves_acount_of_custom_collections` | Retrieves a count of custom collections in a Shopify store, optionally filtered by title, product association, or publication timestamps. |
+| `retrieves_asingle_custom_collection` | Retrieves a specific custom collection and optionally includes specified fields in the response, using the Shopify API. |
+| `updates_an_existing_custom_collection` | Updates an existing custom collection by replacing it with the new data provided in the request body, allowing modifications to its attributes such as title and collected products. |
+| `deletes_acustom_collection` | Deletes a custom product collection in Shopify using the specified collection ID. |
+| `receive_alist_of_all_product_images` | Retrieves a list of product images for a specified product using the "GET" method at the "/admin/api/{api_version}/products/{product_id}/images.json" path, allowing optional filters by "since_id" and customizable fields. |
+| `create_anew_product_image` | Creates and manages product images by uploading new images for a specified product using the POST method. |
+| `receive_acount_of_all_product_images` | Retrieves the count of product images associated with a specific product using the GET method, optionally filtering by a since_id parameter. |
+| `receive_asingle_product_image` | Retrieves a specific product image by ID with optional field selection for the API version. |
+| `modify_an_existing_product_image` | Updates an existing product image specified by the product ID and image ID using the PUT method, allowing for modifications to image attributes such as source or metadata. |
+| `remove_an_existing_product_image` | Deletes a specific product image identified by the `image_id` from a product specified by the `product_id` using the HTTP DELETE method. |
+| `retrieves_alist_of_product_variants` | Retrieves a list of product variants for a specified product with optional pagination, currency display, and field filtering. |
+| `create_anew_product_variant` | Creates a new product variant within a specified product using the POST method, returning a successful response when the variant is added. |
+| `receive_acount_of_all_product_variants` | Retrieves the count of variants for a specific product in Shopify's inventory. |
+| `receive_asingle_product_variant` | Retrieves variant details using the specified API version and variant ID, optionally filtering by specified fields. |
+| `modify_an_existing_product_variant` | Updates the variant with the specified ID in the API, replacing its current state with the data provided in the request body. |
+| `remove_an_existing_product_variant` | Deletes a product variant using the Shopify Admin API. |
+| `retrieves_alist_of_products` | Retrieves a list of products from a Shopify store using the Admin API, allowing for filtering based on parameters such as product IDs, title, vendor, and creation or publication dates. |
+| `creates_anew_product` | Creates a new product in Shopify via the REST Admin API and returns the product details upon successful creation. |
+| `retrieves_acount_of_products` | Retrieves the count of products in a Shopify store using the specified API version, allowing optional filtering by vendor, product type, collection ID, creation date, update date, publication date, and publication status. |
+| `retrieves_asingle_product` | Retrieves product details in JSON format for a specified product using the "GET" method, allowing optional filtering by specifying fields via query parameters. |
+| `updates_aproduct` | Replaces an entire product entry in the admin system with a new version, returning a success status upon completion. |
+| `deletes_aproduct` | Deletes a product along with its associated variants and media from the system using the provided product ID. |
+| `retrieves_alist_of_smart_collections` | Retrieves a list of smart collections from a Shopify store, allowing for filtering by various parameters such as IDs, titles, product IDs, and publication status. |
+| `creates_asmart_collection` | Creates a new Shopify smart collection with automated product inclusion rules and returns the collection details upon successful creation. |
+| `retrieves_acount_of_smart_collections` | Retrieves a count of smart collections in a Shopify store, optionally filtered by title, product ID, update or publication dates, and publication status. |
+| `retrieves_asingle_smart_collection` | Retrieves a smart collection by its ID using the Shopify API, optionally specifying fields to include in the response. |
+| `updates_an_existing_smart_collection` | Updates a specific smart collection's configuration and rules via the Shopify Admin API, returning a success status on completion. |
+| `removes_asmart_collection` | Deletes the specified smart collection and returns a successful response upon completion. |
+| `retrieves_acheckout` | Checks the status of a checkout using a provided token via the GET method. |
+| `modifies_an_existing_checkout` | Updates a checkout using the provided token, supporting HTTP responses for successful updates (200), successful processing without immediate completion (202), and invalid request data (422). |
+| `retrieves_alist_of_shipping_rates` | Retrieves shipping rates for a specified checkout token via the API, returning available options in JSON format. |
+| `retrieve_collection_listings_that_are_published_to_your_app` | Retrieves a list of collection listings in JSON format using the "GET" method, optionally limited by a specified number of entries. |
+| `retrieve_code_product_ids_code_that_are_published_to_acode_collection_id_code` | Retrieves a list of product IDs for a specified collection listing, optionally limited by a query parameter, using the GET method. |
+| `retrieve_aspecific_collection_listing_that_is_published_to_your_app` | Retrieves details of a specific collection listing in the admin API. |
+| `create_acollection_listing_to_publish_acollection_to_your_app` | Updates the specified collection listing resource by replacing its entire representation at the specified ID, returning a success response upon completion. |
+| `delete_acollection_listing_to_unpublish_acollection_from_your_app` | Deletes a collection listing with the specified ID using the DELETE method. |
+| `stores_acredit_card_in_the_card_vault` | Creates a new user session using the Shopify API at the specified path, enabling secure interactions between the client and server. |
+| `retrieves_alist_of_payments_on_aparticular_checkout` | Retrieves payment details from a specific checkout session using the provided token, returning relevant payment information in JSON format. |
+| `creates_anew_payment` | Creates a payment for a checkout session using the provided token, returning a status response upon completion. |
+| `retrieves_asingle_payment` | Retrieves the details of a specific payment associated with a checkout using the Checkout.com API. |
+| `counts_the_number_of_payments_attempted_on_acheckout` | Retrieves the count of payments for a specified checkout using the "GET" method, returning the result in JSON format. |
+| `retrieve_product_listings_that_are_published_to_your_app` | Retrieves a list of product listings with filtering options such as product identifiers, collection, update timestamps, and handles. |
+| `retrieve_code_product_ids_code_that_are_published_to_your_app` | Retrieves a list of product IDs from product listings with optional limit parameter. |
+| `retrieve_acount_of_products_that_are_published_to_your_app` | Retrieves the total count of product listings available in the system. |
+| `retrieve_aspecific_product_listing_that_is_published_to_your_app` | Retrieves a specific product listing by ID using the GET method, returning details about the product listing. |
+| `create_aproduct_listing_to_publish_aproduct_to_your_app` | Updates a product listing by fully replacing its data at the specified path, using the PUT method. |
+| `delete_aproduct_listing_to_unpublish_aproduct_from_your_app` | Deletes a specific product listing by ID using the specified API version. |
+| `receive_alist_of_all_resourcefeedbacks` | Retrieves feedback data for a specific resource via the Admin API. |
+| `create_anew_resourcefeedback` | Submits resource feedback for review and processing, returning status codes for success, conflicts, or validation errors. |
+| `retrieves_alist_of_fulfillment_orders_on_ashop_for_aspecific_app` | Retrieves fulfillment orders assigned to specific locations and filtered by assignment status using query parameters. |
+| `sends_acancellation_request` | Sends a cancellation request to the fulfillment service for a specific fulfillment order, allowing the cancellation process to be initiated. |
+| `accepts_acancellation_request` | Accepts a cancellation request for a fulfillment order via a POST request to the specified endpoint. |
+| `rejects_acancellation_request` | Rejects a cancellation request for a Shopify fulfillment order and returns the updated fulfillment order details. |
+| `retrieves_alist_of_carrier_services` | Retrieves a list of carrier services from a Shopify store, providing access to shipping options and real-time shipping rates for integration with third-party shipping providers. |
+| `creates_acarrier_service` | Creates a custom carrier service in Shopify, enabling third-party shipping rate integration via a callback URL. |
+| `retrieves_asingle_carrier_service` | Retrieves detailed information for a specific carrier service configured to provide real-time shipping rates via Shopify's shipping API. |
+| `updates_acarrier_service` | Updates a specific carrier service with the provided ID using the "PUT" method in the Shopify API. |
+| `deletes_acarrier_service` | Deletes an existing carrier service by ID and returns a success status upon completion. |
+| `retrieves_fulfillments_associated_with_an_order` | Retrieves a list of fulfillments for a specific order with optional filtering by creation/update timestamps and pagination parameters. |
+| `create_anew_fulfillment` | Creates a new fulfillment for an order, typically used to confirm shipment or pickup of items to complete the order process. |
+| `retrieves_fulfillments_associated_with_afulfillment_order` | Retrieves fulfillment information for a specific fulfillment order by its ID using the Shopify API. |
+| `retrieves_acount_of_fulfillments_associated_with_aspecific_order` | Retrieves the count of fulfillments for a specific order based on optional date filters for creation and update times using the GET method. |
+| `receive_asingle_fulfillment` | Retrieves a specific fulfillment for an order using the Shopify Admin API, returning fulfillment details in the response. |
+| `modify_an_existing_fulfillment` | Updates a specific fulfillment order in Shopify's admin API for order processing. |
+| `creates_afulfillment_for_one_or_many_fulfillment_orders` | Creates a new fulfillment record for an order using the Shopify API, allowing for the inclusion of details such as tracking numbers and shipment status updates. |
+| `updates_the_tracking_information_for_afulfillment` | Updates tracking information for a fulfillment using the provided tracking details via a POST request. |
+| `retrieves_alist_of_fulfillment_events_for_aspecific_fulfillment` | Retrieves a list of fulfillment events associated with a specific fulfillment ID within an order using the Shopify API. |
+| `creates_afulfillment_event` | Creates a new fulfillment event for a specified order and fulfillment, allowing tracking and updating of the fulfillment status. |
+| `retrieves_aspecific_fulfillment_event` | Retrieves a specific event by ID for a fulfillment within an order using the "GET" method. |
+| `deletes_afulfillment_event` | Deletes a specific fulfillment event associated with a fulfillment in an order using the Shopify API, removing its tracking information. |
+| `retrieves_alist_of_fulfillment_orders_for_aspecific_order` | Retrieves a list of fulfillment orders associated with a specific order, including fulfillment details and status. |
+| `retrieves_aspecific_fulfillment_order` | Retrieves detailed information about a specific fulfillment order in Shopify, including its status and associated order items. |
+| `cancel_afulfillment_order` | Cancels a fulfillment order using the "POST" method at the specified endpoint, allowing for the termination of fulfillment attempts for the associated order. |
+| `marks_afulfillment_order_as_incomplete` | Closes a fulfillment order via the Shopify Admin API and returns a success status upon completion. |
+| `moves_afulfillment_order_to_anew_location` | Moves fulfillment order line items to a new location and returns the updated fulfillment order details. |
+| `sends_afulfillment_request` | Submits a fulfillment request for a specified fulfillment order, allowing for the management and processing of order line items through a fulfillment service. |
+| `accepts_afulfillment_request` | Accepts a fulfillment request for a specific fulfillment order, transitioning the order status to processing. |
+| `rejects_afulfillment_request` | Rejects a fulfillment request for a specified fulfillment order, preventing any associated line items from being fulfilled. |
+| `receive_alist_of_all_fulfillmentservices` | Retrieves a list of fulfillment services available to a merchant using the Shopify API. |
+| `create_anew_fulfillmentservice` | Registers a new fulfillment service using the Shopify API, allowing third-party warehouses to prepare and ship orders on behalf of store owners. |
+| `receive_asingle_fulfillmentservice` | Retrieves details of a specific fulfillment service, including its configuration and operational settings, within the Shopify admin API. |
+| `modify_an_existing_fulfillmentservice` | Updates a Shopify fulfillment service's configuration, including tracking support and inventory management settings. |
+| `remove_an_existing_fulfillmentservice` | Deletes a specified fulfillment service from the Shopify admin and returns a success status upon removal. |
+| `retrieves_alist_of_locations_that_afulfillment_order_can_potentially_move_to` | Retrieves a list of eligible locations where fulfillment order items can be moved for potential fulfillment, sorted alphabetically by location name. |
+| `return_the_current_balance` | Retrieves the current account balance for Shopify Payments, reflecting transactions not yet included in a payout. |
+| `return_alist_of_all_disputes` | Retrieves a list of Shopify Payments disputes based on specified parameters, such as ID, status, and initiation date, using the GET method at the "/admin/api/{api_version}/shopify_payments/disputes.json" endpoint. |
+| `return_asingle_dispute` | Retrieves information about a specific dispute related to Shopify Payments using the provided dispute ID. |
+| `return_alist_of_all_payouts` | Retrieves a list of Shopify Payments payouts, which represent the movement of money from a merchant's Shopify Payments balance to their bank account, based on specified parameters like date range and payout status. |
+| `return_asingle_payout` | Retrieves details of a specific Shopify Payments payout using the payout ID and API version. |
+| `return_alist_of_all_balance_transactions` | Retrieves Shopify Payments balance transactions associated with payouts, filtered by parameters like payout ID, status, or test mode. |
+| `receive_alist_of_all_countries` | Retrieves country data based on specified parameters such as since_id and fields, returning details in JSON format. |
+| `creates_acountry` | Creates a new country entry via the Shopify Admin REST API and returns a success status upon creation. |
+| `retrieves_acount_of_countries` | Retrieves country list data in JSON format using a GET request. |
+| `retrieves_aspecific_county` | Retrieves country details by ID with optional field filtering. |
+| `updates_an_existing_country` | Updates or creates a country resource at a specified ID using the "PUT" method, allowing for full replacement or creation of the country data. |
+| `remove_an_existing_country` | Deletes a specified country from the system using the DELETE method at the "/admin/api/{api_version}/countries/{country_id}.json" endpoint. |
+| `retrieves_alist_of_currencies_enabled_on_ashop` | Retrieves a list of supported currencies with their metadata using the specified API version. |
+| `retrieves_alist_of_the_shop_spolicies` | Retrieves policy configurations in JSON format from the specified API version path using a GET request. |
+| `retrieves_alist_of_provinces_for_acountry` | Retrieves a list of provinces for a specific country using query parameters like `since_id` and `fields` to filter or format the response. |
+| `retrieves_acount_of_provinces_for_acountry` | Retrieves the total count of provinces for a specified country using the GET method. |
+| `retrieves_asingle_province_for_acountry` | Retrieves province details for a specific country using the specified API version and includes optional field selection. |
+| `updates_an_existing_province_for_acountry` | Updates a specific province's details for a given country via the Shopify Admin REST API and returns a success status upon completion. |
+| `retrieves_the_shop_sconfiguration` | Retrieves shop information in JSON format using the specified API version via the "GET" method at the "/admin/api/{api_version}/shop.json" endpoint, allowing optional specification of fields to include in the response. |
+| `retrieves_alist_of_tender_transactions` | Retrieves a list of tender transactions with optional filtering by processing time, order, and pagination parameters. |
