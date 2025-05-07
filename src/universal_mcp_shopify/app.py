@@ -150,7 +150,7 @@ class ShopifyApp(APIApplication):
             dict[str, Any]: Create a new report
 
         Tags:
-            Analytics, Report
+            Analytics, Report, important
         """
         if api_version is None:
             raise ValueError("Missing required parameter 'api_version'")
@@ -177,7 +177,7 @@ class ShopifyApp(APIApplication):
             dict[str, Any]: Retrieve a single report / Retrieve a single report, showing only particular fields
 
         Tags:
-            Analytics, Report
+            Analytics, Report, important
         """
         if api_version is None:
             raise ValueError("Missing required parameter 'api_version'")
@@ -212,7 +212,7 @@ class ShopifyApp(APIApplication):
             dict[str, Any]: Update an existing report
 
         Tags:
-            Analytics, Report
+            Analytics, Report, important
         """
         if api_version is None:
             raise ValueError("Missing required parameter 'api_version'")
