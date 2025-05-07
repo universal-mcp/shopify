@@ -4,7 +4,7 @@ from universal_mcp.integrations import Integration
 
 class ShopifyApp(APIApplication):
     def __init__(self, integration: Integration = None, **kwargs) -> None:
-        super().__init__(name='shopifyapp', integration=integration, **kwargs)
+        super().__init__(name='shopify', integration=integration, **kwargs)
         self.base_url = "https://{{store_name}}.myshopify.com"
 
     def retrieves_alist_of_access_scopes_associated_to_the_access_token(self) -> dict[str, Any]:
