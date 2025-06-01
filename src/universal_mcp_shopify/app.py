@@ -869,7 +869,7 @@ class ShopifyApp(APIApplication):
         except ValueError:
             return None
 
-    def retrieves_asingle_charge(self, api_version: str, recurring_application_charge_id: str, usage_charge_id: str, fields: Optional[str] = None) -> dict[str, Any]:
+    def retrieves_asingle_chargeone(self, api_version: str, recurring_application_charge_id: str, usage_charge_id: str, fields: Optional[str] = None) -> dict[str, Any]:
         """
         Retrieves a specific usage charge associated with a recurring application charge for tracking and billing purposes.
 
@@ -11183,7 +11183,7 @@ class ShopifyApp(APIApplication):
             self.update_recurring_charge_custom,
             self.retrieves_alist_of_usage_charges,
             self.creates_ausage_charge,
-            self.retrieves_asingle_charge,
+            self.retrieves_asingle_chargeone,
             self.list_customer_addresses,
             self.creates_anew_address_for_acustomer,
             self.get_single_customer_address,
