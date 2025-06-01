@@ -27,13 +27,13 @@ This is automatically generated from OpenAPI schema for the ShopifyApp API.
 | `get_application_credit_by_id` | Retrieves a specific application credit from Shopify's admin API, including optional field filtering parameters. |
 | `get_recurring_charges` | Retrieves a list of recurring application charges with optional filtering by ID and field selection. |
 | `create_recurring_charge` | Creates a new recurring application charge using the API, handling the setup and management of periodic billing. |
-| `retrieves_asingle_charge` | Retrieves a specific usage charge associated with a recurring application charge for tracking and billing purposes. |
+| `retrieves_asingle_charge` | Retrieves details for a specific recurring application charge by ID using the "GET" method, optionally including additional fields specified in the query parameters. |
 | `delete_recurring_charge` | Cancels an existing recurring application charge for a Shopify store. |
 | `activate_recurring_charge` | Activates a recurring application charge using the API and returns a status message in response. |
 | `update_recurring_charge_custom` | Updates a Shopify recurring application charge's properties and returns the modified charge details. |
 | `retrieves_alist_of_usage_charges` | Retrieves usage charges for a specific recurring application charge via the Shopify Admin API, filtering results based on specified fields. |
 | `creates_ausage_charge` | Creates a usage-based charge on a recurring billing subscription and returns the charge details upon success. |
-| `retrieves_asingle_charge` | Retrieves a specific usage charge associated with a recurring application charge for tracking and billing purposes. |
+| `retrieves_asingle_chargeone` | Retrieves a specific usage charge associated with a recurring application charge for tracking and billing purposes. |
 | `list_customer_addresses` | Retrieves a list of customer addresses associated with a specific customer ID. |
 | `creates_anew_address_for_acustomer` | Creates a new address for a specified customer using the POST method. |
 | `get_single_customer_address` | Retrieves a specific customer address using the provided customer ID and address ID, returning details about the address. |
